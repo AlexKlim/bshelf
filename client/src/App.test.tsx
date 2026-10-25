@@ -60,6 +60,14 @@ describe("App shell", () => {
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument()
   })
 
+  it("marks the language chips with their own language", async () => {
+    serve()
+    render(<MemoryRouter initialEntries={["/profile"]}><App initialUser={user} /></MemoryRouter>)
+
+    expect((await screen.findByRole("radio", { name: "Русский" })).closest("label")).toHaveAttribute("lang", "ru")
+    expect(screen.getByRole("radio", { name: "English" }).closest("label")).toHaveAttribute("lang", "en")
+  })
+
   it("switches to Russian", async () => {
     serve()
     await i18n.changeLanguage("ru")

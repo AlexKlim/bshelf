@@ -36,8 +36,8 @@ export function ProfileScreen() {
           value={i18n.language.startsWith("ru") ? "ru" : "en"}
           onChange={(lng) => i18n.changeLanguage(lng)}
           options={[
-            { value: "en", label: "English" },
-            { value: "ru", label: "Русский" },
+            { value: "en", label: "English", lang: "en" },
+            { value: "ru", label: "Русский", lang: "ru" },
           ]}
         />
       </section>

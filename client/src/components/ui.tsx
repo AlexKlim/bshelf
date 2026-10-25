@@ -102,7 +102,7 @@ export function Choices<T extends string>({
 }: {
   legend: string
   value: T
-  options: { value: T; label: string; icon?: IconName }[]
+  options: { value: T; label: string; icon?: IconName; lang?: string }[]
   onChange: (value: T) => void
   hideLegend?: boolean
   disabled?: boolean
@@ -112,7 +112,7 @@ export function Choices<T extends string>({
     <fieldset className="bs-choices" disabled={disabled}>
       <legend className={hideLegend ? "bs-sr" : undefined}>{legend}</legend>
       {options.map((o) => (
-        <label key={o.value} className="bs-choice">
+        <label key={o.value} className="bs-choice" lang={o.lang}>
           <input type="radio" name={name} checked={value === o.value} onChange={() => onChange(o.value)} />
           <span>
             {o.icon && <Ico name={o.icon} />}
