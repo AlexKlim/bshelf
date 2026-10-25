@@ -5,3 +5,6 @@ production:
   enrich_missing_books:
     class: EnrichMissingBooksJob
     schedule: every day at 4am
+  health_check:
+    class: HealthCheckJob
+    schedule: every hour at minute 5

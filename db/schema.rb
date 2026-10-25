@@ -134,6 +134,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100002) do
     t.index ["uuid"], name: "index_merge_events_on_uuid", unique: true
   end
 
+  create_table "metric_events", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "outcome", null: false
+    t.bigint "user_id"
+    t.integer "duration_ms"
+    t.datetime "created_at", null: false
+    t.index ["name", "created_at"], name: "index_metric_events_on_name_and_created_at"
+    t.index ["user_id"], name: "index_metric_events_on_user_id"
+  end
+
   create_table "notes", force: :cascade do |t|
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
     t.bigint "user_id", null: false
@@ -212,6 +222,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100002) do
     t.index ["user_id"], name: "index_readings_on_user_id"
     t.check_constraint "status::text = ANY (ARRAY['want'::character varying::text, 'owned'::character varying::text, 'in_progress'::character varying::text, 'done'::character varying::text])", name: "readings_status"
     t.check_constraint "status_source::text = ANY (ARRAY['manual'::character varying::text, 'litres'::character varying::text, 'kindle_browser'::character varying::text, 'kindle_export'::character varying::text, 'purchase'::character varying::text])", name: "readings_status_source"
+  end
+
+  create_table "remote_browser_sessions", force: :cascade do |t|
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "user_id", null: false
+    t.string "purpose", null: false
+    t.string "status", default: "queued", null: false
+    t.string "interruption"
+    t.string "steel_session_id"
+    t.string "websocket_url"
+    t.string "viewer_path"
+    t.string "viewer_token_digest"
+    t.datetime "viewer_token_expires_at"
+    t.jsonb "steps", default: [], null: false
+    t.jsonb "result"
+    t.datetime "expires_at"
+    t.datetime "finished_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status"], name: "index_remote_browser_sessions_on_status"
+    t.index ["user_id"], name: "index_remote_browser_sessions_on_user_id"
+    t.index ["user_id"], name: "index_remote_browser_sessions_one_active_per_user", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'connecting'::character varying, 'live'::character varying, 'collecting'::character varying])::text[]))"
+    t.index ["uuid"], name: "index_remote_browser_sessions_on_uuid", unique: true
   end
 
   create_table "solid_queue_batch_executions", force: :cascade do |t|
@@ -416,6 +449,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100002) do
   add_foreign_key "highlights", "users", on_delete: :cascade
   add_foreign_key "merge_events", "books", on_delete: :cascade
   add_foreign_key "merge_events", "users", on_delete: :cascade
+  add_foreign_key "metric_events", "users", on_delete: :nullify
   add_foreign_key "notes", "books", on_delete: :cascade
   add_foreign_key "notes", "users", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id", on_delete: :cascade
@@ -424,6 +458,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100002) do
   add_foreign_key "oauth_access_tokens", "users", column: "resource_owner_id", on_delete: :cascade
   add_foreign_key "readings", "editions", on_delete: :cascade
   add_foreign_key "readings", "users", on_delete: :cascade
+  add_foreign_key "remote_browser_sessions", "users", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

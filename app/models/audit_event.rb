@@ -4,6 +4,7 @@ class AuditEvent < ApplicationRecord
     password_reset_requested password_reset
     api_token_created api_token_revoked account_deleted
     assistant_connected assistant_revoked
+    remote_browser_started remote_browser_finished
   ].freeze
 
   belongs_to :user, optional: true

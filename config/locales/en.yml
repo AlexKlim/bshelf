@@ -1,0 +1,18 @@
+en:
+  share:
+    listened: "Listened"
+    read: "Read"
+    read_and_listened: "Read and listened"
+    listening: "Listening"
+    reading: "Reading"
+    owned: "Owned"
+    want: "Want"
+    want_since: "In Want since %{date}"
+    similar:
+      one: "Similar: %{count} book"
+      other: "Similar: %{count} books"
+    not_found: "Not on the shelf"
+    unrecognized: "Could not recognize the book"
+    added: "Added · %{status}"
+    months: [~, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
+    months_since: [~, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]

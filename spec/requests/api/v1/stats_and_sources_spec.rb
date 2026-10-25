@@ -48,10 +48,61 @@ RSpec.describe "Stats and sources" do
       get "/api/v1/sources"
 
       expect(json["sources"]).to eq([
-        { "kind" => "litres", "status" => "error", "last_sync_at" => "2026-10-01T00:00:00.000Z", "error" => "needs_login" },
-        { "kind" => "kindle_export", "status" => "never", "last_sync_at" => nil, "error" => nil },
-        { "kind" => "kindle_browser", "status" => "never", "last_sync_at" => nil, "error" => nil }
+        { "kind" => "litres", "status" => "error", "last_sync_at" => "2026-10-01T00:00:00.000Z", "error" => "needs_login",
+          "books_count" => 0, "session" => nil },
+        { "kind" => "kindle_export", "status" => "never", "last_sync_at" => nil, "error" => nil,
+          "books_count" => 0, "session" => nil },
+        { "kind" => "kindle_browser", "status" => "never", "last_sync_at" => nil, "error" => nil,
+          "books_count" => 0, "session" => nil }
       ])
+    end
+
+    it "counts books per source and shows the latest browser session" do
+      create(:edition, book: create(:book, user:), source: "kindle_browser")
+      old = live_session(user)
+      old.finish!(interruption: "aborted")
+      running = RemoteBrowserSession.start!(user, "kindle")
+
+      get "/api/v1/sources"
+
+      kindle = json["sources"].find { it["kind"] == "kindle_browser" }
+      expect(kindle).to include("books_count" => 1)
+      expect(kindle["session"]).to eq("id" => running.uuid, "status" => "connecting", "result" => nil, "interruption" => nil)
+    end
+
+    describe "banner" do
+      it "is empty when nothing waits for the person" do
+        get "/api/v1/sources"
+
+        expect(json["banner"]).to be_nil
+      end
+
+      it "shows a source error before the Litres reminder and keeps it undismissable" do
+        user.source_connections.create!(kind: "litres", status: "ok", last_sync_at: 40.days.ago)
+        row = user.source_connections.create!(kind: "kindle_browser", status: "error", error: "provider_refused")
+
+        get "/api/v1/sources"
+
+        expect(json["banner"]).to eq("kind" => "source_error", "source" => "kindle_browser", "error" => "provider_refused",
+          "dismissible" => false, "key" => "source_error:kindle_browser:#{row.updated_at.to_i}")
+      end
+
+      it "reminds to sign in to Litres a month after the last sync" do
+        synced = user.source_connections.create!(kind: "litres", status: "ok", last_sync_at: 31.days.ago)
+
+        get "/api/v1/sources"
+
+        expect(json["banner"]).to eq("kind" => "litres_reminder", "dismissible" => true,
+          "key" => "litres_reminder:#{synced.last_sync_at.to_i}")
+      end
+
+      it "shows needs_login as a source error" do
+        user.source_connections.create!(kind: "litres", status: "needs_login")
+
+        get "/api/v1/sources"
+
+        expect(json["banner"]).to include("kind" => "source_error", "error" => "needs_login")
+      end
     end
   end
 end
