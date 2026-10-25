@@ -21,6 +21,7 @@ class MergeEvent < ApplicationRecord
       absorbed = locked.fetch(absorbed.id)
       moved = MOVED.to_h { |key, model| [ key, model.where(book_id: absorbed.id).ids ] }
       filled = absorbed.attributes.slice(*FILLABLE).select { |field, value| !value.nil? && survivor[field].nil? }
+      filled.delete("isbn_source") unless filled.key?("isbn")
 
       MOVED.each { |key, model| model.where(id: moved[key]).update_all(book_id: survivor.id) }
       moved.merge!(hand_over_candidates(survivor, absorbed))

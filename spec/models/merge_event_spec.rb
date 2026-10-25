@@ -51,6 +51,24 @@ RSpec.describe MergeEvent do
     expect(event.filled.keys).to contain_exactly("isbn", "cover_url", "cloth")
   end
 
+  it "takes the ISBN provenance only together with the ISBN" do
+    absorbed.update!(isbn_source: "catalog")
+    survivor.update!(isbn: "9785171021906")
+
+    event = described_class.merge!(survivor, absorbed)
+
+    expect(survivor.reload).to have_attributes(isbn: "9785171021906", isbn_source: nil)
+    expect(event.filled.keys).not_to include("isbn", "isbn_source")
+  end
+
+  it "brings the ISBN provenance along with a filled ISBN" do
+    absorbed.update!(isbn_source: "catalog")
+
+    described_class.merge!(survivor, absorbed)
+
+    expect(survivor.reload).to have_attributes(isbn: "9780156027601", isbn_source: "catalog")
+  end
+
   it "unmerges back to the exact original books and statuses" do
     before_survivor = snapshot(survivor)
     before_absorbed = snapshot(absorbed)
