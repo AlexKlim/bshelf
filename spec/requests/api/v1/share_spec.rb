@@ -194,6 +194,28 @@ RSpec.describe "Share" do
       expect(response).to have_http_status(:conflict)
     end
 
+    it "answers 409 with the book that won a race for the same store id" do
+      winner = create(:book, user:, title: "Solaris")
+      allow(AddBook).to receive(:call).and_wrap_original do |original, **args|
+        create(:edition, book: winner, store: "amazon", external_id: "0156027607")
+        original.call(**args)
+      end
+
+      add(title: "Solaris (Kindle)", edition: { store: "amazon", external_id: "0156027607" })
+
+      expect(response).to have_http_status(:conflict)
+      expect(json["existing"]["id"]).to eq(winner.uuid)
+      expect(user.books.count).to eq(1)
+    end
+
+    it "matches an existing store id only together with its store" do
+      create(:edition, book: create(:book, user:, title: "Solaris"), store: "amazon", external_id: "6450429")
+
+      add(title: "Eden", edition: { external_id: "6450429" })
+
+      expect(response).to have_http_status(:created)
+    end
+
     it "validates status, format and store" do
       add(title: "Solaris", edition: { status: "loved" })
       expect(response).to have_http_status(:unprocessable_content)

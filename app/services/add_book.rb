@@ -8,11 +8,14 @@ class AddBook
     end
   end
 
+  # The per-user lock makes the duplicate check and the insert one step, so two quick adds of one title
+  # (a double tap, a share and a Shortcut) cannot both pass the check.
   def self.call(user:, title:, author: nil, **edition)
-    existing = find_duplicate(user, title, author)
-    raise Duplicate, existing if existing
-
     Book.transaction do
+      Book.connection.execute(Book.sanitize_sql([ "SELECT pg_advisory_xact_lock(hashtext(?))", "add_book:#{user.id}" ]))
+      existing = find_duplicate(user, title, author)
+      raise Duplicate, existing if existing
+
       book = user.books.create!(title: title.to_s.squish, author: author.to_s.squish.presence)
       add_edition(book, **edition)
       book
