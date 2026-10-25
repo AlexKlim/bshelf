@@ -20,6 +20,7 @@ Rails.application.routes.draw do
       resource :password, only: %i[create update]
       resource :profile, only: %i[show destroy], path: "me"
       resources :api_tokens, only: %i[index create destroy]
+      resources :assistants, only: %i[index destroy]
 
       resources :shelves, only: %i[index show], path: "shelf"
       resource :search, only: :show

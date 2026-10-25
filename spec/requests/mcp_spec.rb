@@ -43,6 +43,18 @@ RSpec.describe "MCP endpoint" do
       expect(response).to have_http_status(:unauthorized)
     end
 
+    it "rejects the token once the grant is revoked from the profile" do
+      raw = token
+      sign_in_as(user)
+      delete "/api/v1/assistants/#{claude_app.uuid}"
+      expect(response).to have_http_status(:no_content)
+
+      mcp_call(raw, "tools/list")
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(response.headers["WWW-Authenticate"]).to include('error="invalid_token"')
+    end
+
     it "does not accept a REST API token" do
       _record, raw = ApiToken.issue!(user:, name: "Shortcut")
 
