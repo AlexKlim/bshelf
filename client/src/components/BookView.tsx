@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   addEdition,
@@ -22,10 +22,11 @@ type ViewProps = {
   bookId: string
   summary?: BookSummary
   disabled?: boolean
+  focusTitle?: boolean
   onChanged: () => void
 }
 
-export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
+export function BookView({ bookId, summary, disabled, focusTitle, onChanged }: ViewProps) {
   const { t } = useTranslation()
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
   const [detail, setDetail] = useState<BookDetail | null>(null)
@@ -81,6 +82,7 @@ export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
       book={detail}
       animate={!reduced}
       disabled={disabled}
+      focusTitle={focusTitle}
       onBook={(book) => {
         setDetail(book)
         onChanged()
@@ -123,13 +125,19 @@ type SpreadProps = {
   book: BookDetail
   animate?: boolean
   disabled?: boolean
+  focusTitle?: boolean
   onBook: (book: BookDetail) => void
   onReload: () => void
 }
 
-export function BookSpread({ book, animate, disabled, onBook, onReload }: SpreadProps) {
+export function BookSpread({ book, animate, disabled, focusTitle, onBook, onReload }: SpreadProps) {
   const { t } = useTranslation()
   const cloth = clothFor(book)
+  const title = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    if (focusTitle) title.current?.focus({ preventScroll: true })
+  }, [focusTitle])
 
   return (
     <div className="bs-book">
@@ -143,7 +151,7 @@ export function BookSpread({ book, animate, disabled, onBook, onReload }: Spread
             </div>
           )}
           {book.author && <p className="bs-book__author">{book.author}</p>}
-          <h1 className="bs-book__title" id="book-title">
+          <h1 className="bs-book__title" id="book-title" tabIndex={-1} ref={title}>
             {book.title}
           </h1>
           <span className="bs-ornament" aria-hidden="true" />

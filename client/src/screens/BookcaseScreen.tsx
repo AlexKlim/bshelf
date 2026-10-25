@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { getSources } from "@/api"
@@ -68,10 +68,21 @@ export function BookcaseScreen() {
 
   useEffect(() => {
     if (!desktop || !openId) return
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector('[role="dialog"]')) return
+      if ((e.target as Element).closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return
+      close()
+    }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [desktop, openId, close])
+
+  const lastOpen = useRef(openId)
+  useEffect(() => {
+    const closed = lastOpen.current
+    lastOpen.current = openId
+    if (desktop && closed && !openId) document.querySelector<HTMLElement>(`[data-book="${closed}"]`)?.focus()
+  }, [desktop, openId])
 
   const shelves = useMemo(() => (shelf.shelves ? arrangeShelves(shelf.shelves) : null), [shelf.shelves])
   const summary = shelves?.flatMap((s) => s.books).find((b) => b.id === openId)
@@ -91,7 +102,7 @@ export function BookcaseScreen() {
   }
 
   const book = openId && (
-    <BookView key={openId} bookId={openId} summary={summary} disabled={offline} onChanged={shelf.reload} />
+    <BookView key={openId} bookId={openId} summary={summary} disabled={offline} focusTitle={desktop} onChanged={shelf.reload} />
   )
 
   let body

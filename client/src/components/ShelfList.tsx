@@ -35,7 +35,7 @@ export function ShelfList({ shelves, onOpen, onMore }: Props) {
                 const edition = primaryEdition(book)
                 return (
                   <li key={book.id}>
-                    <button type="button" className="bs-row" onClick={() => onOpen(book)}>
+                    <button type="button" className="bs-row" data-book={book.id} onClick={() => onOpen(book)}>
                       <span className={`bs-row__spine bs-cloth--${clothFor(book)}`} aria-hidden="true" />
                       <span className="bs-row__body">
                         <span className="bs-row__title">{book.title}</span>
