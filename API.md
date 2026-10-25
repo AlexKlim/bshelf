@@ -326,7 +326,7 @@ Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the re
 
 ## Sources
 
-`Source.session` is the latest remote browser session for that source (`kindle` -> `kindle_browser`, `litres` -> `litres`) while it runs and for a day after it ends, else null. It lets the row show "+12 books, 40 highlights" and reconnect after the app was closed. `books_count` counts editions imported from that source. Error codes so far: `needs_login`, `provider_refused`, `page_changed`, `schema_changed`, `timeout` (adapters add theirs).
+`Source.session` is the latest remote browser session for that source (`kindle` -> `kindle_browser`, `litres` -> `litres`) while it runs and for a day after it ends, else null. It lets the row show "+12 books, 40 highlights" and reconnect after the app was closed. `books_count` counts editions imported from that source. Error codes so far: `needs_login`, `invalid_credentials`, `captcha_required`, `provider_refused`, `page_changed`, `timeout` (adapters add theirs). The first three set `status` to `needs_login`: the person has to sign in to the store again; any other error sets `error`.
 
 `banner` fills the single slot above the shelf, highest priority first:
 
@@ -348,7 +348,7 @@ Adapters report through `SourceConnection.record_sync!(user, kind, error:, statu
 | alert | condition |
 | --- | --- |
 | `sync_failure_rate` | more than 50% of at least 4 syncs of one source failed |
-| `sync_error` | any `schema_changed`, `page_changed` or `provider_refused` |
+| `sync_error` | any `page_changed` or `provider_refused` |
 | `share_slow` | share p95 over 2 s |
 | `job_failures` | failed Solid Queue jobs in the last hour |
 

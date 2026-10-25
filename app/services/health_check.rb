@@ -5,7 +5,7 @@ class HealthCheck
   MIN_SYNCS = 4
   SYNC_FAILURE_RATE = 0.5
   SHARE_P95_MS = 2000
-  ALERT_ERRORS = %w[schema_changed page_changed provider_refused].freeze
+  ALERT_ERRORS = %w[page_changed provider_refused].freeze
 
   def self.call(now: Time.current) = new(now).call
 
