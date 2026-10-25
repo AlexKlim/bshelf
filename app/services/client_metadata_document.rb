@@ -19,7 +19,7 @@ class ClientMetadataDocument
     return unless client_id?(client_id)
 
     app = Doorkeeper::Application.find_by(uid: client_id)
-    return app if app && app.updated_at > TTL.ago
+    return app if fresh?(app)
 
     failed = "client_metadata_document:failed:#{client_id}"
     return app if Rails.cache.exist?(failed)
@@ -33,10 +33,15 @@ class ClientMetadataDocument
     app ||= Doorkeeper::Application.new(uid: client_id, name: URI.parse(client_id).host, confidential: false)
     app.update!(redirect_uri: redirect_uris.join("\n"), scopes: Doorkeeper.config.scopes.to_s, updated_at: Time.current)
     app
-  # Two first requests for one client race to create it; the uid check or the unique index stops the loser.
+  # Two first requests for one client race to create it; the uid check or the unique index stops the loser,
+  # and the winner's application is fresh. Otherwise the document itself is invalid, like a failed fetch.
   rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
-    Doorkeeper::Application.find_by(uid: client_id)
+    app = Doorkeeper::Application.find_by(uid: client_id)
+    Rails.cache.write(failed, true, expires_in: FAILURE_TTL) unless fresh?(app)
+    app
   end
+
+  def self.fresh?(app) = app.present? && app.updated_at > TTL.ago
 
   # A failed refresh keeps the stored application, so a flaky client host does not disconnect anyone.
   def self.fetch_redirect_uris(client_id)
