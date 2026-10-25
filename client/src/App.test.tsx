@@ -53,9 +53,25 @@ describe("App shell", () => {
     expect(screen.getByRole("button", { name: "Add book" })).toBeInTheDocument()
   })
 
-  it("sends a signed-out visitor to the sign in", async () => {
+  it("shows a signed-out visitor at / the landing and a signed-in user the bookcase", async () => {
     serve()
-    render(<MemoryRouter><App /></MemoryRouter>)
+    const { unmount } = render(<MemoryRouter><App /></MemoryRouter>)
+
+    expect(await screen.findByRole("heading", { level: 1, name: "Everything you have read and listened to, on one shelf" })).toBeInTheDocument()
+    expect(screen.getAllByRole("link", { name: "Create a shelf" })[0]).toHaveAttribute("href", "/register")
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login")
+    expect(document.title).toBe("Book Shelf: everything you have read and listened to, on one shelf")
+    unmount()
+
+    render(<MemoryRouter><App initialUser={user} /></MemoryRouter>)
+
+    expect(await screen.findByRole("heading", { name: "The bookcase is empty for now" })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { level: 1, name: "Everything you have read and listened to, on one shelf" })).toBeNull()
+  })
+
+  it("sends a signed-out visitor to the sign in from other screens", async () => {
+    serve()
+    render(<MemoryRouter initialEntries={["/stats"]}><App /></MemoryRouter>)
 
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument()
   })
