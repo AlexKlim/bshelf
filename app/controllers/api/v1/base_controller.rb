@@ -22,8 +22,8 @@ module Api
       rescue_from ActionController::ParameterMissing,
         with: ->(e) { render_error(:blank, field: e.param, status: :bad_request) }
 
-      def self.limit_rate(to:, within:, only:)
-        rate_limit to:, within:, only:, store: RATE_LIMIT_STORE,
+      def self.limit_rate(to:, within:, only:, name: nil, by: -> { request.remote_ip })
+        rate_limit to:, within:, only:, name:, by:, store: RATE_LIMIT_STORE,
           with: -> { render_error(:rate_limited, status: :too_many_requests) }
       end
 

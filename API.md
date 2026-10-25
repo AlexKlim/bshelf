@@ -31,8 +31,8 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
 | POST | `/confirmation` | `token` | `204` | `422` `confirmation_token: invalid`, `email: already_confirmed`, `email: confirmation_period_expired` |
 | POST | `/confirmation/resend` | `email` | `202` always | `429` (5/hour/IP) |
 | POST | `/password` | `email` | `202` always. Emails `APP_URL/reset-password?token=...` | `429` (5/hour/IP) |
-| PATCH | `/password` | `token`, `password` | `204` | `422` `reset_password_token: invalid` or `expired`, `password: too_short`; `429` |
-| POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 per 3 min/IP) |
+| PATCH | `/password` | `token`, `password` | `204` | `422` `reset_password_token: invalid` or `expired`, `password: too_short`; `429` (5/hour/IP, counted apart from `POST /password`) |
+| POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 per 3 min per IP, and 10 per 3 min per email) |
 | DELETE | `/session` | | `204` | |
 | GET | `/me` | | `200 { user }` | |
 | DELETE | `/me` | | `204`. Deletes the account and all its data. The client asks the user to type "удалить" first | `403 session_required` |
@@ -206,7 +206,7 @@ Outside `/api/v1`. A remote MCP server over Streamable HTTP for Claude and ChatG
 | POST | `/mcp` | MCP JSON-RPC, stateless, JSON responses. `Authorization: Bearer <OAuth access token>` only; API tokens (`bsh_...`) are not accepted |
 | GET | `/.well-known/oauth-protected-resource`, `/.well-known/oauth-protected-resource/mcp` | RFC 9728 metadata: `resource` = `APP_URL/mcp`, `authorization_servers` = [`APP_URL`] |
 | GET | `/.well-known/oauth-authorization-server` | RFC 8414 metadata (CIMD, PKCE S256, `none` client auth) |
-| GET, POST, DELETE | `/oauth/authorize` | Consent page (server-rendered, ru or en by `Accept-Language`), allow, deny |
+| GET, POST, DELETE | `/oauth/authorize` | Consent page (server-rendered, ru or en by `Accept-Language`), allow, deny. `GET` answers `429` after 20 requests per minute per IP |
 | POST | `/oauth/token` | Code and refresh token exchange; refresh tokens rotate; access tokens live 1 hour |
 | POST | `/oauth/revoke` | RFC 7009 |
 
