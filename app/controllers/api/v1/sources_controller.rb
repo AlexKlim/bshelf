@@ -30,7 +30,7 @@ module Api
           end
       end
 
-      # export_ready (ET5) slots in between source_error and litres_reminder once the import exists.
+      # export_ready slots in between source_error and litres_reminder once the Amazon export import exists.
       def banner(rows)
         failed = SourceConnection::KINDS.filter_map { rows[it] }.find { it.status.in?(%w[error needs_login]) }
         if failed

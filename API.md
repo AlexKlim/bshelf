@@ -1,6 +1,6 @@
 # Book Shelf API v1
 
-REST JSON under `/api/v1`. The React client and future share and MCP lanes build against this file. Request specs in `spec/requests/api/v1` are the executable version of it.
+REST JSON under `/api/v1`. The React client, the share targets and scripts build against this file. Request specs in `spec/requests/api/v1` are the executable version of it.
 
 ## Conventions
 
@@ -12,7 +12,7 @@ REST JSON under `/api/v1`. The React client and future share and MCP lanes build
   `field` is present when the error belongs to an input. Some errors carry extra keys (see `duplicate`).
 - **Dates.** ISO 8601 in UTC. Inputs accept `YYYY-MM-DD` or a full ISO 8601 timestamp from 1900 to the end of next year; an empty string clears a date. Anything else answers `422 { code: "invalid", field }` (`started_at`, `finished_at`).
 - **Status vocabulary** (per edition): `want`, `owned`, `in_progress`, `done`. **Formats:** `audio`, `ebook`, `personal_doc`, `unknown`. The client picks "Reading"/"Listening" and "Read"/"Listened" by format (design README).
-- **Shelf keys:** `now`, `want`, `owned`, a year such as `2025`, `no_date`. Order: now, want, owned, years descending, no_date. A book sits on exactly one shelf: `now` if any edition is `in_progress`, else the year of its latest finished edition (`no_date` when finished without a date), else `owned`, else `want`. Design D5 has no shelf for owned books; the client may show `owned` or fold it into another shelf.
+- **Shelf keys:** `now`, `want`, `owned`, a year such as `2025`, `no_date`. Order: now, want, owned, years descending, no_date. A book sits on exactly one shelf: `now` if any edition is `in_progress`, else the year of its latest finished edition (`no_date` when finished without a date), else `owned`, else `want`. The design has no shelf for owned books; the client may show `owned` or fold it into another shelf.
 
 ## Authentication
 
@@ -123,7 +123,7 @@ A background matcher runs after every catalog lookup. It merges on its own only 
 
 `answer.kind`, plus `book_id` when exactly one book matched:
 
-| kind | Design D11 line |
+| kind | Line |
 | --- | --- |
 | `listened` | "Listened · Mar 2024" (dates from the audio edition) |
 | `read` | "Read · 2023" |
@@ -225,7 +225,7 @@ Tools return `structuredContent` with codes and data (the REST shapes: search an
 | `add_book` | `title`, `author`, `status` (default `want`), `format` (default `unknown`), `finished_at` (`YYYY-MM-DD`) | `{ code: "added" or "duplicate", book: BookSummary }`; the edition `source` is `mcp` |
 | `reading_stats` | `year` (default current), `author` (substring) | `{ year, author, total, listened, read, top_authors, years, books }` |
 
-### SPA contract (client lane)
+### SPA contract
 
 - **Login with `return_to`.** A signed-out user who opens `/oauth/authorize` is sent to `APP_URL/login?return_to=<path>`. After `POST /session` succeeds, the SPA does a full page load (`window.location.assign`) to `return_to` when it starts with `/oauth/authorize`, and ignores it otherwise. Sign up and email confirmation keep `return_to` through to the login.
 - **Profile > Assistants.** List from `GET /assistants` (name, connected date) with a revoke button calling `DELETE /assistants/:id`. The empty state can explain how to connect: in Claude, Customize > Connectors > Add custom connector, URL `APP_URL/mcp`.
@@ -321,9 +321,9 @@ Flow: show the disclosure, `POST` with `disclosure_accepted: true`, then poll `G
 
 Reconnect: when the page becomes visible again, `GET` the session; if it is still `live`, `POST .../viewer` again and reload the iframe. The timer keeps running, the browser is the same.
 
-Live view security (OV-1): Steel sits on the private network only (`STEEL_URL`, must be `*.internal`, `localhost` or a private IP, checked at boot). `viewer` returns a token that works once, for 1 minute, only for its session and only for the session's owner. The first request trades it for an httponly, `SameSite=Strict` cookie scoped to `/api/v1/remote_browser_sessions/:id/view`, which covers the page's subresources until the sign-in time ends or the session leaves `live`. Only the viewer path Steel issued for the session is proxied, with the query Steel gave it; the query the client sends is never forwarded. Responses carry `Cache-Control: no-store` and `frame-ancestors 'self'`.
+Live view security: Steel sits on the private network only (`STEEL_URL`, must be `*.internal`, `localhost` or a private IP, checked at boot). `viewer` returns a token that works once, for 1 minute, only for its session and only for the session's owner. The first request trades it for an httponly, `SameSite=Strict` cookie scoped to `/api/v1/remote_browser_sessions/:id/view`, which covers the page's subresources until the sign-in time ends or the session leaves `live`. Only the viewer path Steel issued for the session is proxied, with the query Steel gave it; the query the client sends is never forwarded. Responses carry `Cache-Control: no-store` and `frame-ancestors 'self'`.
 
-Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the rest wait in a FIFO queue. One running session per person. `REMOTE_BROWSER_DISABLED=1` is the instance kill switch. A deploy interrupts sessions that are `collecting` (`deploy_interrupted`); `live` sessions carry on in the new process. Every start and finish goes to the audit log; `done`, store refusals (`provider_refused`) and changed store pages (`page_changed`, shown to the person as `browser_failed`) update the `kindle_browser` (or `litres`) source; a failure of our own browser does not. A job sweeps stale sessions every minute: `live` past its sign-in window becomes `timeout`, `connecting` or `collecting` without progress for 15 minutes becomes `deploy_interrupted`.
+Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1), the rest wait in a FIFO queue. One running session per person. `REMOTE_BROWSER_DISABLED=1` is the instance kill switch. A deploy interrupts sessions that are `collecting` (`deploy_interrupted`); `live` sessions carry on in the new process. Every start and finish goes to the audit log; `done`, store refusals (`provider_refused`) and changed store pages (`page_changed`, shown to the person as `browser_failed`) update the `kindle_browser` (or `litres`) source; a failure of our own browser does not. A job sweeps stale sessions every minute: `live` past its sign-in window becomes `timeout`, `connecting` or `collecting` without progress for 15 minutes becomes `deploy_interrupted`.
 
 ## Error codes
 
@@ -338,7 +338,7 @@ Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the re
 | kind | when | extra keys |
 | --- | --- | --- |
 | `source_error` | any source in `error` or `needs_login` | `source`, `error` (code, or `needs_login`) |
-| `export_ready` | not emitted yet: needs the Amazon export import (ET5) | |
+| `export_ready` | not emitted yet: needs the Amazon export import | |
 | `litres_reminder` | the last Litres sync is older than 30 days | |
 | `possible_duplicates` | undismissed `GET /duplicates` rows exist; `key` follows the newest pair | `count` |
 
@@ -357,7 +357,7 @@ Adapters report through `SourceConnection.record_sync!(user, kind, error:, statu
 | `share_slow` | share p95 over 2 s |
 | `job_failures` | failed Solid Queue jobs in the last hour |
 
-Point the platform's log alerting at `"event":"alert"`. Ad hoc dashboard: `bin/rails runner 'pp HealthCheck.call'`. The status journal is `status_changes` (phase 1).
+Point the platform's log alerting at `"event":"alert"`. Ad hoc dashboard: `bin/rails runner 'pp HealthCheck.call'`. The status journal is `status_changes`.
 
 ## Health
 
