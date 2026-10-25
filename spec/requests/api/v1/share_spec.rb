@@ -226,6 +226,10 @@ RSpec.describe "Share" do
 
       add(edition: { status: "want" })
       expect(response).to have_http_status(:bad_request)
+
+      add(title: "Solaris", edition: { status: "done", finished_at: "2024-02-30" })
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]).to eq([ { "code" => "invalid", "field" => "finished_at" } ])
     end
   end
 end

@@ -21,6 +21,8 @@ module Api
         with: -> { render_error(:invalid_csrf, status: :forbidden) }
       rescue_from ActionController::ParameterMissing,
         with: ->(e) { render_error(:blank, field: e.param, status: :bad_request) }
+      rescue_from ReadingDates::Invalid,
+        with: ->(e) { render_error(:invalid, field: e.field, status: :unprocessable_content) }
 
       def self.limit_rate(to:, within:, only:, name: nil, by: -> { request.remote_ip })
         rate_limit to:, within:, only:, name:, by:, store: RATE_LIMIT_STORE,

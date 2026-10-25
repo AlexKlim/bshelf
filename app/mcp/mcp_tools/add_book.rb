@@ -23,12 +23,11 @@ module McpTools
       return fail_with(:inclusion, field: :status) unless Reading::STATUSES.include?(status)
       return fail_with(:inclusion, field: :format) unless Edition::FORMATS.include?(format)
 
-      finished = Date.iso8601(finished_at).in_time_zone if finished_at.present?
-      book = ::AddBook.call(user:, title:, author:, status:, format:, source: "mcp", finished_at: finished)
+      book = ::AddBook.call(user:, title:, author:, status:, format:, source: "mcp", finished_at:)
       summary = Shelf.new(user).summaries([ book.id ]).first
       respond("Added: #{describe(summary)}", { code: "added", book: summary })
-    rescue Date::Error
-      fail_with(:invalid, field: :finished_at)
+    rescue ReadingDates::Invalid => e
+      fail_with(:invalid, field: e.field)
     rescue ::AddBook::Duplicate => e
       existing = Shelf.new(user).summaries([ e.book.id ]).first
       respond("Already on the shelf: #{describe(existing)}", { code: "duplicate", book: existing })

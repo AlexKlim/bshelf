@@ -10,7 +10,7 @@ REST JSON under `/api/v1`. The React client and future share and MCP lanes build
   { "errors": [ { "code": "taken", "field": "email" } ] }
   ```
   `field` is present when the error belongs to an input. Some errors carry extra keys (see `duplicate`).
-- **Dates.** ISO 8601 in UTC. Inputs accept `YYYY-MM-DD` or a full timestamp; an empty string clears a date.
+- **Dates.** ISO 8601 in UTC. Inputs accept `YYYY-MM-DD` or a full ISO 8601 timestamp from 1900 to the end of next year; an empty string clears a date. Anything else answers `422 { code: "invalid", field }` (`started_at`, `finished_at`).
 - **Status vocabulary** (per edition): `want`, `owned`, `in_progress`, `done`. **Formats:** `audio`, `ebook`, `personal_doc`, `unknown`. The client picks "Reading"/"Listening" and "Read"/"Listened" by format (design README).
 - **Shelf keys:** `now`, `want`, `owned`, a year such as `2025`, `no_date`. Order: now, want, owned, years descending, no_date. A book sits on exactly one shelf: `now` if any edition is `in_progress`, else the year of its latest finished edition (`no_date` when finished without a date), else `owned`, else `want`. Design D5 has no shelf for owned books; the client may show `owned` or fold it into another shelf.
 
@@ -115,7 +115,7 @@ A background matcher runs after every catalog lookup. It merges on its own only 
 
 ### Change status
 
-`PATCH /editions/:id` sets a manual status. A date key that is sent replaces the stored value (empty string clears it); a key that is not sent keeps the stored value. Unknown status: `422 { code: "inclusion", field: "status" }`.
+`PATCH /editions/:id` sets a manual status. A date key that is sent replaces the stored value (empty string clears it); a key that is not sent keeps the stored value. Moving an edition to `done` without sending `finished_at` sets it to now when none is stored, so a book marked Read lands on this year's shelf; moving to `in_progress` does the same for `started_at`. Adding a finished book without a date (`POST /books`, `/share/add`, MCP) keeps it on `no_date`. Unknown status: `422 { code: "inclusion", field: "status" }`.
 
 ### Search answer
 

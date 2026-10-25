@@ -6,6 +6,7 @@ module Api
         status = params.require(:status)
         return render_error(:inclusion, field: :status, status: :unprocessable_content) unless Reading::STATUSES.include?(status)
 
+        dates = self.dates
         reading = edition.reading || edition.create_reading!(user: current_user, status:, status_source: "manual")
         StatusResolver.manual!(reading, status:, **dates)
 
@@ -15,11 +16,7 @@ module Api
 
       private
 
-      def dates
-        params.permit(:started_at, :finished_at).to_h.to_h do |field, value|
-          [ field.to_sym, value.presence && Time.zone.parse(value) ]
-        end
-      end
+      def dates = ReadingDates.parse(params.permit(:started_at, :finished_at))
     end
   end
 end
