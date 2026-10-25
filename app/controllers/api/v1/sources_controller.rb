@@ -16,6 +16,9 @@ module Api
         render json: { sources:, banner: banner(rows) }
       end
 
+      # Litres sync and the Kindle export import are routed so the client can say "not available yet".
+      def not_implemented = render_error(:not_implemented, status: :not_implemented)
+
       private
 
       def recent_sessions

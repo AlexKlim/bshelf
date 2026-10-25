@@ -79,6 +79,7 @@ Every sign up, confirmation, sign in (and failed attempt for a known email), sig
 | DELETE | `/duplicates/:id` | | `204`, dismissed for good |
 | GET | `/stats` | `year` (default: current) | `200 Stats` |
 | GET | `/sources` | | `200 { sources: [Source], banner: Banner \| null }` (see Sources) |
+| POST | `/sources/litres/sync`, `/sources/kindle_export/request`, `/sources/kindle_export/upload` | | Not implemented yet: always `501 not_implemented`, so the client can show "not available yet" |
 
 Any `:id` that is not the caller's: `404 not_found`. Edition fields go in a nested `edition` object because a top-level `format` key is the request format in Rails.
 
