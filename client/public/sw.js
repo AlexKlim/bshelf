@@ -1,4 +1,5 @@
-const CACHE = "bshelf-shell-v1";
+const CACHE = "bshelf-shell-__BUILD__";
+const SERVER_PATHS = /^\/(api|oauth|mcp|up|\.well-known)(\/|$)/;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.add("/")));
@@ -12,20 +13,27 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+function cacheable(request, response) {
+  if (!response.ok || /no-store/i.test(response.headers.get("Cache-Control") ?? "")) return false;
+  return request.mode !== "navigate" || (response.headers.get("Content-Type") ?? "").startsWith("text/html");
+}
+
 // Network first so a deploy is picked up immediately; the cache only covers offline launches.
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET" || new URL(request.url).pathname.startsWith("/api/")) return;
+  const url = new URL(request.url);
+  if (request.method !== "GET" || url.origin !== self.location.origin || SERVER_PATHS.test(url.pathname)) return;
 
+  const key = request.mode === "navigate" ? "/" : request;
   event.respondWith(
     fetch(request)
       .then((response) => {
-        if (response.ok && new URL(request.url).origin === self.location.origin) {
+        if (cacheable(request, response)) {
           const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request.mode === "navigate" ? "/" : request, copy));
+          caches.open(CACHE).then((cache) => cache.put(key, copy));
         }
         return response;
       })
-      .catch(() => caches.match(request.mode === "navigate" ? "/" : request))
+      .catch(() => caches.match(key))
   );
 });

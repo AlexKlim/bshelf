@@ -51,7 +51,7 @@ describe("status vocabulary", () => {
     expect(primaryEdition(book({ editions: [edition(), reading] }))).toBe(reading)
   })
 
-  it("answers the search in one line (D11)", async () => {
+  it("answers the search in one line", async () => {
     const both = book({
       id: "x",
       editions: [

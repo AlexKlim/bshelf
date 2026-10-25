@@ -91,6 +91,7 @@
     "loading": "Opening the book",
     "loadError": "Could not load the book.",
     "retry": "Try again",
+    "highlightsError": "Could not load more highlights.",
     "page": "Page {{n}}",
     "cover": "Cover",
     "boughtTwice": "You bought this book twice",
@@ -200,6 +201,8 @@
     "month_other": "{{month}}: {{count}} books",
     "empty": "Nothing finished in {{year}} yet",
     "topAuthors": "Most often",
+    "prevYear": "Previous year {{year}}",
+    "nextYear": "Next year {{year}}",
     "loadError": "Could not load the stats."
   },
   "remote": {
@@ -231,7 +234,7 @@
       "library": "Library",
       "highlights": "Highlights"
     },
-    "canLeave": "You can leave this screen. The result will appear as a banner above the bookcase.",
+    "canLeave": "You can leave this screen. The result will appear on the Sources screen.",
     "failure": {
       "timeout": "Time is up",
       "provider_refused": "{{store}} did not let you in",

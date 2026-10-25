@@ -4,6 +4,7 @@ import i18n from "@/i18n"
 import type { Shelf } from "@/lib/types"
 import { book } from "@/test/fixtures"
 import { Bookcase } from "./Bookcase"
+import { ShelfList } from "./ShelfList"
 
 const shelves: Shelf[] = [
   { key: "now", count: 2, books: [book({ id: "n1", title: "Now One" }), book({ id: "n2", title: "Now Two" })] },
@@ -107,5 +108,80 @@ describe("Bookcase keyboard", () => {
   it("sets the spine text direction from the book language", () => {
     render(<Bookcase shelves={[{ key: "now", count: 1, books: [book({ title: "Дюна", language: null })] }]} onOpen={() => {}} />)
     expect(spine("Дюна")).toHaveAttribute("lang", "ru")
+  })
+})
+
+describe("search", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    Reflect.deleteProperty(HTMLElement.prototype, "scrollBy")
+  })
+
+  it("scrolls each shelf sideways to its first match", () => {
+    setPointer(false)
+    const scrolled: [string, number][] = []
+    HTMLElement.prototype.scrollBy = function (this: HTMLElement, options?: ScrollToOptions | number) {
+      scrolled.push([this.closest("section")!.id || this.closest("section")!.getAttribute("aria-labelledby")!, (options as ScrollToOptions).left!])
+    } as typeof HTMLElement.prototype.scrollBy
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const far = this.classList.contains("bs-spine") && this.getAttribute("aria-label")!.startsWith("Year Three")
+      const left = this.classList.contains("bs-shelf__row") ? 0 : far ? 900 : 10
+      const width = this.classList.contains("bs-shelf__row") ? 390 : 32
+      return { left, right: left + width, top: 0, bottom: 0, width, height: 0, x: left, y: 0, toJSON: () => ({}) }
+    })
+    const { rerender } = render(<Bookcase shelves={shelves} onOpen={() => {}} />)
+    rerender(<Bookcase shelves={shelves} matches={new Set(["y3", "n1"])} onOpen={() => {}} />)
+
+    expect(scrolled).toHaveLength(1)
+    expect(scrolled[0][0]).toBe("shelf-2024")
+    expect(scrolled[0][1]).toBeGreaterThan(500)
+  })
+})
+
+describe("paging", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  function observe() {
+    const seen: { fire: () => void; root: Element | null }[] = []
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        cb: (entries: { isIntersecting: boolean }[]) => void
+        root: Element | null
+        constructor(cb: (entries: { isIntersecting: boolean }[]) => void, options: { root?: Element | null } = {}) {
+          this.cb = cb
+          this.root = options.root ?? null
+        }
+        observe() {
+          seen.push({ fire: () => this.cb([{ isIntersecting: true }]), root: this.root })
+        }
+        disconnect() {}
+      },
+    )
+    return seen
+  }
+
+  const partial: Shelf[] = [
+    { key: "2024", count: 5, books: [book({ id: "p1" })] },
+    { key: "2023", count: 1, books: [book({ id: "p2" })] },
+  ]
+
+  it("asks for more books when the end of a partly loaded shelf scrolls into view", () => {
+    const seen = observe()
+    const onMore = vi.fn()
+    render(<Bookcase shelves={partial} onOpen={() => {}} onMore={onMore} />)
+    expect(seen).toHaveLength(1)
+    expect(seen[0].root).toHaveClass("bs-shelf__row")
+    seen[0].fire()
+    expect(onMore).toHaveBeenCalledWith("2024")
+  })
+
+  it("does the same at the end of a shelf in the list view", () => {
+    const seen = observe()
+    const onMore = vi.fn()
+    render(<ShelfList shelves={partial} onOpen={() => {}} onMore={onMore} />)
+    expect(seen).toHaveLength(1)
+    seen[0].fire()
+    expect(onMore).toHaveBeenCalledWith("2024")
   })
 })

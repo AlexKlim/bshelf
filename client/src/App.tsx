@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { lazy, Suspense, useEffect, type ComponentType } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import { TabBar } from "@/components/TabBar"
@@ -7,20 +7,30 @@ import { ShelfProvider } from "@/lib/shelf"
 import { SessionProvider, useSession } from "@/lib/session"
 import type { User } from "@/lib/types"
 import { useMediaQuery } from "@/lib/useMediaQuery"
-import {
-  CheckEmailScreen,
-  ConfirmScreen,
-  ForgotPasswordScreen,
-  LoginScreen,
-  RegisterScreen,
-  ResetPasswordScreen,
-} from "@/screens/AuthScreens"
 import { BookcaseScreen } from "@/screens/BookcaseScreen"
-import { DeletedScreen, ProfileScreen } from "@/screens/ProfileScreen"
-import { RemoteBrowserScreen } from "@/screens/RemoteBrowserScreen"
-import { ShareScreen } from "@/screens/ShareScreen"
-import { KindleExportScreen, LitresScreen, SourcesScreen } from "@/screens/SourcesScreen"
-import { StatsScreen } from "@/screens/StatsScreen"
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function lazyScreen<M extends Record<K, ComponentType<any>>, K extends keyof M>(load: () => Promise<M>, name: K) {
+  return lazy(() => load().then((m) => ({ default: m[name] })))
+}
+
+const auth = () => import("@/screens/AuthScreens")
+const LoginScreen = lazyScreen(auth, "LoginScreen")
+const RegisterScreen = lazyScreen(auth, "RegisterScreen")
+const ForgotPasswordScreen = lazyScreen(auth, "ForgotPasswordScreen")
+const CheckEmailScreen = lazyScreen(auth, "CheckEmailScreen")
+const ConfirmScreen = lazyScreen(auth, "ConfirmScreen")
+const ResetPasswordScreen = lazyScreen(auth, "ResetPasswordScreen")
+const profile = () => import("@/screens/ProfileScreen")
+const ProfileScreen = lazyScreen(profile, "ProfileScreen")
+const DeletedScreen = lazyScreen(profile, "DeletedScreen")
+const sources = () => import("@/screens/SourcesScreen")
+const SourcesScreen = lazyScreen(sources, "SourcesScreen")
+const LitresScreen = lazyScreen(sources, "LitresScreen")
+const KindleExportScreen = lazyScreen(sources, "KindleExportScreen")
+const StatsScreen = lazyScreen(() => import("@/screens/StatsScreen"), "StatsScreen")
+const ShareScreen = lazyScreen(() => import("@/screens/ShareScreen"), "ShareScreen")
+const RemoteBrowserScreen = lazyScreen(() => import("@/screens/RemoteBrowserScreen"), "RemoteBrowserScreen")
 
 function RequireUser() {
   const { user } = useSession()
@@ -69,7 +79,9 @@ function Shell() {
         </Link>
       </header>
       <main className="app__main">
-        <Outlet />
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
       </main>
       {!desktop && (
         <div className="app__tabs">
@@ -83,31 +95,33 @@ function Shell() {
 export default function App({ initialUser }: { initialUser?: User | null }) {
   return (
     <SessionProvider initialUser={initialUser}>
-      <Routes>
-        <Route element={<GuestOnly />}>
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/register" element={<RegisterScreen />} />
-          <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
-        </Route>
-        <Route path="/check-email" element={<CheckEmailScreen />} />
-        <Route path="/confirm" element={<ConfirmScreen />} />
-        <Route path="/reset-password" element={<ResetPasswordScreen />} />
-        <Route path="/deleted" element={<DeletedScreen />} />
-        <Route element={<RequireUser />}>
-          <Route path="/sources/kindle" element={<RemoteBrowserScreen purpose="kindle" />} />
-          <Route path="/sources/litres/captcha" element={<RemoteBrowserScreen purpose="litres" />} />
-          <Route element={<Shell />}>
-            <Route path="/" element={<BookcaseScreen />} />
-            <Route path="/stats" element={<StatsScreen />} />
-            <Route path="/sources" element={<SourcesScreen />} />
-            <Route path="/sources/litres" element={<LitresScreen />} />
-            <Route path="/sources/kindle-export" element={<KindleExportScreen />} />
-            <Route path="/profile" element={<ProfileScreen />} />
-            <Route path="/share" element={<ShareScreen />} />
+      <Suspense fallback={null}>
+        <Routes>
+          <Route element={<GuestOnly />}>
+            <Route path="/login" element={<LoginScreen />} />
+            <Route path="/register" element={<RegisterScreen />} />
+            <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
           </Route>
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="/check-email" element={<CheckEmailScreen />} />
+          <Route path="/confirm" element={<ConfirmScreen />} />
+          <Route path="/reset-password" element={<ResetPasswordScreen />} />
+          <Route path="/deleted" element={<DeletedScreen />} />
+          <Route element={<RequireUser />}>
+            <Route path="/sources/kindle" element={<RemoteBrowserScreen purpose="kindle" />} />
+            <Route path="/sources/litres/captcha" element={<RemoteBrowserScreen purpose="litres" />} />
+            <Route element={<Shell />}>
+              <Route path="/" element={<BookcaseScreen />} />
+              <Route path="/stats" element={<StatsScreen />} />
+              <Route path="/sources" element={<SourcesScreen />} />
+              <Route path="/sources/litres" element={<LitresScreen />} />
+              <Route path="/sources/kindle-export" element={<KindleExportScreen />} />
+              <Route path="/profile" element={<ProfileScreen />} />
+              <Route path="/share" element={<ShareScreen />} />
+            </Route>
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </SessionProvider>
   )
 }

@@ -1,4 +1,29 @@
-import { useId, type InputHTMLAttributes, type ReactNode } from "react"
+import { useEffect, useId, useRef, type InputHTMLAttributes, type ReactNode } from "react"
+import type { ShelfKey } from "@/lib/types"
+
+// Callers key it by the loaded book count, so a page that leaves the end in view still asks for the next one.
+export function ShelfEnd({
+  shelfKey,
+  horizontal,
+  onMore,
+}: {
+  shelfKey: ShelfKey
+  horizontal?: boolean
+  onMore: (key: ShelfKey) => void
+}) {
+  const ref = useRef<HTMLLIElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === "undefined") return
+    const observer = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && onMore(shelfKey), {
+      root: horizontal ? el.parentElement : null,
+      rootMargin: horizontal ? "0px 240px 0px 0px" : "0px 0px 240px 0px",
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [shelfKey, horizontal, onMore])
+  return <li ref={ref} className="bs-shelf__end" aria-hidden="true" />
+}
 
 export type IconName = "audio" | "ebook" | "want" | "owned" | "progress" | "done" | "search" | "close" | "pen"
 
@@ -77,7 +102,7 @@ export function Choices<T extends string>({
 }: {
   legend: string
   value: T
-  options: { value: T; label: string; icon?: IconName }[]
+  options: { value: T; label: string; icon?: IconName; lang?: string }[]
   onChange: (value: T) => void
   hideLegend?: boolean
   disabled?: boolean
@@ -87,7 +112,7 @@ export function Choices<T extends string>({
     <fieldset className="bs-choices" disabled={disabled}>
       <legend className={hideLegend ? "bs-sr" : undefined}>{legend}</legend>
       {options.map((o) => (
-        <label key={o.value} className="bs-choice">
+        <label key={o.value} className="bs-choice" lang={o.lang}>
           <input type="radio" name={name} checked={value === o.value} onChange={() => onChange(o.value)} />
           <span>
             {o.icon && <Ico name={o.icon} />}

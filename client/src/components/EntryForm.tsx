@@ -2,9 +2,8 @@ import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { addBook, type NewBook } from "@/api"
 import type { ApiError } from "@/lib/api"
-import { isYear } from "@/lib/arrange"
 import type { BookDetail, BookSummary, Status } from "@/lib/types"
-import { primaryEdition, statusLine, statusWord, errorMessage } from "@/lib/vocab"
+import { duplicateMessage, errorMessage, statusWord } from "@/lib/vocab"
 import { Choices, Field, Ico } from "./ui"
 
 export type EntryDraft = { title?: string; format?: "audio" | "ebook"; status?: Status }
@@ -40,13 +39,7 @@ export function EntryForm({ draft = {}, disabled, onSaved, onCancel }: Props) {
     } catch (err) {
       const error = err as ApiError
       if (error.code === "duplicate") {
-        const existing = error.body.existing as BookSummary
-        const edition = primaryEdition(existing)
-        const line =
-          edition?.status && isYear(existing.shelf)
-            ? `${statusWord(t, edition.status, edition.format)} · ${existing.shelf}`
-            : statusLine(t, i18n.language, edition)
-        setErrors({ title: line ? t("entry.duplicate", { status: line }) : t("errors.duplicate") })
+        setErrors({ title: duplicateMessage(t, i18n.language, error.body.existing as BookSummary | undefined) })
       } else {
         const field = error.errors[0]?.field
         setErrors({ [field === "author" ? "author" : "title"]: errorMessage(t, error) })

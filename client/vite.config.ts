@@ -1,9 +1,29 @@
+import { createHash } from "node:crypto"
+import { readFileSync, writeFileSync } from "node:fs"
 import path from "path"
 import react from "@vitejs/plugin-react"
+import type { Plugin } from "vite"
 import { defineConfig } from "vitest/config"
 
+function versionServiceWorker(): Plugin {
+  let version = ""
+  let outDir = ""
+  return {
+    name: "version-service-worker",
+    apply: "build",
+    generateBundle(options, bundle) {
+      outDir = options.dir!
+      version = createHash("sha256").update(Object.keys(bundle).sort().join()).digest("hex").slice(0, 12)
+    },
+    closeBundle() {
+      const file = path.join(outDir, "sw.js")
+      writeFileSync(file, readFileSync(file, "utf8").replace("__BUILD__", version))
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), versionServiceWorker()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

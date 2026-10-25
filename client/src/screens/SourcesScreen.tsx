@@ -2,11 +2,11 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate } from "react-router-dom"
 import { dismissDuplicate, getDuplicates, getSources, mergeBooks, unmerge } from "@/api"
-import { requestKindleExport, syncLitres, uploadKindleExport, type SyncResult } from "@/api/pending"
+import { notOfferedYet, requestKindleExport, syncLitres, uploadKindleExport, type SyncResult } from "@/api/pending"
 import { Field, Ico } from "@/components/ui"
 import type { ApiError } from "@/lib/api"
 import { useShelf } from "@/lib/shelf"
-import { syncResult, errorMessage } from "@/lib/vocab"
+import { errorMessage, isActive, syncResult } from "@/lib/vocab"
 import type { Duplicate, Source } from "@/lib/types"
 import { useOnline } from "@/lib/useOnline"
 
@@ -62,7 +62,7 @@ function SourceRow({ source, onChange }: { source: Source; onChange: (s: Source)
   if (source.status === "ready") meta = t("sources.exportReady")
   const session = source.session
   if (session?.status === "done" && session.result) meta = syncResult(t, session.result)
-  if (session && ["queued", "connecting", "live", "collecting"].includes(session.status)) meta = t("sources.collecting")
+  if (session && isActive(session.status)) meta = t("sources.collecting")
   if (session?.status === "interrupted" && session.interruption !== "aborted") meta = t("sources.interrupted")
   if (result) meta = syncResult(t, result)
   const failed = error ?? (source.status === "error" || source.status === "needs_login" ? t(`sourceErrors.${source.error ?? source.status}`, { defaultValue: t("sourceErrors.generic") }) : null)
@@ -77,7 +77,7 @@ function SourceRow({ source, onChange }: { source: Source; onChange: (s: Source)
       onChange({ ...source, status: "ok", last_sync_at: new Date().toISOString() })
       reload()
     } catch (err) {
-      setError(errorMessage(t, err))
+      setError(notOfferedYet(err) ? t("remote.unavailable") : errorMessage(t, err))
     } finally {
       setBusy(false)
     }
@@ -152,14 +152,37 @@ function Duplicates() {
 
   if (!items) return null
 
+  const fail = (e: unknown) => setError(errorMessage(t, e))
+  const drop = (d: Duplicate) => setItems(items.filter((x) => x.id !== d.id))
+
+  const dismiss = (d: Duplicate) => {
+    setError(null)
+    dismissDuplicate(d.id).then(
+      () => drop(d),
+      (e: ApiError) => (e.status === 404 ? drop(d) : fail(e)),
+    )
+  }
+
+  const undo = (mergeId: string) => {
+    setError(null)
+    unmerge(mergeId).then(
+      () => {
+        setMerged(null)
+        reload()
+      },
+      (e: ApiError) => (e.status === 404 ? setMerged(null) : fail(e)),
+    )
+  }
+
   const merge = async (d: Duplicate) => {
+    setError(null)
     try {
       const { book, merge_id } = await mergeBooks(d.books[0].id, d.books[1].id)
-      setItems(items.filter((x) => x.id !== d.id))
+      drop(d)
       setMerged({ title: book.title, mergeId: merge_id })
       reload()
     } catch (e) {
-      setError(errorMessage(t, e))
+      fail(e)
     }
   }
 
@@ -172,7 +195,7 @@ function Duplicates() {
         <div className="bs-banner bs-banner--notice" role="status">
           <p className="bs-banner__text">{t("duplicates.merged", { title: merged.title })}</p>
           {merged.mergeId && (
-            <button type="button" className="bs-btn bs-btn--quiet" onClick={() => unmerge(merged.mergeId!).then(() => (setMerged(null), reload()))}>
+            <button type="button" className="bs-btn bs-btn--quiet" onClick={() => undo(merged.mergeId!)}>
               {t("book.unmerge")}
             </button>
           )}
@@ -190,7 +213,7 @@ function Duplicates() {
               </span>
             ))}
           </div>
-          <button type="button" className="bs-btn bs-btn--quiet" onClick={() => dismissDuplicate(d.id).then(() => setItems(items.filter((x) => x.id !== d.id)))}>
+          <button type="button" className="bs-btn bs-btn--quiet" onClick={() => dismiss(d)}>
             {t("duplicates.notDuplicate")}
           </button>
           <button type="button" className="bs-btn bs-btn--secondary" onClick={() => merge(d)}>
@@ -212,22 +235,26 @@ export function LitresScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<SyncResult | null>(null)
+  const [unavailable, setUnavailable] = useState(false)
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!login || !password) return setErrors({ ...(!login && { login: t("errors.blank") }), ...(!password && { password: t("errors.blank") }) })
     setBusy(true)
     setErrors({})
+    setUnavailable(false)
     try {
       setResult(await syncLitres(login, password))
+      setPassword("")
       reload()
     } catch (err) {
+      if (notOfferedYet(err)) return setUnavailable(true)
+      setPassword("")
       const error = err as ApiError
       if (error.code === "captcha_required") return navigate("/sources/litres/captcha")
       const field = error.errors[0]?.field === "login" ? "login" : "password"
       setErrors({ [field]: t(`sourceErrors.${error.code}`, { defaultValue: errorMessage(t, err) }) })
     } finally {
-      setPassword("")
       setBusy(false)
     }
   }
@@ -251,6 +278,7 @@ export function LitresScreen() {
   return (
     <div className="bs-screen bs-screen--sheet">
       <h1 className="bs-screen__title">{t("sources.litresSignIn")}</h1>
+      {unavailable && <Unavailable />}
       <form className="bs-auth__form bs-screen__form" onSubmit={submit} noValidate>
         <Field label={t("sources.litresLogin")} autoComplete="username" value={login} error={errors.login} onChange={(e) => setLogin(e.target.value)} />
         <Field
@@ -283,6 +311,7 @@ export function KindleExportScreen() {
   const online = useOnline()
   const [requestedAt, setRequestedAt] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [unavailable, setUnavailable] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const confirm = async () => {
@@ -291,7 +320,8 @@ export function KindleExportScreen() {
       await requestKindleExport()
       setRequestedAt(new Date().toISOString())
     } catch (e) {
-      setError(errorMessage(t, e))
+      if (notOfferedYet(e)) setUnavailable(true)
+      else setError(errorMessage(t, e))
     } finally {
       setBusy(false)
     }
@@ -329,7 +359,19 @@ export function KindleExportScreen() {
           </Link>
         </div>
       )}
+      {unavailable && <Unavailable />}
       {error && <p className="bs-field__error">{error}</p>}
+    </div>
+  )
+}
+
+function Unavailable() {
+  const { t } = useTranslation()
+  return (
+    <div className="bs-banner bs-banner--notice" role="status">
+      <p className="bs-banner__text">
+        <b>{t("remote.unavailable")}</b>. {t("remote.unavailableLead")}
+      </p>
     </div>
   )
 }

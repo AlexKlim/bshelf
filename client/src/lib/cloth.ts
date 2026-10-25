@@ -1,6 +1,4 @@
-import type { BookSummary, Cloth } from "./types"
-
-export const CLOTHS: Cloth[] = ["oxblood", "bottle", "navy", "plum", "slate", "ochre", "sage", "linen"]
+import type { BookSummary } from "./types"
 
 export function hash(id: string) {
   let h = 2166136261
@@ -9,24 +7,6 @@ export function hash(id: string) {
     h = Math.imul(h, 16777619)
   }
   return h >>> 0
-}
-
-let table: number[] | undefined
-
-// Same fallback as the server (Zlib.crc32 of the uuid), so a coverless book keeps its cloth where the API omits it.
-export function crc32(text: string) {
-  table ??= Array.from({ length: 256 }, (_, n) => {
-    let c = n
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
-    return c >>> 0
-  })
-  let crc = 0xffffffff
-  for (const byte of new TextEncoder().encode(text)) crc = table[(crc ^ byte) & 0xff] ^ (crc >>> 8)
-  return (crc ^ 0xffffffff) >>> 0
-}
-
-export function clothFor(book: { id: string; cloth?: Cloth | null }): Cloth {
-  return book.cloth ?? CLOTHS[crc32(book.id) % CLOTHS.length]
 }
 
 const clamp = (n: number) => Math.min(1, Math.max(0, n))

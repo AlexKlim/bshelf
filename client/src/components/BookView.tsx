@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   addEdition,
@@ -12,7 +12,7 @@ import {
   updateEdition,
   updateNote,
 } from "@/api"
-import { clothFor } from "@/lib/cloth"
+import type { ApiError } from "@/lib/api"
 import type { BookDetail, BookSummary, Edition, Highlight, Note, Status } from "@/lib/types"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { formatsOf, statusLine, statusWord, verbForm, errorMessage } from "@/lib/vocab"
@@ -22,10 +22,11 @@ type ViewProps = {
   bookId: string
   summary?: BookSummary
   disabled?: boolean
+  focusTitle?: boolean
   onChanged: () => void
 }
 
-export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
+export function BookView({ bookId, summary, disabled, focusTitle, onChanged }: ViewProps) {
   const { t } = useTranslation()
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
   const [detail, setDetail] = useState<BookDetail | null>(null)
@@ -59,7 +60,7 @@ export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
   if (!detail) {
     return (
       <div className="bs-book">
-        <article className={`bs-spread bs-cloth--${shown ? clothFor(shown) : "blank"}`}>
+        <article className={`bs-spread bs-cloth--${shown?.cloth ?? "blank"}`}>
           <section className="bs-page bs-page--left bs-title-page">
             {shown && <h1 className="bs-book__title">{shown.title}</h1>}
           </section>
@@ -81,6 +82,7 @@ export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
       book={detail}
       animate={!reduced}
       disabled={disabled}
+      focusTitle={focusTitle}
       onBook={(book) => {
         setDetail(book)
         onChanged()
@@ -98,7 +100,7 @@ export function BookCover({ book, animate }: { book: BookSummary; animate?: bool
   const formats = formatsOf(book)
   return (
     <div
-      className={`bs-closed bs-cloth--${clothFor(book)}${animate ? " is-taking" : ""}`}
+      className={`bs-closed bs-cloth--${book.cloth}${animate ? " is-taking" : ""}`}
       role="img"
       aria-label={`${book.title}${book.author ? `, ${book.author}` : ""}. ${formats.map((f) => t(`format.${f}`)).join(", ")}`}
     >
@@ -123,13 +125,19 @@ type SpreadProps = {
   book: BookDetail
   animate?: boolean
   disabled?: boolean
+  focusTitle?: boolean
   onBook: (book: BookDetail) => void
   onReload: () => void
 }
 
-export function BookSpread({ book, animate, disabled, onBook, onReload }: SpreadProps) {
+export function BookSpread({ book, animate, disabled, focusTitle, onBook, onReload }: SpreadProps) {
   const { t } = useTranslation()
-  const cloth = clothFor(book)
+  const cloth = book.cloth
+  const title = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    if (focusTitle) title.current?.focus({ preventScroll: true })
+  }, [focusTitle])
 
   return (
     <div className="bs-book">
@@ -143,7 +151,7 @@ export function BookSpread({ book, animate, disabled, onBook, onReload }: Spread
             </div>
           )}
           {book.author && <p className="bs-book__author">{book.author}</p>}
-          <h1 className="bs-book__title" id="book-title">
+          <h1 className="bs-book__title" id="book-title" tabIndex={-1} ref={title}>
             {book.title}
           </h1>
           <span className="bs-ornament" aria-hidden="true" />
@@ -339,14 +347,18 @@ function Highlights({ book }: { book: BookDetail }) {
   const { t } = useTranslation()
   const [items, setItems] = useState<Highlight[]>(book.highlights)
   const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState(false)
   if (book.highlights_count === 0) return null
   const rest = book.highlights_count - items.length
 
   const more = async () => {
     setBusy(true)
+    setFailed(false)
     try {
       const { highlights } = await getHighlights(book.id, items.length)
       setItems([...items, ...highlights])
+    } catch {
+      setFailed(true)
     } finally {
       setBusy(false)
     }
@@ -364,10 +376,11 @@ function Highlights({ book }: { book: BookDetail }) {
           </li>
         ))}
       </ul>
+      {failed && <p className="bs-field__error">{t("book.highlightsError")}</p>}
       {rest > 0 && (
         <div>
-          <button type="button" className="bs-btn bs-btn--quiet" aria-busy={busy} onClick={more}>
-            {t("book.moreHighlights", { count: rest })}
+          <button type="button" className="bs-btn bs-btn--quiet" aria-busy={busy} disabled={busy} onClick={more}>
+            {failed ? t("book.retry") : t("book.moreHighlights", { count: rest })}
           </button>
         </div>
       )}
@@ -403,6 +416,7 @@ function MergeControl({
   }, [open, query, book.id])
 
   const fail = (e: unknown) => setError(errorMessage(t, e))
+  const undo = (id: string) => unmerge(id).then(onReload, (e: ApiError) => (e.status === 404 ? onReload() : fail(e)))
 
   const merges = book.merges ?? []
   if (merges.length > 0) {
@@ -414,7 +428,7 @@ function MergeControl({
             type="button"
             className="bs-btn bs-btn--quiet bs-btn--sm"
             disabled={disabled}
-            onClick={() => unmerge(m.id).then(onReload, fail)}
+            onClick={() => undo(m.id)}
           >
             {merges.length === 1 ? t("book.unmerge") : t("book.unmergeOne", { title: m.title })}
           </button>

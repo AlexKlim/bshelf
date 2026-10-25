@@ -6,12 +6,10 @@ import { Ico } from "@/components/ui"
 import type { ApiError } from "@/lib/api"
 import { useShelf } from "@/lib/shelf"
 import type { RemoteSession } from "@/lib/types"
-import { errorMessage, syncResult } from "@/lib/vocab"
+import { errorMessage, isActive, syncResult } from "@/lib/vocab"
 
 type Purpose = RemoteSession["purpose"]
 
-const SESSION_MS = 5 * 60 * 1000
-const ENDED = new Set(["done", "interrupted"])
 const storageKey = (purpose: Purpose) => `bs:remote:${purpose}`
 
 function remember(purpose: Purpose, id: string | null) {
@@ -21,6 +19,12 @@ function remember(purpose: Purpose, id: string | null) {
   } catch {
     /* reconnect after a reload is a convenience; POST also returns the running session */
   }
+}
+
+function loginWindowMs(session: RemoteSession) {
+  if (session.login_seconds) return session.login_seconds * 1000
+  if (session.expires_at && session.created_at) return Date.parse(session.expires_at) - Date.parse(session.created_at)
+  return null
 }
 
 function recall(purpose: Purpose) {
@@ -44,27 +48,28 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
   const [deadline, setDeadline] = useState<number | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const viewerFor = useRef<string | null>(null)
-  const ns = purpose === "kindle" ? "kindle" : "captcha"
+  const ns = (session?.purpose ?? purpose) === "kindle" ? "kindle" : "captcha"
 
   const apply = useCallback(
     (next: RemoteSession) => {
       setSession(next)
       if (next.seconds_left != null) setDeadline(Date.now() + next.seconds_left * 1000)
-      if (ENDED.has(next.status)) remember(purpose, null)
+      if (!isActive(next.status)) remember(next.purpose, null)
       if (next.status === "done") reload()
       if (next.status !== "live") {
         viewerFor.current = null
         setViewUrl(null)
       }
     },
-    [purpose, reload],
+    [reload],
   )
 
   const refresh = useCallback(
     (id: string) =>
       getRemoteSession(id).then(
         ({ session }) => apply(session),
-        () => {
+        (e: ApiError) => {
+          if (e.status !== 404) return
           remember(purpose, null)
           setSession(null)
         },
@@ -87,7 +92,7 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
     )
   }, [session])
 
-  const active = !!session && !ENDED.has(session.status)
+  const active = !!session && isActive(session.status)
   const sessionId = session?.id
 
   useEffect(() => {
@@ -113,7 +118,7 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
     setError(null)
     try {
       const { session } = await startRemoteSession(purpose)
-      remember(purpose, session.id)
+      remember(session.purpose, session.id)
       apply(session)
     } catch (e) {
       if ((e as ApiError).code === "unavailable") setUnavailable(true)
@@ -125,7 +130,7 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
 
   const cancel = () => {
     if (session && active) cancelRemoteSession(session.id).catch(() => {})
-    remember(purpose, null)
+    remember(session?.purpose ?? purpose, null)
     navigate("/sources")
   }
 
@@ -166,7 +171,7 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
             <Ico name="done" />
             {t("remote.factSession")}
           </li>
-          {purpose === "kindle" && (
+          {ns === "kindle" && (
             <li>
               <Ico name="done" />
               {t("remote.fact2fa")}
@@ -198,12 +203,16 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
   }
 
   if (session.status === "connecting" || session.status === "live") {
-    const left = deadline ? Math.max(0, deadline - now) : SESSION_MS
+    const left = deadline ? Math.max(0, deadline - now) : 0
     const time = `${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, "0")}`
     const live = session.status === "live"
+    const windowMs = loginWindowMs(session)
     return (
       <section className="bs-session bs-session--full" aria-label={t(`remote.${ns}.heading`)}>
-        <div className="bs-session__bar" style={live ? ({ "--left": `${(left / SESSION_MS) * 100}%` } as CSSProperties) : undefined}>
+        <div
+          className="bs-session__bar"
+          style={live && windowMs ? ({ "--left": `${Math.min(100, (left / windowMs) * 100)}%` } as CSSProperties) : undefined}
+        >
           <span className="bs-session__title">{t(`remote.${ns}.heading`)}</span>
           {live && (
             <span

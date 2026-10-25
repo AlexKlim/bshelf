@@ -88,6 +88,8 @@ export type Stats = {
   year: number
   years: number[]
   total: number
+  listened?: number
+  read?: number
   by_format: Partial<Record<Format, number>>
   total_minutes: number | null
   months: { month: number; books: StatsBook[] }[]
@@ -106,6 +108,8 @@ export type RemoteSession = {
   queue_position?: number | null
   expires_at?: string | null
   seconds_left?: number | null
+  login_seconds?: number | null
+  created_at?: string
   steps: { key: string; state: "done" | "pending" }[]
   result: RemoteResult | null
   interruption: RemoteInterruption | null

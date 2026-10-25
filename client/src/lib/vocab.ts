@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next"
-import type { BookSummary, Edition, Format, SearchResult, Status } from "./types"
+import { isYear } from "./arrange"
+import type { BookSummary, Edition, Format, RemoteStatus, SearchResult, Status } from "./types"
 
 const ru = (lng: string) => lng.startsWith("ru")
 
@@ -113,6 +114,17 @@ export function answerLine(t: TFunction, lng: string, result: SearchResult) {
     case "not_found":
       return t("answer.not_found")
   }
+}
+
+export const isActive = (status: RemoteStatus) => status !== "done" && status !== "interrupted"
+
+export function duplicateMessage(t: TFunction, lng: string, existing: BookSummary | undefined) {
+  const edition = existing && primaryEdition(existing)
+  if (!existing || !edition?.status) return t("errors.duplicate")
+  const line = isYear(existing.shelf)
+    ? `${statusWord(t, edition.status, edition.format)} · ${existing.shelf}`
+    : statusLine(t, lng, edition)
+  return t("entry.duplicate", { status: line })
 }
 
 export function syncResult(t: TFunction, r: { books: number; highlights: number }) {

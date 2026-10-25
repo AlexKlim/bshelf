@@ -1,12 +1,13 @@
 import type { KeyboardEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { isYear, shelfLabel } from "@/lib/arrange"
-import { clothFor } from "@/lib/cloth"
-import type { BookSummary, Shelf } from "@/lib/types"
+import type { BookSummary, Shelf, ShelfKey } from "@/lib/types"
 import { formatsOf, primaryEdition, statusLine } from "@/lib/vocab"
-import { StatusMark } from "./ui"
+import { ShelfEnd, StatusMark } from "./ui"
 
-export function ShelfList({ shelves, onOpen }: { shelves: Shelf[]; onOpen: (book: BookSummary) => void }) {
+type Props = { shelves: Shelf[]; onOpen: (book: BookSummary) => void; onMore?: (key: ShelfKey) => void }
+
+export function ShelfList({ shelves, onOpen, onMore }: Props) {
   const { t, i18n } = useTranslation()
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -33,8 +34,8 @@ export function ShelfList({ shelves, onOpen }: { shelves: Shelf[]; onOpen: (book
                 const edition = primaryEdition(book)
                 return (
                   <li key={book.id}>
-                    <button type="button" className="bs-row" onClick={() => onOpen(book)}>
-                      <span className={`bs-row__spine bs-cloth--${clothFor(book)}`} aria-hidden="true" />
+                    <button type="button" className="bs-row" data-book={book.id} onClick={() => onOpen(book)}>
+                      <span className={`bs-row__spine bs-cloth--${book.cloth}`} aria-hidden="true" />
                       <span className="bs-row__body">
                         <span className="bs-row__title">{book.title}</span>
                         {book.author && <span className="bs-row__author">{book.author}</span>}
@@ -48,6 +49,9 @@ export function ShelfList({ shelves, onOpen }: { shelves: Shelf[]; onOpen: (book
                   </li>
                 )
               })}
+              {onMore && shelf.books.length < shelf.count && (
+                <ShelfEnd key={shelf.books.length} shelfKey={shelf.key} onMore={onMore} />
+              )}
             </ul>
           </section>
         ))}
