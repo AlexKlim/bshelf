@@ -200,6 +200,8 @@
     "month_other": "{{month}}: {{count}} books",
     "empty": "Nothing finished in {{year}} yet",
     "topAuthors": "Most often",
+    "prevYear": "Previous year {{year}}",
+    "nextYear": "Next year {{year}}",
     "loadError": "Could not load the stats."
   },
   "remote": {

@@ -12,7 +12,6 @@ import {
   updateEdition,
   updateNote,
 } from "@/api"
-import { clothFor } from "@/lib/cloth"
 import type { BookDetail, BookSummary, Edition, Highlight, Note, Status } from "@/lib/types"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { formatsOf, statusLine, statusWord, verbForm, errorMessage } from "@/lib/vocab"
@@ -60,7 +59,7 @@ export function BookView({ bookId, summary, disabled, focusTitle, onChanged }: V
   if (!detail) {
     return (
       <div className="bs-book">
-        <article className={`bs-spread bs-cloth--${shown ? clothFor(shown) : "blank"}`}>
+        <article className={`bs-spread bs-cloth--${shown?.cloth ?? "blank"}`}>
           <section className="bs-page bs-page--left bs-title-page">
             {shown && <h1 className="bs-book__title">{shown.title}</h1>}
           </section>
@@ -100,7 +99,7 @@ export function BookCover({ book, animate }: { book: BookSummary; animate?: bool
   const formats = formatsOf(book)
   return (
     <div
-      className={`bs-closed bs-cloth--${clothFor(book)}${animate ? " is-taking" : ""}`}
+      className={`bs-closed bs-cloth--${book.cloth}${animate ? " is-taking" : ""}`}
       role="img"
       aria-label={`${book.title}${book.author ? `, ${book.author}` : ""}. ${formats.map((f) => t(`format.${f}`)).join(", ")}`}
     >
@@ -132,7 +131,7 @@ type SpreadProps = {
 
 export function BookSpread({ book, animate, disabled, focusTitle, onBook, onReload }: SpreadProps) {
   const { t } = useTranslation()
-  const cloth = clothFor(book)
+  const cloth = book.cloth
   const title = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {

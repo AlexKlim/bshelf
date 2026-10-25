@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { shelfLabel } from "@/lib/arrange"
-import { bookLang, clothFor, spineSize } from "@/lib/cloth"
+import { bookLang, spineSize } from "@/lib/cloth"
 import type { BookSummary, Shelf, ShelfKey } from "@/lib/types"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { formatsOf, primaryEdition, statusLine } from "@/lib/vocab"
@@ -220,7 +220,7 @@ const Spine = memo(function Spine({
   const { width, height, narrow } = spineSize(book)
   const className = [
     "bs-spine",
-    `bs-cloth--${clothFor(book)}`,
+    `bs-cloth--${book.cloth}`,
     narrow && "bs-spine--narrow",
     pulled && "is-pulled",
     match && !pulled && "is-match",

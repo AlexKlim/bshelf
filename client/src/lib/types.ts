@@ -88,6 +88,8 @@ export type Stats = {
   year: number
   years: number[]
   total: number
+  listened?: number
+  read?: number
   by_format: Partial<Record<Format, number>>
   total_minutes: number | null
   months: { month: number; books: StatsBook[] }[]

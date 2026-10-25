@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { getStats } from "@/api"
 import { Ico } from "@/components/ui"
-import { clothFor } from "@/lib/cloth"
 import type { Stats } from "@/lib/types"
 
 const monthName = (lng: string, month: number, style: "long" | "short") =>
@@ -36,8 +35,9 @@ export function StatsScreen() {
   }, [year, attempt])
 
   const lng = i18n.language
-  const current = stats?.year ?? year ?? new Date().getFullYear()
-  const years = stats ? [...new Set([...stats.years, current])].sort((a, b) => a - b) : []
+  const thisYear = new Date().getFullYear()
+  const current = stats?.year ?? year ?? thisYear
+  const years = stats ? [...new Set([...stats.years, current, thisYear])].filter((y) => y <= thisYear).sort((a, b) => a - b) : []
   const idx = years.indexOf(current)
   const prev = idx > 0 ? years[idx - 1] : undefined
   const next = idx >= 0 && idx < years.length - 1 ? years[idx + 1] : undefined
@@ -48,11 +48,13 @@ export function StatsScreen() {
     setYear(y)
   }
 
+  const listened = stats?.listened ?? stats?.by_format.audio
+  const read = stats?.read ?? stats?.by_format.ebook
   const summary = stats
     ? [
         t("stats.total", { year: stats.year, count: stats.total }),
-        stats.by_format.audio && t("stats.listened", { count: stats.by_format.audio }),
-        stats.by_format.ebook && t("stats.read", { count: stats.by_format.ebook }),
+        listened && t("stats.listened", { count: listened }),
+        read && t("stats.read", { count: read }),
       ]
         .filter(Boolean)
         .join(" · ")
@@ -77,12 +79,26 @@ export function StatsScreen() {
             {summary}
           </h2>
           <div className="bs-year__switch">
-            <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" disabled={!prev} onClick={() => prev && switchYear(prev)}>
-              {prev ?? current - 1}
-            </button>
-            <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" disabled={!next} onClick={() => next && switchYear(next)}>
-              {next ?? current + 1}
-            </button>
+            {prev && (
+              <button
+                type="button"
+                className="bs-btn bs-btn--quiet bs-btn--sm"
+                aria-label={t("stats.prevYear", { year: prev })}
+                onClick={() => switchYear(prev)}
+              >
+                {prev}
+              </button>
+            )}
+            {next && (
+              <button
+                type="button"
+                className="bs-btn bs-btn--quiet bs-btn--sm"
+                aria-label={t("stats.nextYear", { year: next })}
+                onClick={() => switchYear(next)}
+              >
+                {next}
+              </button>
+            )}
           </div>
         </div>
         <div className="bs-year__case">
@@ -123,7 +139,7 @@ export function StatsScreen() {
                   onClick={() => setMonth(month === m.month ? null : m.month)}
                 >
                   {m.books.map((b) => (
-                    <span className={`bs-stack__book bs-cloth--${clothFor(b)}`} key={b.id}>
+                    <span className={`bs-stack__book bs-cloth--${b.cloth ?? "blank"}`} key={b.id}>
                       <Ico name={b.formats.includes("audio") ? "audio" : "ebook"} />
                     </span>
                   ))}

@@ -214,6 +214,8 @@
     "month_other": "{{month}}: {{count}} книги",
     "empty": "Пока нет прочитанных в {{year}}",
     "topAuthors": "Чаще всего",
+    "prevYear": "Предыдущий год {{year}}",
+    "nextYear": "Следующий год {{year}}",
     "loadError": "Не удалось загрузить статистику."
   },
   "remote": {
