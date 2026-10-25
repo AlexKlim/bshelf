@@ -129,6 +129,20 @@ RSpec.describe "Share" do
     expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
   end
 
+  it "looks every text segment up in one query" do
+    book = create(:book, user:, title: "The Cyberiad: Fables for the Cybernetic Age", status: "want")
+    likes = 0
+    counter = ->(*, payload) { likes += 1 if payload[:sql].include?("ILIKE") }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      share(text: "Stanislaw Lem | Fables | Cyberiad, illustrated")
+    end
+
+    expect(json["answer"]).to eq("kind" => "want", "book_id" => book.uuid)
+    expect(json["query"]).to eq("Fables")
+    expect(likes).to eq(1)
+  end
+
   it "does not answer for another book by the same author" do
     create(:book, user:, title: "Eden", author: "Stanislaw Lem", status: "done")
 

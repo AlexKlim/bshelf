@@ -29,30 +29,40 @@ class Shelf
 
   def key_for(book) = placements([ book.id ]).fetch(book.id).key
 
+  # One placement query and one books query for every shelf together.
   def shelves(limit:)
-    grouped.map do |key, ids|
-      { key:, count: ids.size, books: summaries(ids.first(limit)) }
+    shown = grouped(placements).transform_values { |ids| [ ids.size, ids.first(limit) ] }
+    books = load(shown.values.flat_map(&:last))
+    shown.map do |key, (count, ids)|
+      { key:, count:, books: ids.map { BookSerializer.summary(books[it], key) } }
     end
   end
 
   def page(key, offset:, limit:)
-    ids = grouped.fetch(key, [])
+    ids = grouped(placements).fetch(key, [])
     { key:, count: ids.size, books: summaries(ids.drop(offset).first(limit)) }
   end
 
   def summaries(ids)
     return [] if ids.empty?
 
-    places = placements(ids)
-    books = user.books.where(id: ids).includes(editions: :reading).index_by(&:id)
-    ids.map { |id| BookSerializer.summary(books[id], places[id].key) }
+    books = load(ids)
+    summaries_of(ids.map { books[it] })
+  end
+
+  # For books already loaded with their editions and readings.
+  def summaries_of(books)
+    places = placements(books.map(&:id))
+    books.map { BookSerializer.summary(it, places.fetch(it.id).key) }
   end
 
   private
 
+  def load(ids) = user.books.where(id: ids).includes(editions: :reading).index_by(&:id)
+
   # ponytail: places every book on each request; fine for a few thousand books per user.
-  def grouped
-    placements
+  def grouped(places)
+    places
       .group_by { |_id, place| place.key }
       .sort_by { |key, _| shelf_rank(key) }
       .to_h { |key, rows| [ key, sort_rows(key, rows).map(&:first) ] }

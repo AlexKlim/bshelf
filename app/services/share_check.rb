@@ -53,17 +53,27 @@ class ShareCheck
     books = with_editions(exact)
     return [ segments.first, books ] if books.any?
 
-    segments.each do |segment|
-      next if segment.length < 4
+    contained
+  end
 
-      like = "%#{Book.sanitize_sql_like(segment)}%"
-      books = with_editions(user.books.where("title ILIKE :like OR original_title ILIKE :like", like:))
-      return [ segment, books ] if books.any?
+  # The first segment, in share order, that some title contains. One query covers every segment.
+  # ponytail: one row cap for all segments can cut matches when a segment hits many titles; split the query if seen.
+  def contained
+    long = segments.select { it.length >= 4 }
+    return if long.empty?
+
+    likes = long.map { "%#{Book.sanitize_sql_like(it)}%" }
+    scope = user.books.where("title ILIKE ANY (ARRAY[:likes]) OR original_title ILIKE ANY (ARRAY[:likes])", likes:)
+    found = with_editions(scope, limit: ShelfSearch::LIMIT * long.size)
+    long.each do |segment|
+      needle = segment.downcase
+      books = found.select { |book| [ book.title, book.original_title ].compact.any? { it.downcase.include?(needle) } }
+      return [ segment, books.first(ShelfSearch::LIMIT) ] if books.any?
     end
     nil
   end
 
-  def with_editions(scope) = scope.includes(editions: :reading).order(:title).limit(ShelfSearch::LIMIT).to_a
+  def with_editions(scope, limit: ShelfSearch::LIMIT) = scope.includes(editions: :reading).order(:title).limit(limit).to_a
 
   def segments
     @segments ||= text.gsub(URL, " ").split(SEPARATORS)

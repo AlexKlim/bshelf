@@ -7,6 +7,35 @@ RSpec.describe "Shelf" do
 
   def book(title, **attrs) = create(:book, user:, title:, **attrs)
 
+  def book_queries(&)
+    count = 0
+    counter = ->(*, payload) { count += 1 if payload[:sql].include?('FROM "books"') }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record", &)
+    count
+  end
+
+  it "loads every shelf with the same number of book queries" do
+    book("Wanted", status: "want")
+    one_shelf = book_queries { get "/api/v1/shelf" }
+
+    book("Going", status: "in_progress")
+    book("Bought", status: "owned")
+    book("Old", status: "done", finished_at: Time.zone.parse("2024-05-01"))
+    book("Undated", status: "done")
+    five_shelves = book_queries { get "/api/v1/shelf" }
+
+    expect(json["shelves"].size).to eq(5)
+    expect(five_shelves).to eq(one_shelf)
+  end
+
+  it "answers a search without loading the found books twice" do
+    book("Dune", status: "want")
+    book("Dune Messiah", status: "want")
+
+    expect(book_queries { get "/api/v1/search", params: { q: "dune" } }).to eq(2)
+    expect(json["books"].size).to eq(1)
+  end
+
   describe "GET /api/v1/shelf" do
     it "groups books into now, want, owned, years descending and no date" do
       book("Listening", format: "audio", status: "in_progress")
