@@ -91,13 +91,22 @@ RSpec.describe "Remote browser sessions" do
         expect(response.headers).to include("Cache-Control" => "no-store", "Content-Security-Policy" => "frame-ancestors 'self'")
         expect(Array(response.headers["Set-Cookie"]).find { it.start_with?("rb_view_") }).to include("path=/api/v1/remote_browser_sessions/#{session.uuid}/view", "httponly")
 
-        get "/api/v1/remote_browser_sessions/#{session.uuid}/view/assets/app.js"
+        get "/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/debug"
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("at /assets/app.js")
 
         get url
         expect(response).to have_http_status(:forbidden)
         expect(error_codes).to eq([ "invalid_token" ])
+      end
+
+      it "never forwards paths outside the session's viewer to Steel" do
+        get viewer_url(session)
+        expect(steel).not_to receive(:view)
+
+        %w[v1/sessions v1/sessions/other-id/debug assets/app.js v1/sessions/debug/../../v1/sessions].each do |path|
+          get "/api/v1/remote_browser_sessions/#{session.uuid}/view/#{path}"
+          expect(response).to have_http_status(:not_found), path
+        end
       end
 
       it "rejects requests without a token or cookie" do
@@ -139,7 +148,7 @@ RSpec.describe "Remote browser sessions" do
         get viewer_url(session)
         session.finish!(interruption: "aborted")
 
-        get "/api/v1/remote_browser_sessions/#{session.uuid}/view/assets/app.js"
+        get "/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/debug"
 
         expect(response).to have_http_status(:forbidden)
       end
@@ -148,7 +157,7 @@ RSpec.describe "Remote browser sessions" do
         get viewer_url(session)
 
         travel(RemoteBrowserSession::LOGIN_TIME + 1.second) do
-          get "/api/v1/remote_browser_sessions/#{session.uuid}/view/assets/app.js"
+          get "/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/debug"
         end
 
         expect(response).to have_http_status(:forbidden)

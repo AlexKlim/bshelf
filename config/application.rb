@@ -18,6 +18,8 @@ module Bshelf
 
     # Same-origin SPA authenticates with a devise cookie session, which API mode strips out.
     config.session_store :cookie_store, key: "_bshelf_session", same_site: :lax, expire_after: 30.days
+    # The server-rendered OAuth consent form denies with _method=delete; api_only drops this middleware.
+    config.middleware.use Rack::MethodOverride
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use config.session_store, config.session_options
 

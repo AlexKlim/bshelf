@@ -122,6 +122,16 @@ RSpec.describe "OAuth for MCP clients" do
       expect(Doorkeeper::AccessGrant.count).to eq(0)
     end
 
+    it "denies when the browser form posts _method=delete" do
+      sign_in_as(user)
+      get "/oauth/authorize", params: authorize_params
+
+      post "/oauth/authorize", params: authorize_params.merge(_method: "delete")
+
+      expect(response.location).to include("error=access_denied")
+      expect(Doorkeeper::AccessGrant.count).to eq(0)
+    end
+
     it "rotates the refresh token" do
       sign_in_as(user)
       post "/oauth/token", params: token_params(approve["code"])

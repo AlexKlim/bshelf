@@ -53,6 +53,8 @@ module Api
           return render_error(:invalid_token, status: :forbidden) unless valid
         end
 
+        return render_error(:not_found, status: :not_found) unless viewer_path?(session, params[:path].to_s)
+
         status, content_type, body = RemoteBrowser.steel.view(session.steel_session_id, params[:path].to_s,
           request.query_parameters.except("token").to_query)
         response.headers["Cache-Control"] = "no-store"
@@ -64,6 +66,16 @@ module Api
       private
 
       def browser_session = @browser_session ||= current_user.remote_browser_sessions.find_by!(uuid: params[:id])
+
+      # Steel's API has no auth of its own, so only the viewer page and its assets may pass, never other API
+      # paths. The asset prefixes are unknown until the viewer runs against real Steel.
+      VIEWER_ASSET_PREFIXES = [].freeze
+
+      def viewer_path?(session, path)
+        return false if path.split("/").intersect?(%w[. ..])
+
+        path == session.viewer_path.to_s.split("?").first || VIEWER_ASSET_PREFIXES.any? { path.start_with?(it) }
+      end
 
       def view_root = "/api/v1/remote_browser_sessions/#{browser_session.uuid}/view"
 
