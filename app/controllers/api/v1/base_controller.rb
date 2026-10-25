@@ -45,7 +45,6 @@ module Api
         render_error(:unauthorized, status: :unauthorized) unless current_user
       end
 
-      # Account and token management is never reachable with an API token.
       def require_session!
         render_error(:session_required, status: :forbidden) if bearer_request?
       end

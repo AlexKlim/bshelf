@@ -9,6 +9,7 @@ class User < ApplicationRecord
   has_many :notes
   has_many :highlights
   has_many :source_connections
+  has_many :merge_events
 
   def send_devise_notification(notification, *args)
     devise_mailer.send(notification, self, *args).deliver_later

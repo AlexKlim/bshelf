@@ -1,20 +1,60 @@
 {
-  "app": { "name": "Book Shelf" },
-  "tabs": { "label": "Разделы", "shelf": "Шкаф", "stats": "Статистика", "sources": "Источники" },
-  "profile": { "title": "Профиль" },
-  "shelf": { "now": "Сейчас", "want": "Хочу", "owned": "На полке", "noDate": "Без даты" },
+  "app": {
+    "name": "Book Shelf"
+  },
+  "tabs": {
+    "label": "Разделы",
+    "shelf": "Шкаф",
+    "stats": "Статистика",
+    "sources": "Источники"
+  },
+  "profile": {
+    "title": "Профиль"
+  },
+  "shelf": {
+    "now": "Сейчас",
+    "want": "Хочу",
+    "owned": "На полке",
+    "noDate": "Без даты"
+  },
   "status": {
     "want": "Хочу",
     "owned": "На полке",
-    "in_progress": { "audio": "Слушаю", "ebook": "Читаю" },
-    "done": { "audio": "Прослушал", "ebook": "Прочитал" }
+    "in_progress": {
+      "audio": "Слушаю",
+      "ebook": "Читаю"
+    },
+    "done": {
+      "audio": "Прослушал",
+      "ebook": "Прочитал"
+    }
   },
-  "format": { "audio": "Аудио", "ebook": "Книга", "personal_doc": "Документ", "unknown": "Книга" },
+  "format": {
+    "audio": "Аудио",
+    "ebook": "Книга",
+    "personal_doc": "Документ",
+    "unknown": "Книга"
+  },
   "errors": {
     "generic": "Что-то пошло не так. Попробуйте ещё раз.",
     "network": "Нет сети.",
     "not_found": "Не найдено.",
     "unauthorized": "Войдите, чтобы продолжить.",
-    "rate_limited": "Слишком много попыток. Попробуйте через несколько минут."
+    "rate_limited": "Слишком много попыток. Попробуйте через несколько минут.",
+    "session_required": "Войдите на этом устройстве, чтобы сделать это.",
+    "invalid_csrf": "Страница устарела. Обновите её и попробуйте ещё раз.",
+    "blank": "Заполните поле.",
+    "invalid_credentials": "Неверный email или пароль.",
+    "unconfirmed": "Сначала подтвердите email. Проверьте почту.",
+    "taken": "Этот email уже зарегистрирован.",
+    "invalid": "Неверное значение.",
+    "too_short": "Слишком коротко.",
+    "too_long": "Слишком длинно.",
+    "inclusion": "Выберите один из вариантов.",
+    "already_confirmed": "Email уже подтверждён. Войдите.",
+    "confirmation_period_expired": "Ссылка устарела. Запросите новую.",
+    "expired": "Ссылка устарела. Запросите новую.",
+    "duplicate": "Уже на полке.",
+    "not_implemented": "Пока недоступно."
   }
 }

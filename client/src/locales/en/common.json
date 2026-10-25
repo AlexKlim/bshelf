@@ -1,20 +1,60 @@
 {
-  "app": { "name": "Book Shelf" },
-  "tabs": { "label": "Sections", "shelf": "Bookcase", "stats": "Stats", "sources": "Sources" },
-  "profile": { "title": "Profile" },
-  "shelf": { "now": "Now", "want": "Want", "owned": "Owned", "noDate": "No date" },
+  "app": {
+    "name": "Book Shelf"
+  },
+  "tabs": {
+    "label": "Sections",
+    "shelf": "Bookcase",
+    "stats": "Stats",
+    "sources": "Sources"
+  },
+  "profile": {
+    "title": "Profile"
+  },
+  "shelf": {
+    "now": "Now",
+    "want": "Want",
+    "owned": "Owned",
+    "noDate": "No date"
+  },
   "status": {
     "want": "Want",
     "owned": "Owned",
-    "in_progress": { "audio": "Listening", "ebook": "Reading" },
-    "done": { "audio": "Listened", "ebook": "Read" }
+    "in_progress": {
+      "audio": "Listening",
+      "ebook": "Reading"
+    },
+    "done": {
+      "audio": "Listened",
+      "ebook": "Read"
+    }
   },
-  "format": { "audio": "Audio", "ebook": "E-book", "personal_doc": "Document", "unknown": "Book" },
+  "format": {
+    "audio": "Audio",
+    "ebook": "E-book",
+    "personal_doc": "Document",
+    "unknown": "Book"
+  },
   "errors": {
     "generic": "Something went wrong. Try again.",
     "network": "No connection.",
     "not_found": "Not found.",
     "unauthorized": "Sign in to continue.",
-    "rate_limited": "Too many attempts. Try again in a few minutes."
+    "rate_limited": "Too many attempts. Try again in a few minutes.",
+    "session_required": "Sign in on this device to do this.",
+    "invalid_csrf": "The page is out of date. Reload and try again.",
+    "blank": "Fill in this field.",
+    "invalid_credentials": "Wrong email or password.",
+    "unconfirmed": "Confirm your email first. Check your inbox.",
+    "taken": "This email is already registered.",
+    "invalid": "This value is not valid.",
+    "too_short": "Too short.",
+    "too_long": "Too long.",
+    "inclusion": "Choose one of the options.",
+    "already_confirmed": "This email is already confirmed. Sign in.",
+    "confirmation_period_expired": "The link has expired. Request a new one.",
+    "expired": "The link has expired. Request a new one.",
+    "duplicate": "Already on the shelf.",
+    "not_implemented": "Not available yet."
   }
 }

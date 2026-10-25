@@ -13,6 +13,18 @@ Rails.application.routes.draw do
       resource :password, only: %i[create update]
       resource :profile, only: %i[show destroy], path: "me"
       resources :api_tokens, only: %i[index create destroy]
+
+      resources :shelves, only: %i[index show], path: "shelf"
+      resource :search, only: :show
+      resources :books, only: %i[show create update destroy] do
+        post :merge, on: :member
+        resources :notes, only: %i[index create update destroy], shallow: true
+        resources :highlights, only: :index
+      end
+      resources :editions, only: :update
+      resources :merges, only: :destroy
+      resource :stats, only: :show
+      resources :sources, only: :index
     end
   end
 
