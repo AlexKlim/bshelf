@@ -26,6 +26,8 @@ export function ShareScreen() {
   const [title, setTitle] = useState("")
   const [choosingFormat, setChoosingFormat] = useState(false)
   const [saved, setSaved] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const blocked = !online || busy
 
   useEffect(() => {
     if (empty) return
@@ -41,6 +43,7 @@ export function ShareScreen() {
   const add = async (edition: { format: Format; status: Status }) => {
     if (!title.trim()) return setError(t("share.typeTitle"))
     setError(null)
+    setBusy(true)
     const s = answer?.suggestion
     try {
       const { message } = await shareAdd(
@@ -57,6 +60,8 @@ export function ShareScreen() {
           ? t("entry.duplicate", { status: statusLine(t, i18n.language, primaryEdition(existing)) })
           : errorMessage(t, e),
       )
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -82,7 +87,7 @@ export function ShareScreen() {
           <Choices<Format>
             legend={t("share.formatPrompt")}
             value={"" as Format}
-            disabled={!online}
+            disabled={blocked}
             onChange={(format) => add({ format, status: "want" })}
             options={[
               { value: "audio", label: t("format.audio"), icon: "audio" },
@@ -91,14 +96,14 @@ export function ShareScreen() {
           />
         ) : (
           <span className="bs-answer__actions">
-            <button type="button" className="bs-btn bs-btn--secondary bs-btn--sm" disabled={!online} onClick={() => setChoosingFormat(true)}>
+            <button type="button" className="bs-btn bs-btn--secondary bs-btn--sm" disabled={blocked} onClick={() => setChoosingFormat(true)}>
               <Ico name="want" />
               {t("search.want")}
             </button>
-            <button type="button" className="bs-btn bs-btn--secondary bs-btn--sm" disabled={!online} onClick={() => add({ format: "ebook", status: "done" })}>
+            <button type="button" className="bs-btn bs-btn--secondary bs-btn--sm" disabled={blocked} onClick={() => add({ format: "ebook", status: "done" })}>
               {t("search.read")}
             </button>
-            <button type="button" className="bs-btn bs-btn--secondary bs-btn--sm" disabled={!online} onClick={() => add({ format: "audio", status: "done" })}>
+            <button type="button" className="bs-btn bs-btn--secondary bs-btn--sm" disabled={blocked} onClick={() => add({ format: "audio", status: "done" })}>
               {t("search.listened")}
             </button>
           </span>

@@ -21,6 +21,7 @@ export function SearchField({ disabled, onMatches, onWrite, onAdded }: Props) {
   const [result, setResult] = useState<SearchResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [version, setVersion] = useState(0)
+  const [busy, setBusy] = useState(false)
   const q = query.trim()
 
   useEffect(() => {
@@ -52,12 +53,15 @@ export function SearchField({ disabled, onMatches, onWrite, onAdded }: Props) {
   }
 
   const want = async () => {
+    setBusy(true)
     try {
       await addBook({ title: q, edition: { format: "unknown", status: "want" } })
       onAdded()
       setVersion((v) => v + 1)
     } catch (e) {
       setError(errorMessage(t, e))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -82,7 +86,7 @@ export function SearchField({ disabled, onMatches, onWrite, onAdded }: Props) {
       <div className="bs-answer" role="status">
         {q && error && <span>{error}</span>}
         {q && result && !error && (
-          <SearchAnswer query={q} result={result} disabled={disabled} onWant={want} onWrite={onWrite} />
+          <SearchAnswer query={q} result={result} disabled={disabled || busy} onWant={want} onWrite={onWrite} />
         )}
       </div>
     </div>
