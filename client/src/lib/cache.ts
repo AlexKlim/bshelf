@@ -1,4 +1,5 @@
 const PREFIX = "bs:cache:"
+const MAX_CHARS = 1_000_000
 
 export function readCache<T>(key: string): T | null {
   try {
@@ -11,7 +12,9 @@ export function readCache<T>(key: string): T | null {
 
 export function writeCache(key: string, value: unknown) {
   try {
-    localStorage.setItem(PREFIX + key, JSON.stringify(value))
+    const json = JSON.stringify(value)
+    if (json.length > MAX_CHARS) localStorage.removeItem(PREFIX + key)
+    else localStorage.setItem(PREFIX + key, json)
   } catch {
     /* storage full or blocked: the cache is only a convenience */
   }

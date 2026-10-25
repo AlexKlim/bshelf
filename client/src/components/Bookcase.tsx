@@ -2,18 +2,19 @@ import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } f
 import { useTranslation } from "react-i18next"
 import { shelfLabel } from "@/lib/arrange"
 import { bookLang, clothFor, spineSize } from "@/lib/cloth"
-import type { BookSummary, Shelf } from "@/lib/types"
+import type { BookSummary, Shelf, ShelfKey } from "@/lib/types"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { formatsOf, primaryEdition, statusLine } from "@/lib/vocab"
-import { Ico, StatusMark } from "./ui"
+import { Ico, ShelfEnd, StatusMark } from "./ui"
 
 type Props = {
   shelves: Shelf[]
   matches?: ReadonlySet<string>
   onOpen: (book: BookSummary) => void
+  onMore?: (key: ShelfKey) => void
 }
 
-export function Bookcase({ shelves, matches, onOpen }: Props) {
+export function Bookcase({ shelves, matches, onOpen, onMore }: Props) {
   const { t, i18n } = useTranslation()
   const hover = !useMediaQuery("(pointer: coarse)")
   const [pulled, setPulled] = useState<string | null>(null)
@@ -137,6 +138,9 @@ export function Bookcase({ shelves, matches, onOpen }: Props) {
                   />
                 </li>
               ))}
+              {onMore && shelf.books.length < shelf.count && (
+                <ShelfEnd key={shelf.books.length} shelfKey={shelf.key} horizontal onMore={onMore} />
+              )}
             </ul>
             <div className="bs-shelf__plank" />
           </section>

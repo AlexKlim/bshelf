@@ -1,4 +1,29 @@
-import { useId, type InputHTMLAttributes, type ReactNode } from "react"
+import { useEffect, useId, useRef, type InputHTMLAttributes, type ReactNode } from "react"
+import type { ShelfKey } from "@/lib/types"
+
+// Keyed by the number of loaded books by the caller, so it observes afresh after each page.
+export function ShelfEnd({
+  shelfKey,
+  horizontal,
+  onMore,
+}: {
+  shelfKey: ShelfKey
+  horizontal?: boolean
+  onMore: (key: ShelfKey) => void
+}) {
+  const ref = useRef<HTMLLIElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === "undefined") return
+    const observer = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && onMore(shelfKey), {
+      root: horizontal ? el.parentElement : null,
+      rootMargin: horizontal ? "0px 240px 0px 0px" : "0px 0px 240px 0px",
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [shelfKey, horizontal, onMore])
+  return <li ref={ref} className="bs-shelf__end" aria-hidden="true" />
+}
 
 export type IconName = "audio" | "ebook" | "want" | "owned" | "progress" | "done" | "search" | "close" | "pen"
 

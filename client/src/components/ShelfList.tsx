@@ -2,11 +2,13 @@ import type { KeyboardEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { isYear, shelfLabel } from "@/lib/arrange"
 import { clothFor } from "@/lib/cloth"
-import type { BookSummary, Shelf } from "@/lib/types"
+import type { BookSummary, Shelf, ShelfKey } from "@/lib/types"
 import { formatsOf, primaryEdition, statusLine } from "@/lib/vocab"
-import { StatusMark } from "./ui"
+import { ShelfEnd, StatusMark } from "./ui"
 
-export function ShelfList({ shelves, onOpen }: { shelves: Shelf[]; onOpen: (book: BookSummary) => void }) {
+type Props = { shelves: Shelf[]; onOpen: (book: BookSummary) => void; onMore?: (key: ShelfKey) => void }
+
+export function ShelfList({ shelves, onOpen, onMore }: Props) {
   const { t, i18n } = useTranslation()
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -48,6 +50,9 @@ export function ShelfList({ shelves, onOpen }: { shelves: Shelf[]; onOpen: (book
                   </li>
                 )
               })}
+              {onMore && shelf.books.length < shelf.count && (
+                <ShelfEnd key={shelf.books.length} shelfKey={shelf.key} onMore={onMore} />
+              )}
             </ul>
           </section>
         ))}

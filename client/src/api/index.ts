@@ -14,6 +14,7 @@ import type {
   Note,
   SearchResult,
   Shelf,
+  ShelfKey,
   Source,
   Stats,
   Status,
@@ -38,7 +39,10 @@ export const listTokens = () => api<{ api_tokens: ApiToken[] }>("/api_tokens")
 export const createToken = (name: string) => post<{ api_token: ApiToken; token: string }>("/api_tokens", { name })
 export const revokeToken = (id: string) => del(`/api_tokens/${id}`)
 
-export const getShelves = () => api<{ shelves: Shelf[] }>("/shelf?limit=200")
+const SHELF_PAGE = 40
+export const getShelves = () => api<{ shelves: Shelf[] }>(`/shelf?limit=${SHELF_PAGE}`)
+export const getShelfPage = (key: ShelfKey, offset: number) =>
+  api<Shelf>(`/shelf/${key}?offset=${offset}&limit=${SHELF_PAGE}`)
 export const search = (q: string) => api<SearchResult>(`/search?q=${encodeURIComponent(q)}`)
 
 export type NewBook = {

@@ -115,9 +115,9 @@ export function BookcaseScreen() {
       />
     )
   } else if (view === "list") {
-    body = <ShelfList shelves={shelves} onOpen={open} />
+    body = <ShelfList shelves={shelves} onOpen={open} onMore={shelf.loadMore} />
   } else {
-    body = <Bookcase shelves={shelves} matches={matches} onOpen={open} />
+    body = <Bookcase shelves={shelves} matches={matches} onOpen={open} onMore={shelf.loadMore} />
   }
 
   const hasBooks = shelves && !isEmptyCase(shelves)
