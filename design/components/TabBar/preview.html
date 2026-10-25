@@ -1,0 +1,24 @@
+<!-- @dsCard group="Навигация" height=150 subtitle="Снизу на телефоне, сверху на десктопе" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>TabBar</title>
+<style>
+  body { margin: 0; padding: 16px; background: var(--wall); font-family: var(--font-ui); display: grid; gap: 16px; }
+  .phone { max-inline-size: 390px; }
+</style>
+</head>
+<body>
+<nav class="bs-tabs phone" role="tablist" aria-label="Разделы">
+  <button class="bs-tab" role="tab" aria-selected="true" type="button">Шкаф</button>
+  <button class="bs-tab" role="tab" aria-selected="false" type="button">Статистика</button>
+  <button class="bs-tab" role="tab" aria-selected="false" type="button">Источники</button>
+</nav>
+<nav class="bs-tabs bs-tabs--top" role="tablist" aria-label="Sections">
+  <button class="bs-tab" role="tab" aria-selected="false" type="button">Bookcase</button>
+  <button class="bs-tab" role="tab" aria-selected="true" type="button">Stats</button>
+  <button class="bs-tab" role="tab" aria-selected="false" type="button">Sources</button>
+</nav>
+</body>
+</html>

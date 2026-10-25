@@ -1,0 +1,45 @@
+<!-- @dsCard group="Шкаф" height=280 subtitle="Покой, выдвинут, найден поиском, без обложки, загрузка" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Spine</title>
+<style>
+  body { margin: 0; padding: 16px; background: var(--wall); font-family: var(--font-ui); }
+  .stage { display: flex; align-items: flex-end; gap: 2px; padding: 32px 16px 0; background: var(--wood-back); border-bottom: var(--plank) solid var(--wood-oak); overflow-x: auto; }
+  .gap { inline-size: 16px; flex: none; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <button class="bs-spine bs-cloth--oxblood" lang="ru" style="--spine-w:36px;--spine-h:168px" aria-label="Мастер и Маргарита, Михаил Булгаков. Прослушал, март 2024">
+    <span class="bs-spine__text"><span class="bs-spine__title">Мастер и Маргарита</span><span class="bs-spine__author">Михаил Булгаков</span></span>
+    <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i></span>
+  </button>
+  <button class="bs-spine bs-cloth--navy is-pulled" lang="en" style="--spine-w:40px;--spine-h:176px" aria-expanded="true" aria-label="Project Hail Mary, Andy Weir. Read, Feb 2025">
+    <span class="bs-spine__text"><span class="bs-spine__title">Project Hail Mary</span><span class="bs-spine__author">Andy Weir</span></span>
+    <span class="bs-spine__format"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span>
+  </button>
+  <button class="bs-spine bs-cloth--ochre" lang="ru" style="--spine-w:30px;--spine-h:152px" aria-label="Пикник на обочине, Аркадий и Борис Стругацкие. Прочитал и прослушал">
+    <span class="bs-spine__text"><span class="bs-spine__title">Пикник на обочине</span><span class="bs-spine__author">Стругацкие</span></span>
+    <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span>
+  </button>
+  <button class="bs-spine bs-cloth--bottle is-match" lang="en" style="--spine-w:34px;--spine-h:160px" aria-label="Thinking, Fast and Slow, Daniel Kahneman. Listened, 2023">
+    <span class="bs-spine__text"><span class="bs-spine__title">Thinking, Fast and Slow</span><span class="bs-spine__author">Daniel Kahneman</span></span>
+    <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i></span>
+  </button>
+  <button class="bs-spine bs-cloth--plum bs-spine--narrow" lang="ru" style="--spine-w:28px;--spine-h:144px" aria-label="Норвежский лес, Харуки Мураками. Хочу">
+    <span class="bs-spine__text"><span class="bs-spine__title">Норвежский лес</span><span class="bs-spine__author">Харуки Мураками</span></span>
+    <span class="bs-spine__format"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span>
+  </button>
+  <button class="bs-spine bs-cloth--blank" lang="en" style="--spine-w:32px;--spine-h:168px" aria-label="The Remains of the Day, Kazuo Ishiguro. Owned">
+    <span class="bs-spine__text"><span class="bs-spine__title">The Remains of the Day</span><span class="bs-spine__author">Kazuo Ishiguro</span></span>
+    <span class="bs-spine__format"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span>
+  </button>
+  <span class="gap"></span>
+  <span class="bs-spine bs-cloth--blank is-loading" style="--spine-w:32px;--spine-h:160px" aria-hidden="true"></span>
+  <span class="bs-spine bs-cloth--blank is-loading" style="--spine-w:28px;--spine-h:144px" aria-hidden="true"></span>
+  <span class="bs-spine bs-cloth--blank is-loading" style="--spine-w:38px;--spine-h:176px" aria-hidden="true"></span>
+</div>
+</body>
+</html>

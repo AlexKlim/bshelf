@@ -1,0 +1,63 @@
+<!-- @dsCard group="Источники" height=600 width=1040 subtitle="Вход через браузер на сервере: раскрытие, вход с таймером, сбор данных" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>RemoteBrowser</title>
+<style>
+  body { margin: 0; padding: 24px 16px; background: var(--wall); font-family: var(--font-ui); color: var(--ink); }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+  .phone { inline-size: 300px; max-inline-size: 100%; border: 1px solid var(--hairline); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-sheet); }
+  .skel { display: grid; gap: 12px; inline-size: 220px; }
+  .skel span { display: block; block-size: 40px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--hairline); }
+  .skel span:first-child { block-size: 20px; inline-size: 60%; border: 0; background: var(--hairline); }
+  .skel span:last-child { background: var(--hairline); }
+  .skel p { margin: 4px 0 0; text-align: center; font: 400 12px/16px var(--font-ui); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="row">
+  <section class="phone bs-session" aria-label="Раскрытие">
+    <div class="bs-session__bar"><span class="bs-session__title">Sync Kindle</span></div>
+    <div class="bs-session__body">
+      <h2 class="bs-session__h">Вход в Amazon</h2>
+      <p class="bs-session__text">Вы входите в Amazon в браузере на нашем сервере.</p>
+      <ul class="bs-facts">
+        <li><i class="bs-ico bs-ico-done" aria-hidden="true"></i>Пароль не сохраняется</li>
+        <li><i class="bs-ico bs-ico-done" aria-hidden="true"></i>Сессия удаляется после синка</li>
+        <li><i class="bs-ico bs-ico-done" aria-hidden="true"></i>За кодом 2FA можно уйти в другое приложение, вход дождётся</li>
+      </ul>
+      <div class="bs-session__actions">
+        <button class="bs-btn bs-btn--primary" type="button">Продолжить</button>
+        <button class="bs-btn bs-btn--quiet" type="button">Отмена</button>
+      </div>
+    </div>
+  </section>
+  <section class="phone bs-session" aria-label="Вход">
+    <div class="bs-session__bar" style="--left:84%">
+      <span class="bs-session__title">Вход в Amazon</span>
+      <span class="bs-session__timer" role="timer" aria-label="Осталось 4 минуты 12 секунд">4:12</span>
+      <button class="bs-btn bs-btn--quiet bs-btn--sm" type="button">Отменить</button>
+    </div>
+    <div class="bs-session__view">
+      <div class="skel" aria-hidden="true"><span></span><span></span><span></span><span></span><p>Здесь страница входа Amazon из браузера на сервере</p></div>
+    </div>
+  </section>
+  <section class="phone bs-session" aria-label="Сбор данных">
+    <div class="bs-session__bar"><span class="bs-session__title">Sync Kindle</span></div>
+    <div class="bs-session__body">
+      <h2 class="bs-session__h">Читаем библиотеку</h2>
+      <ul class="bs-facts" aria-live="polite">
+        <li><i class="bs-ico bs-ico-done" aria-hidden="true"></i>Вход выполнен, сессия удалена</li>
+        <li><i class="bs-ico bs-ico-done" aria-hidden="true"></i>Библиотека: 214 книг</li>
+        <li class="is-pending"><i class="bs-ico bs-ico-progress" aria-hidden="true"></i>Хайлайты…</li>
+      </ul>
+      <p class="bs-session__text">Можно уйти с этого экрана. Результат появится баннером над шкафом.</p>
+      <div class="bs-session__actions">
+        <button class="bs-btn bs-btn--secondary" type="button">К шкафу</button>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

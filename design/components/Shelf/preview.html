@@ -1,0 +1,69 @@
+<!-- @dsCard group="Шкаф" height=560 subtitle="Шкаф из двух полок, выдвинутая книга и подпись над полкой" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Shelf</title>
+<style>
+  body { margin: 0; padding: 16px; background: var(--wall); font-family: var(--font-ui); color: var(--ink); }
+  .wrap { display: grid; gap: 8px; max-inline-size: 560px; }
+  .bs-caption { margin-left: 72px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <button class="bs-caption" type="button">
+    <span class="bs-caption__title">Project Hail Mary</span>
+    <span class="bs-caption__author">Andy Weir</span>
+    <span class="bs-status"><i class="bs-ico bs-ico-progress" aria-hidden="true"></i>Читаю · с октября 2026</span>
+  </button>
+  <div class="bs-case">
+    <section class="bs-shelf" aria-labelledby="sh-now">
+      <h2 class="bs-shelf__plaque" id="sh-now">Сейчас · 3</h2>
+      <ul class="bs-shelf__row">
+        <li><button class="bs-spine bs-cloth--slate" lang="ru" style="--spine-w:34px;--spine-h:160px" aria-label="Дюна, Фрэнк Герберт. Слушаю">
+          <span class="bs-spine__text"><span class="bs-spine__title">Дюна</span><span class="bs-spine__author">Фрэнк Герберт</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--navy is-pulled" aria-expanded="true" lang="en" style="--spine-w:40px;--spine-h:176px" aria-label="Project Hail Mary, Andy Weir. Reading">
+          <span class="bs-spine__text"><span class="bs-spine__title">Project Hail Mary</span><span class="bs-spine__author">Andy Weir</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--linen" lang="ru" style="--spine-w:30px;--spine-h:144px" aria-label="Generation «П», Виктор Пелевин. Слушаю">
+          <span class="bs-spine__text"><span class="bs-spine__title">Generation «П»</span><span class="bs-spine__author">Пелевин</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i></span></button></li>
+      </ul>
+      <div class="bs-shelf__plank"></div>
+    </section>
+    <section class="bs-shelf" aria-labelledby="sh-2025">
+      <h2 class="bs-shelf__plaque" id="sh-2025">2025 · 18</h2>
+      <ul class="bs-shelf__row">
+        <li><button class="bs-spine bs-cloth--oxblood" lang="ru" style="--spine-w:36px;--spine-h:168px" aria-label="Мастер и Маргарита, Михаил Булгаков. Прослушал, март 2025">
+          <span class="bs-spine__text"><span class="bs-spine__title">Мастер и Маргарита</span><span class="bs-spine__author">Михаил Булгаков</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--bottle" lang="en" style="--spine-w:34px;--spine-h:160px" aria-label="Sapiens, Yuval Noah Harari. Read, May 2025">
+          <span class="bs-spine__text"><span class="bs-spine__title">Sapiens</span><span class="bs-spine__author">Yuval Noah Harari</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--ochre" lang="ru" style="--spine-w:30px;--spine-h:152px" aria-label="Пикник на обочине, Стругацкие. Прочитал и прослушал">
+          <span class="bs-spine__text"><span class="bs-spine__title">Пикник на обочине</span><span class="bs-spine__author">Стругацкие</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--plum" lang="ru" style="--spine-w:44px;--spine-h:184px" aria-label="Анна Каренина, Лев Толстой. Прослушал, июль 2025">
+          <span class="bs-spine__text"><span class="bs-spine__title">Анна Каренина</span><span class="bs-spine__author">Лев Толстой</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--sage" lang="en" style="--spine-w:32px;--spine-h:144px" aria-label="The Remains of the Day, Kazuo Ishiguro. Read, Aug 2025">
+          <span class="bs-spine__text"><span class="bs-spine__title">The Remains of the Day</span><span class="bs-spine__author">Kazuo Ishiguro</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--navy" lang="en" style="--spine-w:36px;--spine-h:168px" aria-label="Thinking, Fast and Slow, Daniel Kahneman. Listened, Oct 2025">
+          <span class="bs-spine__text"><span class="bs-spine__title">Thinking, Fast and Slow</span><span class="bs-spine__author">Daniel Kahneman</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--oxblood bs-spine--narrow" lang="ru" style="--spine-w:28px;--spine-h:152px" aria-label="Норвежский лес, Харуки Мураками. Прочитал, ноябрь 2025">
+          <span class="bs-spine__text"><span class="bs-spine__title">Норвежский лес</span><span class="bs-spine__author">Мураками</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span></button></li>
+        <li><button class="bs-spine bs-cloth--slate" lang="ru" style="--spine-w:38px;--spine-h:176px" aria-label="Мессия Дюны, Фрэнк Герберт. Прослушал, декабрь 2025">
+          <span class="bs-spine__text"><span class="bs-spine__title">Мессия Дюны</span><span class="bs-spine__author">Фрэнк Герберт</span></span>
+          <span class="bs-spine__format"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i></span></button></li>
+      </ul>
+      <div class="bs-shelf__plank"></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

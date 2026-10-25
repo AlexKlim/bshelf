@@ -1,0 +1,46 @@
+<!-- @dsCard group="Книга" height=620 subtitle="«Добавить книгу» как запись от руки, с ошибкой дубля" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>EntryForm</title>
+<style>
+  body { margin: 0; padding: 24px 16px; background: var(--wall); font-family: var(--font-ui); color: var(--ink); }
+  .bs-entry { margin: 0 auto; }
+</style>
+</head>
+<body>
+<form class="bs-entry" onsubmit="event.preventDefault()">
+  <h2 class="bs-entry__title">Записать книгу</h2>
+  <div class="bs-field">
+    <label class="bs-field__label" for="en-title">Название</label>
+    <input class="bs-field__input" id="en-title" value="Project Hail Mary" aria-invalid="true" aria-describedby="en-title-err">
+    <span class="bs-field__error" id="en-title-err">Уже на полке: Прочитал · 2025</span>
+  </div>
+  <div class="bs-field">
+    <label class="bs-field__label" for="en-author">Автор</label>
+    <input class="bs-field__input" id="en-author" placeholder="Кто написал" value="Andy Weir">
+  </div>
+  <fieldset class="bs-choices">
+    <legend>Формат</legend>
+    <label class="bs-choice"><input type="radio" name="en-format" id="en-f-audio" checked><span><i class="bs-ico bs-ico-audio" aria-hidden="true"></i>Аудио</span></label>
+    <label class="bs-choice"><input type="radio" name="en-format" id="en-f-ebook"><span><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i>Книга</span></label>
+  </fieldset>
+  <fieldset class="bs-choices">
+    <legend>Статус</legend>
+    <label class="bs-choice"><input type="radio" name="en-status" id="en-s-want"><span><i class="bs-ico bs-ico-want" aria-hidden="true"></i>Хочу</span></label>
+    <label class="bs-choice"><input type="radio" name="en-status" id="en-s-owned"><span><i class="bs-ico bs-ico-owned" aria-hidden="true"></i>На полке</span></label>
+    <label class="bs-choice"><input type="radio" name="en-status" id="en-s-prog"><span><i class="bs-ico bs-ico-progress" aria-hidden="true"></i>Слушаю</span></label>
+    <label class="bs-choice"><input type="radio" name="en-status" id="en-s-done" checked><span><i class="bs-ico bs-ico-done" aria-hidden="true"></i>Прослушал</span></label>
+  </fieldset>
+  <div class="bs-field">
+    <label class="bs-field__label" for="en-when">Когда</label>
+    <input class="bs-field__input" id="en-when" value="сентябрь 2026">
+  </div>
+  <div class="bs-entry__actions">
+    <button class="bs-btn bs-btn--quiet" type="button">Отмена</button>
+    <button class="bs-btn bs-btn--primary" type="submit"><i class="bs-ico bs-ico-pen" aria-hidden="true"></i>Записать</button>
+  </div>
+</form>
+</body>
+</html>

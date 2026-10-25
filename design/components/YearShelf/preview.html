@@ -1,0 +1,41 @@
+<!-- @dsCard group="Статистика" height=340 subtitle="Полка года: стопки корешков по месяцам вместо графиков" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>YearShelf</title>
+<style>
+  body { margin: 0; padding: 16px; background: var(--wall); font-family: var(--font-ui); color: var(--ink); max-inline-size: 640px; }
+  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+</style>
+</head>
+<body>
+<section class="bs-year" aria-labelledby="yr">
+  <div class="top">
+    <h2 class="bs-year__sum" id="yr">2025: 18 книг · 11 слушал · 7 читал</h2>
+    <div><button class="bs-btn bs-btn--quiet bs-btn--sm" type="button">2024</button><button class="bs-btn bs-btn--quiet bs-btn--sm" type="button" disabled>2026</button></div>
+  </div>
+  <div>
+  <div class="bs-year__months">
+    <button class="bs-stack" type="button" aria-label="Январь: 1 книга"><span class="bs-stack__book bs-cloth--oxblood"><i class="bs-ico bs-ico-audio"></i></span></button>
+    <button class="bs-stack" type="button" aria-label="Февраль: 2 книги"><span class="bs-stack__book bs-cloth--navy"><i class="bs-ico bs-ico-ebook"></i></span><span class="bs-stack__book bs-cloth--ochre"><i class="bs-ico bs-ico-audio"></i></span></button>
+    <span aria-hidden="true"></span>
+    <button class="bs-stack" type="button" aria-label="Апрель: 3 книги"><span class="bs-stack__book bs-cloth--bottle"><i class="bs-ico bs-ico-audio"></i></span><span class="bs-stack__book bs-cloth--plum"><i class="bs-ico bs-ico-audio"></i></span><span class="bs-stack__book bs-cloth--linen"><i class="bs-ico bs-ico-ebook"></i></span></button>
+    <button class="bs-stack" type="button" aria-label="Май: 1 книга"><span class="bs-stack__book bs-cloth--slate"><i class="bs-ico bs-ico-audio"></i></span></button>
+    <button class="bs-stack" type="button" aria-label="Июнь: 2 книги"><span class="bs-stack__book bs-cloth--sage"><i class="bs-ico bs-ico-ebook"></i></span><span class="bs-stack__book bs-cloth--oxblood"><i class="bs-ico bs-ico-audio"></i></span></button>
+    <button class="bs-stack" type="button" aria-label="Июль: 2 книги"><span class="bs-stack__book bs-cloth--plum"><i class="bs-ico bs-ico-audio"></i></span><span class="bs-stack__book bs-cloth--navy"><i class="bs-ico bs-ico-ebook"></i></span></button>
+    <span aria-hidden="true"></span>
+    <button class="bs-stack" type="button" aria-label="Сентябрь: 1 книга"><span class="bs-stack__book bs-cloth--ochre"><i class="bs-ico bs-ico-audio"></i></span></button>
+    <button class="bs-stack" type="button" aria-label="Октябрь: 3 книги"><span class="bs-stack__book bs-cloth--bottle"><i class="bs-ico bs-ico-ebook"></i></span><span class="bs-stack__book bs-cloth--slate"><i class="bs-ico bs-ico-audio"></i></span><span class="bs-stack__book bs-cloth--oxblood"><i class="bs-ico bs-ico-audio"></i></span></button>
+    <button class="bs-stack" type="button" aria-label="Ноябрь: 2 книги"><span class="bs-stack__book bs-cloth--linen"><i class="bs-ico bs-ico-ebook"></i></span><span class="bs-stack__book bs-cloth--navy"><i class="bs-ico bs-ico-audio"></i></span></button>
+    <button class="bs-stack" type="button" aria-label="Декабрь: 1 книга"><span class="bs-stack__book bs-cloth--plum"><i class="bs-ico bs-ico-ebook"></i></span></button>
+  </div>
+  <div class="bs-year__labels" aria-hidden="true"><span>янв</span><span>фев</span><span>мар</span><span>апр</span><span>май</span><span>июн</span><span>июл</span><span>авг</span><span>сен</span><span>окт</span><span>ноя</span><span>дек</span></div>
+  </div>
+  <dl class="bs-year__foot">
+    <div><dt>Без даты</dt><dd>3 книги</dd></div>
+    <div><dt>Чаще всего</dt><dd>Стругацкие · 3, Фрэнк Герберт · 2, Kazuo Ishiguro · 2</dd></div>
+  </dl>
+</section>
+</body>
+</html>

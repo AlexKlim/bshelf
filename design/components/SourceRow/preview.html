@@ -1,0 +1,34 @@
+<!-- @dsCard group="Источники" height=250 subtitle="Литрес, Kindle и выгрузка: последний синк и действие" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>SourceRow</title>
+<style>
+  body { margin: 0; padding: 0 16px 16px; background: var(--surface); font-family: var(--font-ui); max-inline-size: 560px; }
+</style>
+</head>
+<body>
+<div class="bs-source">
+  <div class="bs-source__body">
+    <span class="bs-source__name">Литрес</span>
+    <span class="bs-source__meta">Последний синк 12 дней назад · 148 книг</span>
+  </div>
+  <button class="bs-btn bs-btn--secondary" type="button">Войти и обновить</button>
+</div>
+<div class="bs-source">
+  <div class="bs-source__body">
+    <span class="bs-source__name">Kindle</span>
+    <span class="bs-source__meta bs-source__meta--error">Amazon не пустил вход. Попробуйте ещё раз.</span>
+  </div>
+  <button class="bs-btn bs-btn--secondary" type="button">Sync Kindle</button>
+</div>
+<div class="bs-source">
+  <div class="bs-source__body">
+    <span class="bs-source__name">Выгрузка Amazon</span>
+    <span class="bs-source__meta">Запрошена 3 дня назад, Amazon готовит архив</span>
+  </div>
+  <button class="bs-btn bs-btn--secondary" type="button" disabled>Ждём архив</button>
+</div>
+</body>
+</html>

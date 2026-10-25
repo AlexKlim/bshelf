@@ -1,0 +1,34 @@
+<!-- @dsCard group="Шкаф" height=470 subtitle="Вид «Список»: те же полки строками, переключатель запоминается" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>ShelfList</title>
+<style>
+  body { margin: 0; padding: 16px 0; background: var(--wall); font-family: var(--font-ui); color: var(--ink); max-inline-size: 560px; }
+  .toggle { padding: 0 16px 8px; }
+</style>
+</head>
+<body>
+<fieldset class="bs-choices toggle">
+  <legend class="sr" style="position:absolute;clip-path:inset(50%)">Вид</legend>
+  <label class="bs-choice"><input type="radio" name="view" id="v-case"><span>Шкаф</span></label>
+  <label class="bs-choice"><input type="radio" name="view" id="v-list" checked><span>Список</span></label>
+</fieldset>
+<section class="bs-list" aria-labelledby="l-now">
+  <h2 class="bs-list__head" id="l-now">Сейчас · 2</h2>
+  <ul>
+    <li><button class="bs-row" type="button"><span class="bs-row__spine bs-cloth--navy" aria-hidden="true"></span><span class="bs-row__body"><span class="bs-row__title">Project Hail Mary</span><span class="bs-row__author">Andy Weir</span></span><span class="bs-status bs-status--strong"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i>Читаю</span></button></li>
+    <li><button class="bs-row" type="button"><span class="bs-row__spine bs-cloth--slate" aria-hidden="true"></span><span class="bs-row__body"><span class="bs-row__title">Дюна</span><span class="bs-row__author">Фрэнк Герберт</span></span><span class="bs-status bs-status--strong"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i>Слушаю</span></button></li>
+  </ul>
+</section>
+<section class="bs-list" aria-labelledby="l-2025">
+  <h2 class="bs-list__head" id="l-2025">2025 · 18</h2>
+  <ul>
+    <li><button class="bs-row" type="button"><span class="bs-row__spine bs-cloth--oxblood" aria-hidden="true"></span><span class="bs-row__body"><span class="bs-row__title">Мастер и Маргарита</span><span class="bs-row__author">Михаил Булгаков</span></span><span class="bs-status"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i>Прослушал · март</span></button></li>
+    <li><button class="bs-row" type="button"><span class="bs-row__spine bs-cloth--ochre" aria-hidden="true"></span><span class="bs-row__body"><span class="bs-row__title">Пикник на обочине</span><span class="bs-row__author">Аркадий и Борис Стругацкие</span></span><span class="bs-status"><span class="bs-status__formats"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span>Май</span></button></li>
+    <li><button class="bs-row" type="button"><span class="bs-row__spine bs-cloth--sage" aria-hidden="true"></span><span class="bs-row__body"><span class="bs-row__title">The Remains of the Day</span><span class="bs-row__author">Kazuo Ishiguro</span></span><span class="bs-status"><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i>Прочитал · авг</span></button></li>
+  </ul>
+</section>
+</body>
+</html>

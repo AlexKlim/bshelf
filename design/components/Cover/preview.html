@@ -1,0 +1,76 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Book Shelf</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--wall); color: var(--ink); font-family: var(--font-ui); overflow: hidden; }
+  .cover { position: relative; height: 288px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; overflow: hidden; }
+  .art svg { display: block; width: 480px; height: 288px; }
+  .back { fill: var(--wood-back); }
+  .oak { fill: var(--wood-oak); }
+  .edge { fill: var(--wood-edge); }
+  .ox { fill: var(--spine-oxblood); }
+  .bot { fill: var(--spine-bottle); }
+  .och { fill: var(--spine-ochre); }
+  .band { fill: var(--spine-band); }
+  .sp { rx: var(--radius-xs); }
+  .words { position: absolute; left: var(--space-8); bottom: var(--space-8); max-width: 440px; }
+  .name { margin: 0; font-family: var(--font-page); font-size: 104px; line-height: .95; font-weight: 600; letter-spacing: -.02em; color: var(--ink); }
+  .tag { margin: var(--space-3) 0 0 4px; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      wood-back 464x240 bled off the top and right edge (the cabinet) · wood-oak plank 480x18 with a wood-edge 6px lip · spines in spine-oxblood, spine-bottle, spine-ochre, about 40% of 960x288
+  arrangement one tall cabinet slab, a row of spines standing on the plank, one pulled out at the README's 5° angle
+  pattern     literal motif row: book spines from spine-w-min to spine-w-max wide and spine-h-min to spine-h-max tall, each with two spine-band stripes, because the whole product is "the shelf looks like a shelf"
+  scales      spine gaps 2px as on bs-shelf__row, row starts space-4 inside the slab, plank = plank token, corners radius-xs
+-->
+<rect class="back" x="24" y="-8" width="464" height="240" rx="2"/>
+<rect class="ox sp"  x="40"  y="64" width="28" height="168" rx="2"/>
+<rect class="bot sp" x="70"  y="84" width="36" height="148" rx="2"/>
+<rect class="och sp" x="108" y="56" width="24" height="176" rx="2"/>
+<rect class="ox sp"  x="134" y="72" width="32" height="160" rx="2"/>
+<g transform="translate(0,-12) rotate(-5 188 232)">
+  <rect class="bot sp" x="168" y="96" width="40" height="136" rx="2"/>
+  <rect class="band" x="168" y="102" width="40" height="2"/>
+  <rect class="band" x="168" y="206" width="40" height="2"/>
+</g>
+<rect class="och sp" x="210" y="60" width="28" height="172" rx="2"/>
+<rect class="bot sp" x="240" y="76" width="34" height="156" rx="2"/>
+<rect class="ox sp"  x="276" y="92" width="26" height="140" rx="2"/>
+<rect class="och sp" x="304" y="52" width="38" height="180" rx="2"/>
+<rect class="bot sp" x="344" y="80" width="30" height="152" rx="2"/>
+<rect class="ox sp"  x="376" y="68" width="24" height="164" rx="2"/>
+<rect class="och sp" x="402" y="88" width="36" height="144" rx="2"/>
+<rect class="bot sp" x="440" y="62" width="30" height="170" rx="2"/>
+<rect class="band" x="40"  y="70" width="28" height="2"/><rect class="band" x="40"  y="206" width="28" height="2"/>
+<rect class="band" x="70"  y="90" width="36" height="2"/><rect class="band" x="70"  y="206" width="36" height="2"/>
+<rect class="band" x="108" y="62" width="24" height="2"/><rect class="band" x="108" y="206" width="24" height="2"/>
+<rect class="band" x="134" y="78" width="32" height="2"/><rect class="band" x="134" y="206" width="32" height="2"/>
+<rect class="band" x="210" y="66" width="28" height="2"/><rect class="band" x="210" y="206" width="28" height="2"/>
+<rect class="band" x="240" y="82" width="34" height="2"/><rect class="band" x="240" y="206" width="34" height="2"/>
+<rect class="band" x="276" y="98" width="26" height="2"/><rect class="band" x="276" y="206" width="26" height="2"/>
+<rect class="band" x="304" y="58" width="38" height="2"/><rect class="band" x="304" y="206" width="38" height="2"/>
+<rect class="band" x="344" y="86" width="30" height="2"/><rect class="band" x="344" y="206" width="30" height="2"/>
+<rect class="band" x="376" y="74" width="24" height="2"/><rect class="band" x="376" y="206" width="24" height="2"/>
+<rect class="band" x="402" y="94" width="36" height="2"/><rect class="band" x="402" y="206" width="36" height="2"/>
+<rect class="band" x="440" y="68" width="30" height="2"/><rect class="band" x="440" y="206" width="30" height="2"/>
+<rect class="oak" x="8" y="232" width="480" height="18"/>
+<rect class="edge" x="8" y="250" width="480" height="6"/>
+</svg>
+</div>
+<div class="words">
+  <h1 class="name">Book<br>Shelf</h1>
+  <p class="tag">Один шкаф для всего, что вы прочитали и прослушали.</p>
+</div>
+</div>
+</body>
+</html>

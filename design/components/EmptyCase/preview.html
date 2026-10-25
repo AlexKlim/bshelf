@@ -1,0 +1,37 @@
+<!-- @dsCard group="Шкаф" height=560 subtitle="Пустой шкаф: войти в Литрес, запросить историю Kindle, записать книгу" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>EmptyCase</title>
+<style>
+  body { margin: 0; padding: 16px; background: var(--wall); font-family: var(--font-ui); color: var(--ink); }
+  .bs-empty { max-inline-size: 640px; }
+</style>
+</head>
+<body>
+<div class="bs-empty">
+  <div class="bs-case" aria-hidden="true">
+    <div class="bs-shelf"><ul class="bs-shelf__row"></ul><div class="bs-shelf__plank"></div></div>
+    <div class="bs-shelf"><ul class="bs-shelf__row"></ul><div class="bs-shelf__plank"></div></div>
+  </div>
+  <section class="bs-onboard" aria-labelledby="ob-title">
+    <h2 class="bs-onboard__title" id="ob-title">Шкаф пока пустой</h2>
+    <p class="bs-onboard__lead">Начните с источника: книги встанут на полки сами.</p>
+    <ul class="bs-paths">
+      <li class="bs-path">
+        <button class="bs-btn bs-btn--primary" type="button">Войти в Литрес</button>
+        <p class="bs-path__note">Аудиокниги появятся сразу после входа. Пароль не хранится.</p>
+      </li>
+      <li class="bs-path">
+        <button class="bs-btn bs-btn--secondary" type="button" disabled>Запросить историю Kindle</button>
+        <p class="bs-path__note"><i class="bs-ico bs-ico-progress" aria-hidden="true"></i>Запрошено 25 октября. Amazon готовит архив, обычно 1-3 дня.</p>
+      </li>
+      <li class="bs-path">
+        <button class="bs-btn bs-btn--quiet" type="button"><i class="bs-ico bs-ico-pen" aria-hidden="true"></i>Добавить книгу</button>
+      </li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!-- @dsCard group="Книга" height=680 width=1040 subtitle="Открытая книга: титульная страница слева, заметки и хайлайты справа" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>BookSpread</title>
+<style>
+  body { margin: 0; padding: 32px 24px; background: var(--wall); font-family: var(--font-ui); color: var(--ink); }
+  .bs-book { max-inline-size: 960px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div class="bs-book">
+  <article class="bs-spread bs-cloth--ochre" aria-labelledby="bk-title">
+    <section class="bs-page bs-page--left bs-title-page" aria-label="Страница 2">
+      <div class="bs-cover bs-cloth--ochre" role="img" aria-label="Обложка">Пикник на обочине</div>
+      <p class="bs-book__author">Аркадий и Борис Стругацкие</p>
+      <h1 class="bs-book__title" id="bk-title">Пикник на обочине</h1>
+      <span class="bs-ornament" aria-hidden="true"></span>
+      <ul class="bs-colophon">
+        <li><i class="bs-ico bs-ico-audio" aria-hidden="true"></i>Аудио, Литрес. Прослушал в марте 2024</li>
+        <li><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i>Kindle, Roadside Picnic. Прочитал в 2019</li>
+      </ul>
+      <p class="bs-book__twice">Вы купили эту книгу дважды</p>
+      <p class="bs-page__folio" aria-hidden="true">2</p>
+    </section>
+    <section class="bs-page bs-page--right" aria-label="Страница 3">
+      <p class="bs-page__head">Пикник на обочине</p>
+      <h2 class="bs-page__h">Заметки</h2>
+      <p class="bs-note">Перечитать в оригинале. Финал у Шара совсем другой, чем в «Сталкере».</p>
+      <h2 class="bs-page__h">Хайлайты</h2>
+      <ul class="bs-highlights">
+        <li><p class="bs-highlight"><mark>Счастье для всех, даром, и пусть никто не уйдёт обиженный!</mark></p></li>
+        <li><p class="bs-highlight"><mark>A picnic. Picture a forest, a country road, a meadow.</mark></p></li>
+      </ul>
+      <div><button class="bs-btn bs-btn--quiet" type="button">Ещё 12 хайлайтов</button></div>
+      <div class="bs-spread__foot"><button class="bs-btn bs-btn--quiet bs-btn--sm" type="button">Разъединить издания</button></div>
+      <p class="bs-page__folio" aria-hidden="true">3</p>
+    </section>
+  </article>
+</div>
+</body>
+</html>

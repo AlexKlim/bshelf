@@ -1,0 +1,39 @@
+<!-- @dsCard group="Поиск" height=260 subtitle="«Читал ли я…»: ответ одной строкой и «Не на полке»" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>SearchField</title>
+<style>
+  body { margin: 0; padding: 16px; background: var(--wall); font-family: var(--font-ui); color: var(--ink); display: grid; gap: 16px; max-inline-size: 560px; }
+  .block { display: grid; gap: 4px; }
+</style>
+</head>
+<body>
+<div class="block">
+  <label class="bs-search" for="q1">
+    <i class="bs-ico bs-ico-search" aria-hidden="true"></i>
+    <input class="bs-search__input" id="q1" type="search" placeholder="Читал ли я…" value="пикник">
+    <button class="bs-iconbtn" type="button" aria-label="Очистить"><i class="bs-ico bs-ico-close" aria-hidden="true"></i></button>
+  </label>
+  <p class="bs-answer" role="status" style="margin:0">
+    <span class="bs-answer__title">Пикник на обочине</span>
+    <span class="bs-status"><span class="bs-status__formats"><i class="bs-ico bs-ico-audio" aria-hidden="true"></i><i class="bs-ico bs-ico-ebook" aria-hidden="true"></i></span>Читали и слушали · 2019, 2024</span>
+  </p>
+</div>
+<div class="block">
+  <label class="bs-search" for="q2">
+    <i class="bs-ico bs-ico-search" aria-hidden="true"></i>
+    <input class="bs-search__input" id="q2" type="search" placeholder="Читал ли я…" value="Улитка на склоне">
+  </label>
+  <div class="bs-answer" role="status">
+    <span class="bs-answer__title">Не на полке</span>
+    <span class="bs-answer__actions">
+      <button class="bs-btn bs-btn--secondary bs-btn--sm" type="button"><i class="bs-ico bs-ico-want" aria-hidden="true"></i>Хочу</button>
+      <button class="bs-btn bs-btn--secondary bs-btn--sm" type="button">Читал</button>
+      <button class="bs-btn bs-btn--secondary bs-btn--sm" type="button">Слушал</button>
+    </span>
+  </div>
+</div>
+</body>
+</html>

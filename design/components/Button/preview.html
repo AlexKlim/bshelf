@@ -1,0 +1,25 @@
+<!-- @dsCard group="Основа" height=150 subtitle="Главная, вторичная, тихая, занята, неактивна" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Button</title>
+<style>
+  body { margin: 0; padding: 16px; background: var(--wall); font-family: var(--font-ui); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .row + .row { margin-top: 12px; padding: 12px; background: var(--paper); }
+</style>
+</head>
+<body>
+<div class="row">
+  <button class="bs-btn bs-btn--primary" type="button">Войти в Литрес</button>
+  <button class="bs-btn bs-btn--secondary" type="button">Синхронизировать</button>
+  <button class="bs-btn bs-btn--quiet" type="button">Запросить историю Kindle</button>
+</div>
+<div class="row">
+  <button class="bs-btn bs-btn--primary" type="button" aria-busy="true">Синхронизирую…</button>
+  <button class="bs-btn bs-btn--secondary" type="button" disabled>Нет сети</button>
+  <button class="bs-btn bs-btn--quiet bs-btn--sm" type="button">Разъединить издания</button>
+</div>
+</body>
+</html>

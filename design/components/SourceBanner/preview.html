@@ -1,0 +1,22 @@
+<!-- @dsCard group="Сообщения" height=170 subtitle="Ошибка источника и обычное сообщение, один слот над шкафом" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>SourceBanner</title>
+<style>
+  body { margin: 0; padding: 16px; background: var(--wall); font-family: var(--font-ui); display: grid; gap: 12px; }
+</style>
+</head>
+<body>
+<div class="bs-banner bs-banner--error" role="alert">
+  <p class="bs-banner__text" style="margin:0"><b>Литрес не пустил вход:</b> неверный пароль. Шкаф показан из кэша.</p>
+  <button class="bs-btn bs-btn--quiet" type="button">Войти снова</button>
+</div>
+<div class="bs-banner bs-banner--notice" role="status">
+  <p class="bs-banner__text" style="margin:0">Выгрузка Amazon готова: 214 книг ждут импорта.</p>
+  <button class="bs-btn bs-btn--quiet" type="button">Импортировать</button>
+  <button class="bs-iconbtn" type="button" aria-label="Скрыть"><i class="bs-ico bs-ico-close" aria-hidden="true"></i></button>
+</div>
+</body>
+</html>
