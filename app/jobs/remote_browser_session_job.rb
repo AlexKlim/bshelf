@@ -10,9 +10,11 @@ class RemoteBrowserSessionJob < ApplicationJob
     end
   rescue RemoteBrowser::ProviderRefused
     session.finish!(interruption: "provider_refused")
+  rescue RemoteBrowser::PageChanged
+    session.finish!(interruption: "browser_failed", source_error: "page_changed")
   rescue StandardError => e
     session.finish!(interruption: "browser_failed")
-    raise unless e.is_a?(RemoteBrowser::PageChanged) || e.is_a?(RemoteBrowser::BrowserFailed)
+    raise unless e.is_a?(RemoteBrowser::BrowserFailed)
   end
 
   private
@@ -39,7 +41,7 @@ class RemoteBrowserSessionJob < ApplicationJob
     return unless session.transition!(from: "live", to: "collecting", steps:)
 
     RemoteBrowser.running << session.id
-    result = collector.collect(session) { session.step_done!(it) }
+    result = collector.collect(session) { |step| step ? session.step_done!(step) : session.heartbeat! }
     session.finish!(to: "done", result:, from: "collecting")
   ensure
     RemoteBrowser.running.delete(session.id)

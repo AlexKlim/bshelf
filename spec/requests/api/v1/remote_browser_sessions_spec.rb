@@ -22,7 +22,7 @@ RSpec.describe "Remote browser sessions" do
       start
       expect(response).to have_http_status(:created)
       expect(json["session"]).to include("purpose" => "kindle", "status" => "connecting", "queue_position" => nil,
-        "steps" => [], "result" => nil, "interruption" => nil)
+        "steps" => [], "result" => nil, "interruption" => nil, "login_window_seconds" => 300)
       id = json["session"]["id"]
 
       start

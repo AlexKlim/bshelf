@@ -92,6 +92,7 @@ module Api
           queue_position: session.queue_position,
           expires_at: session.expires_at,
           seconds_left: session.seconds_left,
+          login_window_seconds: RemoteBrowserSession::LOGIN_TIME.to_i,
           steps: session.steps,
           result: session.result,
           interruption: session.interruption,

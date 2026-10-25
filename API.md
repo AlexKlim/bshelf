@@ -304,6 +304,7 @@ Cookie session only (`403 session_required` for API tokens). Screen flow: `desig
   "queue_position": 1,            // only while queued
   "expires_at": "...",            // end of the 5:00 sign-in, set when live
   "seconds_left": 287,            // only while live
+  "login_window_seconds": 300,    // length of the whole sign-in window, for the timer's full scale
   "steps": [ { "key": "library", "state": "done" }, { "key": "highlights", "state": "pending" } ],
   "result": { "books": 12, "highlights": 40 },  // when done
   "interruption": null,           // aborted | timeout | provider_refused | deploy_interrupted | browser_failed
@@ -317,7 +318,7 @@ Reconnect: when the page becomes visible again, `GET` the session; if it is stil
 
 Live view security (OV-1): Steel sits on the private network only (`STEEL_URL`, must be `*.internal`, `localhost` or a private IP, checked at boot). `viewer` returns a token that works once, for 1 minute, only for its session and only for the session's owner. The first request trades it for an httponly, `SameSite=Strict` cookie scoped to `/api/v1/remote_browser_sessions/:id/view`, which covers the page's subresources until the sign-in time ends or the session leaves `live`. Only the viewer path Steel issued for the session is proxied, with the query Steel gave it; the query the client sends is never forwarded. Responses carry `Cache-Control: no-store` and `frame-ancestors 'self'`.
 
-Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the rest wait in a FIFO queue. One running session per person. `REMOTE_BROWSER_DISABLED=1` is the instance kill switch. A deploy interrupts sessions that are `collecting` (`deploy_interrupted`); `live` sessions carry on in the new process. Every start and finish goes to the audit log; `done` and store refusals update the `kindle_browser` (or `litres`) source.
+Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the rest wait in a FIFO queue. One running session per person. `REMOTE_BROWSER_DISABLED=1` is the instance kill switch. A deploy interrupts sessions that are `collecting` (`deploy_interrupted`); `live` sessions carry on in the new process. Every start and finish goes to the audit log; `done`, store refusals (`provider_refused`) and changed store pages (`page_changed`, shown to the person as `browser_failed`) update the `kindle_browser` (or `litres`) source; a failure of our own browser does not. A job sweeps stale sessions every minute: `live` past its sign-in window becomes `timeout`, `connecting` or `collecting` without progress for 15 minutes becomes `deploy_interrupted`.
 
 ## Error codes
 

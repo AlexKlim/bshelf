@@ -37,6 +37,46 @@ RSpec.describe RemoteBrowserSession do
     expect(waiting.reload.status).to eq("connecting")
   end
 
+  it "recovers a stuck collecting session every minute without any request" do
+    stuck = described_class.start!(users.first, "kindle")
+    stuck.update_columns(status: "collecting", steel_session_id: "steel-1", updated_at: 16.minutes.ago)
+    task = YAML.load_file(Rails.root.join("config/recurring.yml")).dig("production", "remote_browser_dispatch")
+    expect(task).to eq("command" => "RemoteBrowserSession.dispatch!", "schedule" => "every minute")
+
+    described_class.dispatch!
+
+    expect(stuck.reload).to have_attributes(status: "interrupted", interruption: "deploy_interrupted")
+    expect(steel.released).to eq([ "steel-1" ])
+  end
+
+  it "starts a fresh session when the person's last one went stale" do
+    stuck = described_class.start!(users.first, "kindle")
+    stuck.update_columns(status: "collecting", updated_at: 16.minutes.ago)
+
+    session = described_class.start!(users.first, "kindle")
+
+    expect(session).not_to eq(stuck)
+    expect(session.status).to eq("connecting")
+    expect(stuck.reload.status).to eq("interrupted")
+  end
+
+  it "releases swept browsers and records them only after the dispatch lock is released" do
+    stuck = live_session(users.first)
+    stuck.update_columns(expires_at: 2.minutes.ago)
+    depth = described_class.connection.open_transactions
+    seen = []
+    allow(RemoteBrowser).to receive(:release) { seen << described_class.connection.open_transactions }
+    allow(MetricEvent).to receive(:record!).and_wrap_original do |original, *args, **kwargs|
+      seen << described_class.connection.open_transactions
+      original.call(*args, **kwargs)
+    end
+
+    described_class.dispatch!
+
+    expect(stuck.reload.interruption).to eq("timeout")
+    expect(seen).to eq([ depth, depth ])
+  end
+
   it "uses each viewer token once and only before it expires" do
     session = live_session(users.first)
     token = session.issue_viewer_token!
