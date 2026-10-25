@@ -20,7 +20,7 @@ export function TabBar({ top = false }: { top?: boolean }) {
           type="button"
           role="tab"
           className="bs-tab"
-          aria-selected={pathname === tab.path}
+          aria-selected={tab.path === "/" ? pathname === "/" : pathname.startsWith(tab.path)}
           onClick={() => navigate(tab.path)}
         >
           {t(`tabs.${tab.key}`)}
