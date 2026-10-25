@@ -1,5 +1,3 @@
-# Server-rendered text (share answers, the OAuth consent page) follows `locale`, then the first supported
-# language in Accept-Language, then English.
 module RequestLocale
   extend ActiveSupport::Concern
 

@@ -29,7 +29,6 @@ class Shelf
 
   def key_for(book) = placements([ book.id ]).fetch(book.id).key
 
-  # One placement query and one books query for every shelf together.
   def shelves(limit:)
     shown = grouped(placements).transform_values { |ids| [ ids.size, ids.first(limit) ] }
     books = load(shown.values.flat_map(&:last))
@@ -50,7 +49,6 @@ class Shelf
     summaries_of(ids.map { books[it] })
   end
 
-  # For books already loaded with their editions and readings.
   def summaries_of(books)
     places = placements(books.map(&:id))
     books.map { BookSerializer.summary(it, places.fetch(it.id).key) }
@@ -60,7 +58,6 @@ class Shelf
 
   def load(ids) = user.books.where(id: ids).includes(editions: :reading).index_by(&:id)
 
-  # ponytail: places every book on each request; fine for a few thousand books per user.
   def grouped(places)
     places
       .group_by { |_id, place| place.key }

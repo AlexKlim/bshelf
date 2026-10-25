@@ -1,5 +1,3 @@
-# Stands in for Steel in development and test. Stateless across processes: the web process
-# serves the viewer while a Solid Queue process creates and releases sessions.
 class FakeSteelSession
   attr_reader :created, :released
 

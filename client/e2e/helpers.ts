@@ -6,7 +6,6 @@ const root = resolve(import.meta.dirname, "../..")
 
 export const uniqueEmail = () => `reader-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`
 
-// The confirmation email goes to letter_opener; reading the token from the database is the stable way in.
 export function confirmationToken(email: string) {
   return execFileSync(
     "bin/rails",

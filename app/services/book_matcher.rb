@@ -1,5 +1,3 @@
-# Only ISBN or original title + author merge on their own; a shared title is a possible duplicate for the
-# shelf banner. The older book survives so its id stays stable for the client.
 class BookMatcher
   Row = Data.define(:id, :user_id, :title, :original_title, :author, :isbn, :isbn_source)
   NORMALIZED_ISBN = "regexp_replace(upper(coalesce(isbn, '')), '[^0-9X]', '', 'g') IN (:isbns)"
@@ -66,7 +64,6 @@ class BookMatcher
     matches.order(:id).pluck(*Row.members).map { Row.new(*it) }
   end
 
-  # An ISBN the catalog guessed from a title is only as good as that guess, so it proposes instead of merging.
   def verdict(other)
     authors = TextKey.authors(book.author, other.author)
     same_isbn = @isbn && @isbn == self.class.isbn13(other.isbn)

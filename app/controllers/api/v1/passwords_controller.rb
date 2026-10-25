@@ -5,7 +5,6 @@ module Api
       limit_rate to: 5, within: 1.hour, only: :create, name: "request"
       limit_rate to: 5, within: 1.hour, only: :update, name: "reset"
 
-      # Always 202 so the endpoint does not reveal which emails have accounts.
       def create
         user = User.send_reset_password_instructions(email: params.require(:email))
         AuditEvent.record!("password_reset_requested", request:, user:) if user.persisted?

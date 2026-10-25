@@ -1,5 +1,3 @@
-# Sync, share, remote browser and job signals over the last day. Alerts are structured error log lines
-# (event "alert"), so whatever reads the logs (Railway log alerts today) pages the operator; there is no email.
 class HealthCheck
   WINDOW = 24.hours
   MIN_SYNCS = 4

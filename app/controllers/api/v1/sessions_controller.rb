@@ -8,7 +8,6 @@ module Api
 
       limit_rate to: 10, within: 3.minutes, only: :create
 
-      # Per email only failures count, so the owner signing in never locks the account.
       def create
         email = params.require(:email)
         failures = "sign_in_failures:#{email.to_s.strip.downcase}"

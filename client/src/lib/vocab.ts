@@ -20,7 +20,6 @@ export function monthOnly(iso: string, lng: string) {
   return new Intl.DateTimeFormat(lng, { month: ru(lng) ? "long" : "short", timeZone: "UTC" }).format(new Date(iso))
 }
 
-// "с мая 2025": Russian needs the genitive month, which Intl only produces next to a day.
 export function sinceMonth(iso: string, lng: string) {
   const date = new Date(iso)
   if (!ru(lng)) return monthYear(iso, lng)

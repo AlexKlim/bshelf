@@ -1,5 +1,3 @@
-# One tick of a browser session. While the person signs in, the job re-enqueues itself instead
-# of sleeping, so it holds no worker thread and survives a deploy.
 class RemoteBrowserSessionJob < ApplicationJob
   TICK = 2.seconds
 

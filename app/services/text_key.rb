@@ -1,5 +1,3 @@
-# Comparison keys for titles and authors. No transliteration: Cyrillic and Latin never compare equal, so a
-# Russian and an English edition meet only through original_title.
 module TextKey
   def self.title(value)
     value.to_s.unicode_normalize(:nfkd).gsub(/\p{Mn}/, "").downcase.gsub(/[^\p{L}\p{N}]+/, " ").strip
@@ -17,7 +15,6 @@ module TextKey
     end
   end
 
-  # :same, :different, or :unknown when one side is blank or the scripts differ.
   def self.authors(a, b)
     left = author_tokens(a)
     right = author_tokens(b)

@@ -16,7 +16,6 @@ class RemoteBrowserSession < ApplicationRecord
 
   scope :active, -> { where(status: ACTIVE) }
 
-  # Sweeps first, so a session whose worker died does not come back as the person's running one.
   def self.start!(user, purpose)
     dispatch!
     session = user.remote_browser_sessions.active.first || user.remote_browser_sessions.create!(purpose:)
@@ -26,8 +25,6 @@ class RemoteBrowserSession < ApplicationRecord
     user.remote_browser_sessions.active.first!
   end
 
-  # Serialized by an advisory lock, so two requests cannot both take the last free browser. Also runs every
-  # minute from config/recurring.yml. Swept browsers are released after the lock, outside the transaction.
   def self.dispatch!
     swept = transaction do
       connection.execute("SELECT pg_advisory_xact_lock(#{LOCK_KEY})")
@@ -41,7 +38,6 @@ class RemoteBrowserSession < ApplicationRecord
     swept.each(&:finished)
   end
 
-  # A process killed without its stop hook leaves rows that would hold a browser slot forever.
   def self.sweep_stale
     timed_out = where(status: "live", expires_at: ...1.minute.ago).map { [ it, "timeout" ] }
     dead = where(status: %w[connecting collecting], updated_at: ...STALE_AFTER.ago).map { [ it, "deploy_interrupted" ] }
@@ -76,8 +72,6 @@ class RemoteBrowserSession < ApplicationRecord
     transition!(from:, to:, interruption:, result:, finished_at: Time.current, viewer_token_digest: nil)
   end
 
-  # What follows an end: release the browser and record the outcome. It talks to Steel, so callers
-  # run it outside their transactions.
   def finished(source_error: SOURCE_ERRORS[interruption])
     RemoteBrowser.release(steel_session_id) if steel_session_id
     outcome = interruption || status
@@ -90,7 +84,6 @@ class RemoteBrowserSession < ApplicationRecord
     update!(steps: steps.map { it["key"] == key ? it.merge("state" => "done") : it })
   end
 
-  # Collectors call back on progress; a collection that keeps reporting is never swept as stale.
   def heartbeat! = self.class.where(id:, status: "collecting").update_all(updated_at: Time.current)
 
   def issue_viewer_token!

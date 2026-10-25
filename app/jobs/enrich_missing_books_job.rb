@@ -1,4 +1,3 @@
-# Picks up books whose lookup ran out of retries, usually after a day of exhausted catalog quota.
 class EnrichMissingBooksJob < ApplicationJob
   BATCH = 500
 

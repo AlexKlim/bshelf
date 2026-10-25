@@ -1,8 +1,6 @@
 import type { TFunction } from "i18next"
 import type { Shelf, ShelfKey } from "./types"
 
-// The bookcase has no "owned" shelf: bought-but-unstarted books stand on "Want" after the wanted ones,
-// their caption still says "Owned". "Now" and "Want" are always on the case so it keeps its shape.
 export function arrangeShelves(shelves: Shelf[]): Shelf[] {
   const byKey = new Map(shelves.map((s) => [s.key, s]))
   const owned = byKey.get("owned")

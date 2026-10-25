@@ -1,6 +1,4 @@
 module McpTools
-  # Tools answer with codes and data the assistant can phrase in the user's language,
-  # plus a one-line English summary as the text content.
   class BaseTool < MCP::Tool
     UUID = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
 

@@ -1,5 +1,3 @@
-# Background jobs never read-then-write a status: the decision lives in the WHERE clause of one
-# UPDATE, so a manual edit that lands between a job's read and its write always wins.
 class StatusResolver
   STATUS_RANK = { "want" => 0, "owned" => 1, "in_progress" => 2, "done" => 3 }.freeze
   SOURCE_RANK = { "purchase" => 0, "kindle_export" => 1, "kindle_browser" => 2, "litres" => 3, "manual" => 4 }.freeze
@@ -27,9 +25,6 @@ class StatusResolver
     @reading = reading
   end
 
-  # Manual writes set exactly the date fields passed (nil clears). Automatic writes only fill
-  # what they know and never touch a manual row, a stronger source, or a later status,
-  # except a purchase moving "want" to "owned": buying a wanted book is news no other source carries.
   def apply(status:, source:, **dates)
     raise ArgumentError, "unknown status #{status}" unless STATUS_RANK.key?(status)
 

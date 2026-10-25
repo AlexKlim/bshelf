@@ -10,7 +10,6 @@ import type { BookSummary, Format, SearchResult, ShareAnswer, Status } from "@/l
 import { useOnline } from "@/lib/useOnline"
 import { duplicateMessage, errorMessage } from "@/lib/vocab"
 
-// Android share_target lands here (GET /share?title&text&url); the server matches links and text.
 export function ShareScreen() {
   const { t, i18n } = useTranslation()
   const [params] = useSearchParams()

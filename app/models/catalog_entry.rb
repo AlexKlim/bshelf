@@ -1,4 +1,3 @@
-# Shared by all users: keys are catalog queries, not shelf data.
 class CatalogEntry < ApplicationRecord
   TTL = 30.days
 

@@ -45,7 +45,6 @@ module Api
 
       def book = @book ||= current_user.books.find_by!(uuid: params[:id])
 
-      # Nested because a top-level "format" key would be read as the request format.
       def edition_params
         edition = params.fetch(:edition, {})
         attrs = edition.permit(:format, :store, :status).to_h.symbolize_keys

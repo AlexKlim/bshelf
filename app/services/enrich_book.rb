@@ -1,4 +1,3 @@
-# Fills only blank fields, so manual values and covers from a store sync always win over the catalog.
 class EnrichBook
   ISBN_CONFIDENCE = 1.0
   TITLE_AUTHOR_CONFIDENCE = 0.9
@@ -57,8 +56,6 @@ class EnrichBook
     nil
   end
 
-  # A shared series name ("Ведьмак. Последнее желание" and "Ведьмак. Меч предназначения") is enough to borrow
-  # a cover, but an ISBN identifies one volume, so it is taken only from the same full title or an ISBN hit.
   def apply(candidate, confidence, exact)
     book.cover_url ||= candidate["cover_url"]
     book.year ||= candidate["year"]

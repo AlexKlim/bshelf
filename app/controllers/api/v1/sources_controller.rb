@@ -16,7 +16,6 @@ module Api
         render json: { sources:, banner: banner(rows) }
       end
 
-      # Litres sync and the Kindle export import are routed so the client can say "not available yet".
       def not_implemented = render_error(:not_implemented, status: :not_implemented)
 
       private
@@ -30,7 +29,6 @@ module Api
           end
       end
 
-      # export_ready slots in between source_error and litres_reminder once the Amazon export import exists.
       def banner(rows)
         failed = SourceConnection::KINDS.filter_map { rows[it] }.find { it.status.in?(%w[error needs_login]) }
         if failed

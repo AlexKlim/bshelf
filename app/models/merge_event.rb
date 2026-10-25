@@ -1,5 +1,3 @@
-# A merge moves rows, it never rewrites them: editions keep their readings and statuses, so unmerge only has
-# to move the same ids back and recreate the absorbed book with its original id, uuid and timestamps.
 class MergeEvent < ApplicationRecord
   FILLABLE = %w[author original_title language isbn isbn_source year page_count audio_minutes cover_url cloth].freeze
   MOVED = { "editions" => Edition, "highlights" => Highlight, "notes" => Note, "merge_events" => MergeEvent }.freeze
@@ -34,9 +32,6 @@ class MergeEvent < ApplicationRecord
 
   def self.snapshot(record) = record.attributes.transform_values { it.is_a?(Time) ? it.iso8601(6) : it }
 
-  # Candidates cannot simply move like editions: a pair is ordered and unique, and the merged pair itself
-  # goes away. So the absorbed book's rows are kept as they were and copies point at the survivor.
-  # Dismissed pairs come along, so the matcher keeps leaving them alone.
   def self.hand_over_candidates(survivor, absorbed)
     removed = DuplicateCandidate.involving(absorbed).to_a
     added = removed.filter_map do |candidate|
@@ -50,9 +45,6 @@ class MergeEvent < ApplicationRecord
     { "candidates_removed" => removed.map { snapshot(it) }, "candidates_added" => added }
   end
 
-  # Returns [survivor, restored], or nil if another request unmerged it first.
-  # ponytail: in a chain (A absorbs B, then C absorbs A) undoing B first leaves B's filled fields in A's
-  # snapshot; editions and statuses still come back exactly. Rewrite later snapshots if that ever matters.
   def unmerge!
     transaction do
       lock!
@@ -72,7 +64,6 @@ class MergeEvent < ApplicationRecord
 
   private
 
-  # The pair with the survivor is skipped: unmerge records it as dismissed instead.
   def restore_candidates
     DuplicateCandidate.where(id: moved["candidates_added"]).delete_all
     Array(moved["candidates_removed"]).each do |attrs|

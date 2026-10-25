@@ -1,5 +1,3 @@
-# Reading dates from API input: `YYYY-MM-DD` or an ISO 8601 timestamp, "" or nil clears the date.
-# Tomorrow is allowed because the reader's day can be ahead of the server's.
 module ReadingDates
   FIELDS = %i[started_at finished_at].freeze
   EARLIEST = Time.utc(1900)

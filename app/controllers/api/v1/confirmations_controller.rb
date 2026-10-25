@@ -12,7 +12,6 @@ module Api
         head :no_content
       end
 
-      # Always 202 so the endpoint does not reveal which emails have accounts.
       def resend
         User.send_confirmation_instructions(email: params.require(:email))
         head :accepted

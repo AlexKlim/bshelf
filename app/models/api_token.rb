@@ -20,7 +20,6 @@ class ApiToken < ApplicationRecord
     token
   end
 
-  # Tokens are 190 random bits, so a fast digest is enough and allows an indexed lookup.
   def self.digest(raw) = OpenSSL::Digest::SHA256.hexdigest(raw)
 
   def revoke! = update!(revoked_at: Time.current)

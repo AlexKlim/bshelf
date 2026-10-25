@@ -1,5 +1,3 @@
-# Sends Devise mails in the background without a usable token in solid_queue_jobs: the job arguments
-# carry it encrypted with a key derived from secret_key_base.
 class DeviseMailJob < ApplicationJob
   def self.encryptor
     ActiveSupport::MessageEncryptor.new(Rails.application.key_generator.generate_key("devise mail token", 32))

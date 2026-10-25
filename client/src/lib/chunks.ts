@@ -10,7 +10,6 @@ export function isChunkError(error: unknown) {
   )
 }
 
-// A deploy replaces the hashed chunks; one reload picks up the new index. The timestamp stops a reload loop when the chunk is really gone.
 export function reloadOnce() {
   try {
     if (Date.now() - Number(sessionStorage.getItem(KEY) ?? 0) < WINDOW_MS) return false

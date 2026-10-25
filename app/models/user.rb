@@ -17,7 +17,6 @@ class User < ApplicationRecord
     DeviseMailJob.perform_later(self, notification.to_s, DeviseMailJob.seal(token), *args)
   end
 
-  # A reset means someone else may have had the password, so every credential issued with it stops working.
   def revoke_access!
     now = Time.current
     api_tokens.active.update_all(revoked_at: now)

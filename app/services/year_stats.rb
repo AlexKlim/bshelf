@@ -1,10 +1,8 @@
-# Counts only finished editions by finished_at; a book counts once per year, formats as a breakdown.
 class YearStats
   TOP_AUTHORS = 5
 
   attr_reader :user, :year
 
-  # Listened means an audio edition was finished; read means any other format was. A book can be both.
   def self.counts(books)
     { listened: books.count { it[:formats].include?("audio") }, read: books.count { (it[:formats] - [ "audio" ]).any? } }
   end

@@ -43,7 +43,6 @@ module Api
 
       def bearer_request? = request.authorization.present?
 
-      # A token lives in a Shortcut or a script, so it may read the shelf and use share, nothing else.
       def authenticate!
         return render_error(:unauthorized, status: :unauthorized) unless current_user
 
@@ -58,7 +57,6 @@ module Api
 
       def warden = request.env["warden"]
 
-      # Unfiltered, so a number or an array reaches ReadingDates and answers 422 instead of being dropped.
       def date_params(scope = params) = scope.slice(*ReadingDates::FIELDS).to_unsafe_h.symbolize_keys
 
       def set_csrf_cookie

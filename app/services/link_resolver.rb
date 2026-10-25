@@ -2,9 +2,6 @@ require "ipaddr"
 require "net/http"
 require "socket"
 
-# Turns a shared Litres or Amazon link into a store id. Short links are followed only through
-# allowlisted hosts whose every DNS answer is public, and the request goes to the checked IP,
-# so a rebinding answer between the check and the connect cannot reach the private network.
 class LinkResolver
   class Failed < StandardError; end
 
@@ -63,7 +60,6 @@ class LinkResolver
     end
   end
 
-  # Returns a Link, or nil when the link is a store page without a book id.
   def call(url)
     deadline = monotonic + BUDGET
     uri = parse_uri(url)

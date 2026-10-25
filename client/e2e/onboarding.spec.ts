@@ -5,7 +5,6 @@ import { confirmationToken, uniqueEmail } from "./helpers"
 // The cloth comes from a hash of the random book id; pin it so the snapshots compare the book, not the colour.
 const stylePath = fileURLToPath(new URL("./snapshot.css", import.meta.url))
 
-// The baselines are rendered on macOS; Linux draws the same fonts differently, so CI checks behaviour only.
 const snapshot = (locator: Locator, name: string) =>
   process.platform === "darwin" ? expect(locator).toHaveScreenshot(name, { stylePath }) : Promise.resolve()
 

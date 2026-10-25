@@ -3,8 +3,6 @@ module Api
     class AssistantsController < BaseController
       before_action :require_session!
 
-      # Refresh tokens rotate, so the live token is always new: the connection dates from the first grant or
-      # token ever issued to the app, revoked ones included.
       def index
         tokens = Doorkeeper::AccessToken.active_for(current_user).includes(:application).order(:created_at)
         apps = tokens.group_by(&:application)

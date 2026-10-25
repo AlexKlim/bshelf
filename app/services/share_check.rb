@@ -43,8 +43,6 @@ class ShareCheck
     [ link.external_id, books ] if books.any?
   end
 
-  # Matches titles only: an author segment matching one other book of the author would
-  # answer "read" for the wrong book.
   def by_text
     return if segments.empty?
 
@@ -56,8 +54,6 @@ class ShareCheck
     contained
   end
 
-  # The first segment, in share order, that some title contains. One query covers every segment.
-  # ponytail: one row cap for all segments can cut matches when a segment hits many titles; split the query if seen.
   def contained
     long = segments.select { it.length >= 4 }
     return if long.empty?

@@ -1,7 +1,5 @@
 require "net/http"
 
-# Open Library first: no daily quota, unlike keyless Google Books. Both return candidates in one shape:
-# { title, authors, isbn, year, language, page_count, cover_url, work_title }.
 class CatalogClient
   class Error < StandardError; end
 
@@ -82,7 +80,6 @@ class CatalogClient
     JSON.parse(response.body) if response.is_a?(Net::HTTPSuccess)
   end
 
-  # Raising inside the block closes the connection, so an oversized cover is never read to the end.
   def read_cover(uri, response)
     too_large = Error.new("#{uri.host}: cover too large")
     raise too_large if response.content_length.to_i > MAX_COVER_BYTES
@@ -95,7 +92,6 @@ class CatalogClient
     body
   end
 
-  # Without a block the whole body is read; with one, the block decides how much of it to read.
   def get(uri, accept:)
     headers = { "Accept" => accept, "User-Agent" => "BookShelf/1 (#{Rails.configuration.x.app_url})" }
     Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) do |http|

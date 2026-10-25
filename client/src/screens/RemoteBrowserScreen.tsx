@@ -99,7 +99,6 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
     if (!active || !sessionId) return
     const poll = window.setInterval(() => refresh(sessionId), 1500)
     const tick = window.setInterval(() => setNow(Date.now()), 1000)
-    // Back from the 2FA app: same browser, the timer kept running on the server, a new token reloads the view.
     const onVisible = () => {
       if (document.visibilityState !== "visible") return
       viewerFor.current = null

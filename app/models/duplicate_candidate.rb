@@ -1,4 +1,3 @@
-# A pair of books that may be one book. Dismissed rows stay so the matcher never proposes or merges the pair again.
 class DuplicateCandidate < ApplicationRecord
   REASONS = %w[title_author title].freeze
 

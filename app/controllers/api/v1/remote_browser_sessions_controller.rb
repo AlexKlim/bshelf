@@ -38,8 +38,6 @@ module Api
                        expires_at: browser_session.viewer_token_expires_at }
       end
 
-      # The live view loads in an iframe on our origin. The one-time token from #viewer is traded
-      # for a cookie scoped to this session's view path, which then covers the page's subresources.
       def view
         session = browser_session
         if params[:token]

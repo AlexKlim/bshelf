@@ -13,7 +13,6 @@ const clamp = (n: number) => Math.min(1, Math.max(0, n))
 
 type Sized = Pick<BookSummary, "id" | "page_count" | "audio_minutes">
 
-// Width follows length (tokens: 150-800 pages, 3-25 hours); unknown length gets a stable middle width.
 export function spineSize(book: Sized) {
   const h = hash(book.id)
   const t = book.page_count

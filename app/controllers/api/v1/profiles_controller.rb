@@ -7,9 +7,6 @@ module Api
         render json: { user: UserSerializer.call(current_user) }
       end
 
-      # Every user-owned table cascades on users.id, so one DELETE wipes the account. A running remote
-      # browser is finished first so its Steel browser is released. Audit rows survive without user or IP;
-      # the deletion row keeps only the uuid, which is not personal data on its own.
       def destroy
         user = current_user
         user.remote_browser_sessions.active.find_each { it.finish!(interruption: "aborted") }

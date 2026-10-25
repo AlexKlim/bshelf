@@ -8,8 +8,6 @@ class AddBook
     end
   end
 
-  # The per-user lock makes the duplicate check and the insert one step, so two quick adds of one title
-  # (a double tap, a share and a Shortcut) cannot both pass the check.
   def self.call(user:, title:, author: nil, **edition)
     Book.transaction do
       Book.connection.execute(Book.sanitize_sql([ "SELECT pg_advisory_xact_lock(hashtext(?))", "add_book:#{user.id}" ]))
@@ -34,7 +32,6 @@ class AddBook
     end
   end
 
-  # Same title key; with an author given, also the same author by the matcher's rule.
   def self.find_duplicate(user, title, author)
     key = TextKey.title(title)
     return if key.empty?

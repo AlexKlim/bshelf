@@ -9,7 +9,6 @@ class SourceConnection < ApplicationRecord
   validates :kind, inclusion: { in: KINDS }
   validates :status, inclusion: { in: STATUSES }
 
-  # Every sync adapter reports here: it is both the Sources screen row and the failure-rate metric.
   def self.record_sync!(user, kind, error: nil, status: sync_status(error), duration_ms: nil)
     row = user.source_connections.find_or_create_by!(kind:)
     row.update!(status:, error:, **(status == "ok" ? { last_sync_at: Time.current } : {}))

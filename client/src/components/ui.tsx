@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, type InputHTMLAttributes, type ReactNode } from "react"
 import type { ShelfKey } from "@/lib/types"
 
-// Callers key it by the loaded book count, so a page that leaves the end in view still asks for the next one.
 export function ShelfEnd({
   shelfKey,
   horizontal,

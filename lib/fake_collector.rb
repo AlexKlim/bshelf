@@ -1,5 +1,3 @@
-# Collector for development and test: the person "signs in" a few seconds after the browser is
-# live, then two steps finish. The real Kindle and Litres collectors replace it.
 class FakeCollector
   attr_accessor :login_delay, :result
 

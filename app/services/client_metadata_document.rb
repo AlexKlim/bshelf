@@ -1,7 +1,3 @@
-# Resolves an OAuth Client ID Metadata Document (CIMD) client_id into a Doorkeeper application.
-# Only hosts we trust are fetched (MCP_AUTH.md); the redirect URIs must live on the client_id host,
-# so a document cannot send codes anywhere else. Replace with Doorkeeper's
-# use_client_id_metadata_documents once it ships in a release.
 class ClientMetadataDocument
   HOSTS = %w[claude.ai chatgpt.com].freeze
   TTL = 1.day
@@ -43,7 +39,6 @@ class ClientMetadataDocument
 
   def self.fresh?(app) = app.present? && app.updated_at > TTL.ago
 
-  # A failed refresh keeps the stored application, so a flaky client host does not disconnect anyone.
   def self.fetch_redirect_uris(client_id)
     document = JSON.parse(Doorkeeper::HttpFetcher.new.fetch(client_id))
     return unless document.is_a?(Hash) && document["client_id"] == client_id
