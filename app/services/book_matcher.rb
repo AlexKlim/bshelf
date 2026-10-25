@@ -69,12 +69,10 @@ class BookMatcher
   # An ISBN the catalog guessed from a title is only as good as that guess, so it proposes instead of merging.
   def verdict(other)
     authors = TextKey.authors(book.author, other.author)
-    if @isbn && @isbn == self.class.isbn13(other.isbn)
-      return :merge unless [ book, other ].any? { it.isbn_source == "catalog" }
-
-      return authors == :same ? "title_author" : "title"
-    end
+    same_isbn = @isbn && @isbn == self.class.isbn13(other.isbn)
+    return :merge if same_isbn && [ book, other ].none? { it.isbn_source == "catalog" }
     return :merge if @original.present? && authors == :same && @original == TextKey.title(other.original_title)
+    return authors == :same ? "title_author" : "title" if same_isbn
     return unless @titles.intersect?(TextKey.titles(other.title, other.original_title))
 
     { same: "title_author", unknown: "title" }[authors]

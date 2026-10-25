@@ -17,13 +17,13 @@ module Api
       end
 
       def add
-        attrs = params.fetch(:edition, {}).permit(:format, :status, :store, :external_id, :started_at, :finished_at)
-          .to_h.symbolize_keys.compact_blank
+        edition = params.fetch(:edition, {})
+        attrs = edition.permit(:format, :status, :store, :external_id).to_h.symbolize_keys.compact_blank
         existing = attrs[:store] && attrs[:external_id] && store_edition(attrs)&.book
         return render_duplicate(existing) if existing
 
         book = AddBook.call(user: current_user, title: params.require(:title), author: params[:author], source: "share",
-          **{ format: "unknown", status: "want" }.merge(attrs))
+          **{ format: "unknown", status: "want" }.merge(attrs, date_params(edition)))
         edition = book.editions.first
         status = ShareCheck.status_label(edition.reading.status, edition.format)
         render json: { book: summary(book), message: I18n.t("share.added", status:) }, status: :created

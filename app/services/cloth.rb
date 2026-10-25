@@ -46,6 +46,8 @@ module Cloth
     image = Vips::Image.thumbnail_buffer(bytes, SAMPLE).colourspace(:srgb)
     image = image.extract_band(0, n: 3) if image.bands > 3
     image.to_a.flatten(1).map { nearest(*it) }.tally.max_by(&:last).first
+  rescue LoadError, NameError
+    nil
   rescue Vips::Error
     nil
   end

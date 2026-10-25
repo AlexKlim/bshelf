@@ -41,6 +41,18 @@ RSpec.describe BookMatcher do
     expect(DuplicateCandidate.sole).to have_attributes(book_id: older.id, other_book_id: newer.id, reason: "title_author")
   end
 
+  it "still merges a catalog ISBN match with the same original title and author" do
+    older = book(title: "Солярис", author: "Stanisław Lem", original_title: "Solaris", isbn: "9780156027601",
+      isbn_source: "catalog")
+    newer = book(title: "Solaris", author: "Lem, Stanisław", original_title: "Solaris", isbn: "9780156027601",
+      isbn_source: "catalog")
+
+    described_class.call(newer)
+
+    expect(user.books.ids).to eq([ older.id ])
+    expect(DuplicateCandidate.count).to eq(0)
+  end
+
   it "does not merge on an original title that has no letters or digits" do
     book(title: "Eden", author: "Stanisław Lem")
     newer = book(title: "Солярис", author: "Stanisław Lem", original_title: "...")

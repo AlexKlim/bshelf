@@ -28,6 +28,18 @@ RSpec.describe Cloth do
     expect(described_class.from_image("<html>")).to be_nil
   end
 
+  it "returns nil without libvips" do
+    jpeg = solid_jpeg(30, 90, 70)
+    allow(described_class).to receive(:require).with("vips").and_raise(LoadError, "libvips not found")
+
+    expect(described_class.from_image(jpeg)).to be_nil
+
+    allow(described_class).to receive(:require).with("vips").and_return(false)
+    hide_const("Vips")
+
+    expect(described_class.from_image(jpeg)).to be_nil
+  end
+
   it "decodes only JPEG, PNG, WebP and GIF covers" do
     image = (Vips::Image.black(40, 60) + [ 30, 90, 70 ]).cast(:uchar)
 

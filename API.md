@@ -10,7 +10,7 @@ REST JSON under `/api/v1`. The React client, the share targets and scripts build
   { "errors": [ { "code": "taken", "field": "email" } ] }
   ```
   `field` is present when the error belongs to an input. Some errors carry extra keys (see `duplicate`).
-- **Dates.** ISO 8601 in UTC. Inputs accept `YYYY-MM-DD` or a full ISO 8601 timestamp from 1900 to the end of next year; an empty string clears a date. Anything else answers `422 { code: "invalid", field }` (`started_at`, `finished_at`).
+- **Dates.** ISO 8601 in UTC. Inputs are strings, `YYYY-MM-DD` or a full ISO 8601 timestamp from 1900 to tomorrow (server date plus one day, for readers ahead of UTC), since a reading cannot start or finish in the future; an empty string or `null` clears a date. Anything else, a number, boolean or array included, answers `422 { code: "invalid", field }` (`started_at`, `finished_at`).
 - **Status vocabulary** (per edition): `want`, `owned`, `in_progress`, `done`. **Formats:** `audio`, `ebook`, `personal_doc`, `unknown`. The client picks "Reading"/"Listening" and "Read"/"Listened" by format (design README).
 - **Shelf keys:** `now`, `want`, `owned`, a year such as `2025`, `no_date`. Order: now, want, owned, years descending, no_date. A book sits on exactly one shelf: `now` if any edition is `in_progress`, else the year of its latest finished edition (`no_date` when finished without a date), else `owned`, else `want`. The design has no shelf for owned books; the client may show `owned` or fold it into another shelf.
 
@@ -32,7 +32,7 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
 | POST | `/confirmation/resend` | `email` | `202` always | `429` (5/hour/IP) |
 | POST | `/password` | `email` | `202` always. Emails `APP_URL/reset-password?token=...` | `429` (5/hour/IP) |
 | PATCH | `/password` | `token`, `password` | `204`. Revokes every API token and connected assistant of the account | `422` `reset_password_token: invalid` or `expired`, `password: too_short`; `429` (5/hour/IP, counted apart from `POST /password`) |
-| POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 per 3 min per IP, and 10 per 3 min per email) |
+| POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 attempts per 3 min per IP; after 10 failed attempts per 3 min for an email, that email answers `429` even with the right password) |
 | DELETE | `/session` | | `204` | |
 | GET | `/me` | | `200 { user }` | |
 | DELETE | `/me` | | `204`. Ends a running remote browser session, then deletes the account and all its data. The client asks the user to type "удалить" first | `403 session_required` |
@@ -106,7 +106,7 @@ The client shows "Already on the shelf: Listened · 2024" from `existing`.
 
 `DELETE /merges/:id` undoes it: the other book comes back with its original id, fields, editions and statuses, and fields the merge filled are cleared unless they were edited since. Its possible duplicates return to it. The pair is then never merged or proposed again automatically.
 
-A background matcher runs after every catalog lookup. It merges on its own only on the same ISBN, or the same original title and author; those merges show up in `BookDetail.merges` so they can be undone. An ISBN the catalog filled in only proposes a duplicate, because the catalog found it by title. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
+A background matcher runs after every catalog lookup. It merges on its own only on the same original title and author; those merges show up in `BookDetail.merges` so they can be undone. A shared ISBN only proposes a duplicate: every stored ISBN was filled in by the catalog, which found it by title. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
 
 ```json
 // Duplicate

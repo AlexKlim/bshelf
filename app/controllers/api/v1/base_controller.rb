@@ -58,6 +58,9 @@ module Api
 
       def warden = request.env["warden"]
 
+      # Unfiltered, so a number or an array reaches ReadingDates and answers 422 instead of being dropped.
+      def date_params(scope = params) = scope.slice(*ReadingDates::FIELDS).to_unsafe_h.symbolize_keys
+
       def set_csrf_cookie
         cookies["CSRF-TOKEN"] = { value: form_authenticity_token, same_site: :lax, secure: request.ssl? }
       end

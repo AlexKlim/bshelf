@@ -42,6 +42,27 @@ RSpec.describe "Rate limits" do
     expect(response).to have_http_status(:too_many_requests)
   end
 
+  it "counts only failed sign ins toward the per-email limit" do
+    sign_in = ->(password, i) do
+      post "/api/v1/session", params: { email: user.email, password: }, env: { "REMOTE_ADDR" => "203.0.113.#{i}" }, as: :json
+    end
+
+    10.times { |i| sign_in.call("password123", i) }
+    9.times { |i| sign_in.call("nope", 10 + i) }
+    expect(response).to have_http_status(:unauthorized)
+
+    sign_in.call("password123", 19)
+    expect(response).to have_http_status(:ok)
+
+    sign_in.call("nope", 20)
+    sign_in.call("password123", 21)
+    expect(response).to have_http_status(:too_many_requests)
+
+    post "/api/v1/session", params: { email: "other@example.com", password: "nope" },
+      env: { "REMOTE_ADDR" => "203.0.113.22" }, as: :json
+    expect(response).to have_http_status(:unauthorized)
+  end
+
   it "keeps the reset request and the reset itself in separate buckets" do
     5.times { post "/api/v1/password", params: { email: user.email }, as: :json }
     token = user.send_reset_password_instructions

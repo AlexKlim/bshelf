@@ -156,6 +156,20 @@ RSpec.describe "Books, editions, notes and highlights" do
       expect(edition.reading.reload.started_at).to eq(Time.zone.parse("2025-03-01"))
     end
 
+    it "accepts dates up to tomorrow and rejects later ones" do
+      freeze_time
+
+      %w[started_at finished_at].each do |field|
+        patch "/api/v1/editions/#{edition.uuid}", params: { :status => "done", field => Date.tomorrow.iso8601 }, as: :json
+        expect(response).to have_http_status(:ok), field
+
+        patch "/api/v1/editions/#{edition.uuid}", params: { :status => "done", field => (Date.current + 2).iso8601 },
+          as: :json
+        expect(response).to have_http_status(:unprocessable_content), field
+        expect(json["errors"]).to eq([ { "code" => "invalid", "field" => field } ])
+      end
+    end
+
     it "dates a book marked finished now when it has no finish date yet" do
       freeze_time
 

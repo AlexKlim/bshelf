@@ -19,6 +19,32 @@ RSpec.describe ClientMetadataDocument do
     expect(fetcher).to have_received(:fetch).twice
   end
 
+  context "with a document the application refuses" do
+    let(:fetcher) { instance_double(Doorkeeper::HttpFetcher, fetch: document) }
+
+    before do
+      allow(Doorkeeper::HttpFetcher).to receive(:new).and_return(fetcher)
+      allow_any_instance_of(Doorkeeper::Application).to receive(:update!) do |app|
+        raise ActiveRecord::RecordInvalid, app
+      end
+    end
+
+    it "does not fetch a new client_id again for a few minutes" do
+      2.times { expect(described_class.resolve(client_id)).to be_nil }
+
+      expect(fetcher).to have_received(:fetch).once
+    end
+
+    it "keeps the stored application and does not refresh it again for a few minutes" do
+      app = Doorkeeper::Application.create!(uid: client_id, name: "claude.ai", redirect_uri: callback,
+        confidential: false, updated_at: 2.days.ago)
+
+      2.times { expect(described_class.resolve(client_id)).to eq(app) }
+
+      expect(fetcher).to have_received(:fetch).once
+    end
+  end
+
   it "returns the application another request created while this one fetched" do
     allow_any_instance_of(Doorkeeper::HttpFetcher).to receive(:fetch) do
       Doorkeeper::Application.create!(uid: client_id, name: "claude.ai", redirect_uri: callback, confidential: false)
