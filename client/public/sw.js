@@ -1,8 +1,12 @@
 const CACHE = "bshelf-shell-__BUILD__";
 const SERVER_PATHS = /^\/(api|oauth|mcp|up|\.well-known)(\/|$)/;
+// The build replaces the empty list with every emitted chunk, so lazy screens open offline after the first visit.
+const ASSETS = /* __ASSETS__ */ [];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.add("/")));
+  event.waitUntil(
+    caches.open(CACHE).then((cache) => Promise.all([cache.add("/"), ...ASSETS.map((url) => cache.add(url).catch(() => {}))]))
+  );
   self.skipWaiting();
 });
 
