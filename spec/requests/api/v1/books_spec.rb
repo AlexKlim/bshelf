@@ -39,6 +39,15 @@ RSpec.describe "Books, editions, notes and highlights" do
       expect(json["existing"]["editions"].first).to include("status" => "done", "format" => "audio")
     end
 
+    it "compares titles and authors the way the matcher does" do
+      existing = create(:book, user:, title: "Dune", author: "Frank Herbert")
+
+      post "/api/v1/books", params: { title: "DUNE.", author: "Herbert" }, as: :json
+
+      expect(response).to have_http_status(:conflict)
+      expect(json["existing"]["id"]).to eq(existing.uuid)
+    end
+
     it "treats a different author as a different book" do
       create(:book, user:, title: "Solaris", author: "Lem", status: "done")
 

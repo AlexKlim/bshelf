@@ -119,6 +119,16 @@ RSpec.describe "Share" do
     expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
   end
 
+  it "matches a title or original title regardless of punctuation and accents" do
+    book = create(:book, user:, title: "Пикник на обочине", original_title: "Piknik na obochine", status: "owned")
+
+    share(text: "Пикник на обочине! | Литрес")
+    expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
+
+    share(text: "Píknik na obochine: a novel")
+    expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
+  end
+
   it "does not answer for another book by the same author" do
     create(:book, user:, title: "Eden", author: "Stanislaw Lem", status: "done")
 

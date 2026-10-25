@@ -4,8 +4,6 @@ class ShareCheck
   NOISE = /amazon|litres|литрес|audible|kindle store|\Abooks\z|аудиокниг|слушать|читать|скачать|онлайн/i
   FORMAT_WORDS = /\b(?:kindle edition|audible audiobook|audiobook|ebook|paperback|hardcover)\b/i
   ISBN = /\A(?:97[89])?\d{9}[\dX]\z/
-  SAME_TITLE = "lower(regexp_replace(trim(title), '\\s+', ' ', 'g')) IN (:t) OR " \
-    "lower(regexp_replace(trim(coalesce(original_title, '')), '\\s+', ' ', 'g')) IN (:t)"
   MAX_TEXT = 2000
 
   def self.status_label(status, format)
@@ -50,7 +48,8 @@ class ShareCheck
   def by_text
     return if segments.empty?
 
-    exact = user.books.where(SAME_TITLE, t: segments.map { AddBook.normalize(it) }).or(user.books.where(isbn: isbns))
+    keys = segments.map { TextKey.title(it) }.compact_blank
+    exact = user.books.where(title_key: keys).or(user.books.where(original_title_key: keys)).or(user.books.where(isbn: isbns))
     books = with_editions(exact)
     return [ segments.first, books ] if books.any?
 

@@ -34,15 +34,11 @@ class AddBook
     end
   end
 
+  # Same title key; with an author given, also the same author by the matcher's rule.
   def self.find_duplicate(user, title, author)
-    title = normalize(title)
-    return if title.empty?
+    key = TextKey.title(title)
+    return if key.empty?
 
-    scope = user.books.where("lower(regexp_replace(trim(title), '\\s+', ' ', 'g')) = ?", title)
-    author = normalize(author)
-    scope = scope.where("lower(regexp_replace(trim(coalesce(author, '')), '\\s+', ' ', 'g')) = ?", author) if author.present?
-    scope.order(:id).first
+    user.books.where(title_key: key).order(:id).find { author.blank? || TextKey.authors(author, it.author) == :same }
   end
-
-  def self.normalize(value) = value.to_s.unicode_normalize(:nfc).downcase.squish
 end

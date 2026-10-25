@@ -87,7 +87,7 @@ Any `:id` that is not the caller's: `404 not_found`. Edition fields go in a nest
 
 `edition.format` defaults to `unknown`, `edition.status` to `want`. The status is recorded as manual, so imports never overwrite it.
 
-A book with the same title (case and spacing ignored) and the same author (or any author, if none is given) already on the shelf:
+A book with the same title (case, punctuation and diacritics ignored, the matcher's rule) and the same author (one name contained in the other, e.g. "Herbert" and "Frank Herbert"; any author if none is given) already on the shelf:
 
 ```json
 // 409
