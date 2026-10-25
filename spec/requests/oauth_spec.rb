@@ -150,6 +150,43 @@ RSpec.describe "OAuth for MCP clients" do
       expect(json["error"]).to eq("invalid_grant")
     end
 
+    it "refuses a refresh token once the assistant is revoked" do
+      sign_in_as(user)
+      post "/oauth/token", params: token_params(approve["code"])
+      refresh_token = json["refresh_token"]
+
+      delete "/api/v1/assistants/#{claude_app.uuid}"
+      expect(response).to have_http_status(:no_content)
+
+      post "/oauth/token", params: { grant_type: "refresh_token", refresh_token:,
+        client_id: OauthHelpers::CLAUDE_CLIENT_ID, resource: mcp_resource }
+      expect(response).to have_http_status(:bad_request)
+      expect(json["error"]).to eq("invalid_grant")
+    end
+
+    it "accepts an authorization code once" do
+      sign_in_as(user)
+      code = approve["code"]
+
+      post "/oauth/token", params: token_params(code)
+      expect(response).to have_http_status(:ok)
+
+      post "/oauth/token", params: token_params(code)
+      expect(response).to have_http_status(:bad_request)
+      expect(json["error"]).to eq("invalid_grant")
+    end
+
+    it "does not fetch the client metadata once GET /oauth/authorize is rate limited" do
+      sign_in_as(user)
+      20.times { get "/oauth/authorize", params: authorize_params }
+      expect_any_instance_of(Doorkeeper::HttpFetcher).not_to receive(:fetch)
+      Doorkeeper::Application.update_all(updated_at: 2.days.ago)
+
+      get "/oauth/authorize", params: authorize_params
+
+      expect(response).to have_http_status(:too_many_requests)
+    end
+
     it "rejects a wrong code_verifier" do
       sign_in_as(user)
 
