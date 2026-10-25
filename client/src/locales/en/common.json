@@ -351,5 +351,78 @@
   "footer": {
     "tagline": "Book Shelf · one shelf for Litres and Kindle",
     "source": "Source code"
+  },
+  "landing": {
+    "title": "Book Shelf: everything you have read and listened to, on one shelf",
+    "nav": "Page sections",
+    "how": "How it works",
+    "faq": "Questions",
+    "create": "Create a shelf",
+    "h1": "Everything you have read and listened to, on one shelf",
+    "lead": "Audiobooks from Litres and books from Kindle go onto the shelves by themselves. And before you buy, \"Share\" tells you whether you have read the book already.",
+    "note": "Free and open source. The Litres password is not stored.",
+    "steps": [
+      {
+        "title": "Sign in to Litres",
+        "text": "Audiobooks go onto the shelves right after you sign in. The password is only used to sign in, we do not save it."
+      },
+      {
+        "title": "Request your Kindle history",
+        "text": "Amazon takes up to 30 days to prepare the data export. Upload the archive, and what you have read goes onto the shelves by year."
+      },
+      {
+        "title": "Add the rest",
+        "text": "A paper book or a gift can be written in by hand. A book bought in two stores becomes one."
+      }
+    ],
+    "readTitle": "Have I read it?",
+    "readLead": "In a store, tap \"Share\" and pick Book Shelf. The answer comes in one line, before you finish reading the blurb.",
+    "fromLitres": "From Litres",
+    "fromAmazon": "From Amazon",
+    "listenedOn": "Listened · March 2024",
+    "yearLead": "In December, see how much you have read and listened to. Twelve stacks, one per month, and your favorite authors.",
+    "assistantTitle": "Ask your assistant",
+    "assistantLead": "Connect Book Shelf to Claude, and it answers from your shelf: what you have read, what you wanted to read, how much you listened to this year.",
+    "chat": [
+      "Have I read \"Солярис\"?",
+      "Yes, you listened to \"Солярис\" by Станислав Лем in March 2024, an audiobook from Litres.",
+      "Add Klara and the Sun to Want",
+      "Done, the book is on the Want shelf."
+    ],
+    "ownTitle": "Your books stay yours",
+    "own": [
+      {
+        "title": "The password is not stored",
+        "text": "Litres and Amazon ask for the password only to sign in. We do not save it and do not see it in logs."
+      },
+      {
+        "title": "Delete with one button",
+        "text": "In the profile you can erase everything at once: books, notes, assistant connections."
+      },
+      {
+        "title": "Open source",
+        "text": "The code is on GitHub. You can check it or run Book Shelf yourself."
+      }
+    ],
+    "questions": [
+      {
+        "q": "Do I need a Litres subscription or Kindle Unlimited?",
+        "a": "No. Book Shelf collects the books you bought. Books from subscriptions do not get onto the shelf yet."
+      },
+      {
+        "q": "How do books from Kindle get in?",
+        "a": "Through the Amazon data export: request it once, and Amazon sends an archive. New purchases can be added through \"Share\"."
+      },
+      {
+        "q": "How much does it cost?",
+        "a": "Nothing. Book Shelf is an open project."
+      },
+      {
+        "q": "Is there a phone app?",
+        "a": "Book Shelf opens in the browser and installs on the phone home screen like an app. The \"Share\" shortcut works on iPhone and Android."
+      }
+    ],
+    "ctaTitle": "Build your shelf",
+    "ctaLead": "Start with Litres: the books go onto the shelves in a minute."
   }
 }

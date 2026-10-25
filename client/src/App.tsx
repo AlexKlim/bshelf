@@ -32,12 +32,13 @@ const KindleExportScreen = lazyScreen(sources, "KindleExportScreen")
 const StatsScreen = lazyScreen(() => import("@/screens/StatsScreen"), "StatsScreen")
 const ShareScreen = lazyScreen(() => import("@/screens/ShareScreen"), "ShareScreen")
 const RemoteBrowserScreen = lazyScreen(() => import("@/screens/RemoteBrowserScreen"), "RemoteBrowserScreen")
+const LandingScreen = lazyScreen(() => import("@/screens/LandingScreen"), "LandingScreen")
 
 function RequireUser() {
   const { user } = useSession()
   const location = useLocation()
   if (user === undefined) return null
-  if (!user) return <Navigate to="/login" replace state={{ from: location }} />
+  if (!user) return location.pathname === "/" ? <LandingScreen /> : <Navigate to="/login" replace state={{ from: location }} />
   return (
     <ShelfProvider key={user.id}>
       <Outlet />
