@@ -89,6 +89,7 @@
 
 /* Caption shown above the shelf after the first tap on a spine */
 .bs-caption { display: grid; gap: 2px; max-inline-size: 280px; padding: var(--space-2) var(--space-3); background: var(--paper); color: var(--ink); border-radius: var(--radius-sm); box-shadow: var(--shadow-sheet); text-align: start; border: 0; cursor: pointer; font: inherit; }
+.bs-caption:focus-visible { outline: none; box-shadow: var(--ring), var(--shadow-sheet); }
 .bs-caption__title { font: 600 15px/20px var(--font-ui); }
 .bs-caption__author { font: 400 13px/18px var(--font-ui); color: var(--ink-muted); }
 
@@ -157,7 +158,7 @@
 
 /* ---------- Search "Have I read..." ---------- */
 .bs-search { display: flex; align-items: center; gap: var(--space-2); min-block-size: 52px; padding: 0 var(--space-1) 0 var(--space-4); background: var(--surface); color: var(--ink-muted); border: 1px solid var(--rule-strong); border-radius: var(--radius-pill); }
-.bs-search:focus-within { border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+.bs-search:focus-within { box-shadow: var(--ring); }
 .bs-search__input { flex: 1; min-inline-size: 0; border: 0; background: transparent; color: var(--ink); font: 400 17px/24px var(--font-ui); outline: none; }
 .bs-search__input::placeholder { color: var(--ink-muted); opacity: 1; }
 .bs-search__input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
@@ -233,10 +234,10 @@
 /* ---------- List view: the accessible twin of the bookcase ---------- */
 .bs-list { display: grid; }
 .bs-list > ul { margin: 0; padding: 0; list-style: none; }
-.bs-list__head { position: sticky; top: 0; z-index: 1; margin: 0; padding: var(--space-4) var(--space-4) var(--space-2); background: var(--wall); font: 600 11px/14px var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
+.bs-list__head { position: sticky; top: var(--header-h); z-index: 1; margin: 0; padding: var(--space-4) var(--space-4) var(--space-2); background: var(--wall); font: 600 11px/14px var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
 .bs-row { display: flex; align-items: center; gap: var(--space-3); inline-size: 100%; min-block-size: 56px; padding: var(--space-2) var(--space-4); border: 0; border-bottom: 1px solid var(--hairline); background: transparent; color: var(--ink); text-align: start; font: inherit; cursor: pointer; }
 .bs-row:hover { background: var(--surface); }
-.bs-row:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--focus); }
+.bs-row:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--focus), inset 0 0 0 4px var(--paper); }
 .bs-row__spine { flex: none; inline-size: 10px; block-size: 40px; border-radius: var(--radius-xs) var(--radius-xs) 0 0; }
 .bs-row__body { flex: 1; min-inline-size: 0; display: grid; }
 .bs-row__title, .bs-row__author { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -258,9 +259,9 @@
 .bs-btn:has(> input:focus-visible) { box-shadow: var(--ring); }
 
 /* Header: wordmark, tabs on desktop, avatar that opens the profile */
-.bs-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: var(--space-4); min-block-size: 56px; padding: 0 var(--space-4); background: var(--surface); border-bottom: 1px solid var(--hairline); }
+.bs-header { position: sticky; top: 0; z-index: 10; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); block-size: var(--header-h); padding: 0 var(--space-4); background: var(--surface); border-bottom: 1px solid var(--hairline); }
 .bs-header > .bs-tabs { flex: 1; align-self: stretch; border-bottom: 0; }
-.bs-header > .bs-tabs .bs-tab { flex: none; padding: 0 var(--space-4); }
+.bs-header > .bs-tabs .bs-tab { flex: none; min-block-size: 0; padding: 0 var(--space-4); }
 .bs-wordmark { margin: 0; font: 600 18px/24px var(--font-page); color: var(--ink); }
 .bs-header > .bs-wordmark:only-of-type { margin-right: auto; }
 .bs-avatar { display: grid; place-items: center; flex: none; inline-size: var(--touch-min); block-size: var(--touch-min); margin-left: auto; border-radius: var(--radius-pill); background: var(--accent); color: var(--on-accent); font: 600 15px/1 var(--font-ui); text-decoration: none; box-shadow: inset 0 0 0 6px var(--surface); }
