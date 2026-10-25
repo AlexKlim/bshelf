@@ -17,6 +17,7 @@ module ReadingDates
   end
 
   def self.cast(field, value)
+    raise Invalid, field unless value.nil? || [ String, Date, Time ].any? { value.is_a?(it) }
     return if value.blank?
 
     # Date.iso8601 refuses "2024-02-30", which Time.zone.iso8601 would roll over to March 1.

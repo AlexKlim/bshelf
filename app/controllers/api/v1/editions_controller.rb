@@ -16,7 +16,7 @@ module Api
 
       private
 
-      def dates = ReadingDates.parse(params.permit(:started_at, :finished_at))
+      def dates = ReadingDates.parse(date_params)
     end
   end
 end

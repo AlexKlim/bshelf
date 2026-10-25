@@ -47,8 +47,9 @@ module Api
 
       # Nested because a top-level "format" key would be read as the request format.
       def edition_params
-        attrs = params.fetch(:edition, {}).permit(:format, :store, :status, :started_at, :finished_at).to_h.symbolize_keys
-        { format: "unknown", status: "want" }.merge(attrs.compact_blank)
+        edition = params.fetch(:edition, {})
+        attrs = edition.permit(:format, :store, :status).to_h.symbolize_keys
+        { format: "unknown", status: "want" }.merge(attrs.compact_blank, date_params(edition))
       end
 
       def render_book(record, status: :ok, **extra)
