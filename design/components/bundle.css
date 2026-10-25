@@ -57,7 +57,6 @@
   position: relative; flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
   inline-size: var(--spine-w); block-size: var(--spine-h); min-block-size: var(--touch-min);
   padding: var(--space-3) 0 var(--space-2); border: 0; border-radius: var(--radius-xs) var(--radius-xs) 0 0;
-  background-color: var(--spine-blank); color: var(--spine-text-dark);
   background-image: linear-gradient(var(--spine-band), var(--spine-band)), linear-gradient(var(--spine-band), var(--spine-band)), linear-gradient(90deg, var(--spine-shade), transparent 22%, transparent 78%, var(--spine-shade));
   background-size: 100% 2px, 100% 2px, 100% 100%;
   background-position: 0 6px, 0 calc(100% - 30px), 0 0;
@@ -121,7 +120,7 @@
 /* Narrow: still the same book, one page in view, swipe to turn */
 @container (max-width: 639px) {
   /* the side boards become borders, so the scrolling pages never clip them */
-  .bs-spread { grid-template-columns: 100%; grid-auto-flow: column; grid-auto-columns: 100%; padding-inline: 6px; border-inline: 8px solid transparent; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .bs-spread { grid-template-columns: calc(100% - 20px); grid-auto-flow: column; grid-auto-columns: calc(100% - 20px); padding-inline: 6px; border-inline: 8px solid transparent; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
   .bs-spread::after { display: none; }
   .bs-page { scroll-snap-align: center; min-block-size: 480px; padding: var(--space-6) var(--space-6) var(--space-12); }
 }
@@ -158,6 +157,7 @@
 .bs-search:focus-within { border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
 .bs-search__input { flex: 1; min-inline-size: 0; border: 0; background: transparent; color: var(--ink); font: 400 17px/24px var(--font-ui); outline: none; }
 .bs-search__input::placeholder { color: var(--ink-muted); opacity: 1; }
+.bs-search__input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .bs-answer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); padding: var(--space-2) var(--space-4); font: 400 15px/22px var(--font-ui); color: var(--ink); }
 .bs-answer__title { font-weight: 600; }
 .bs-answer__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); flex-basis: 100%; }
@@ -242,4 +242,91 @@
 
 @media (prefers-reduced-motion: reduce) {
   .bs-spine { transition: none; }
+}
+
+/* ---------- App additions: shell, dialogs, inline editing, screens. Same tokens, no new visual language. ---------- */
+.bs-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Plain input for what is typed, not written into the book: email, password, a search inside the book */
+.bs-field__input--plain { color: var(--ink); font: 400 17px/24px var(--font-ui); }
+.bs-field__hint { font: 400 12px/16px var(--font-ui); color: var(--ink-muted); }
+.bs-btn--danger { color: var(--danger); }
+.bs-btn.is-disabled { opacity: .45; cursor: not-allowed; }
+.bs-btn:has(> input:focus-visible) { box-shadow: var(--ring); }
+
+/* Header: wordmark, tabs on desktop, avatar that opens the profile */
+.bs-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: var(--space-4); min-block-size: 56px; padding: 0 var(--space-4); background: var(--surface); border-bottom: 1px solid var(--hairline); }
+.bs-header > .bs-tabs { flex: 1; align-self: stretch; border-bottom: 0; }
+.bs-header > .bs-tabs .bs-tab { flex: none; padding: 0 var(--space-4); }
+.bs-wordmark { margin: 0; font: 600 18px/24px var(--font-page); color: var(--ink); }
+.bs-header > .bs-wordmark:only-of-type { margin-right: auto; }
+.bs-avatar { display: grid; place-items: center; flex: none; inline-size: var(--touch-min); block-size: var(--touch-min); margin-left: auto; border-radius: var(--radius-pill); background: var(--accent); color: var(--on-accent); font: 600 15px/1 var(--font-ui); text-decoration: none; box-shadow: inset 0 0 0 6px var(--surface); }
+.bs-avatar:focus-visible { outline: none; box-shadow: inset 0 0 0 6px var(--surface), var(--ring); }
+
+/* Caption above the shelf, next to the pulled book */
+.bs-shelf > .bs-caption { position: absolute; z-index: 5; bottom: calc(100% - var(--space-4)); left: clamp(var(--space-2), var(--x, 0px), calc(100% - 280px - var(--space-2))); min-inline-size: 180px; }
+
+/* The book opens over the bookcase */
+.bs-scrim { position: fixed; inset: 0; z-index: 20; background: var(--scrim); }
+.bs-dialog { position: fixed; inset: 0; z-index: 21; overflow-y: auto; overscroll-behavior: contain; display: grid; justify-items: center; align-items: start; padding: 64px var(--space-4) var(--space-8); }
+.bs-dialog:focus { outline: none; }
+.bs-dialog__body { inline-size: 100%; max-inline-size: 960px; display: grid; justify-items: center; }
+.bs-dialog__body > .bs-book, .bs-dialog__body > .bs-entry { inline-size: 100%; }
+.bs-dialog__close { position: fixed; top: var(--space-2); right: var(--space-2); z-index: 22; background: var(--paper); color: var(--ink); border-radius: var(--radius-pill); box-shadow: var(--shadow-sheet); }
+.bs-dialog__close:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* Take out: the spine turns to face you. Open: the cover swings into a spread. */
+.bs-closed.is-taking { animation: bs-take var(--dur-take) var(--ease-book) both; }
+.bs-spread.is-opening { animation: bs-open var(--dur-open) var(--ease-book) both; }
+@keyframes bs-take { from { transform: perspective(900px) translateY(24px) rotateY(80deg) scale(.7); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes bs-open { from { transform: scaleX(.5); opacity: .5; } to { transform: none; opacity: 1; } }
+
+/* Spread: editions you can restatus, notes you can edit in place */
+.bs-colophon__edition { flex-direction: column; }
+.bs-colophon__line { display: inline-flex; align-items: center; gap: var(--space-2); min-block-size: var(--touch-min); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.bs-colophon__line:hover { text-decoration: underline; text-decoration-color: var(--page-edge); text-underline-offset: 4px; }
+.bs-colophon__line:focus-visible, .bs-note--button:focus-visible { outline: none; box-shadow: var(--ring); }
+.bs-colophon__edition .bs-choices { justify-content: center; }
+.bs-note--button { display: block; inline-size: 100%; padding: 0; border: 0; border-radius: var(--radius-xs); background: transparent; text-align: start; cursor: text; }
+.bs-note-edit { display: grid; gap: var(--space-2); }
+.bs-note-edit__input { inline-size: 100%; min-block-size: 88px; padding: 0; border: 0; border-bottom: 1px solid var(--rule-strong); background: transparent; color: var(--pen); font: 400 22px/28px var(--font-hand); resize: vertical; }
+.bs-note-edit__input:focus-visible { outline: none; border-bottom: 2px solid var(--focus); }
+.bs-note-edit__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-1); }
+.bs-page__error { margin: auto 0 0; font: 400 15px/22px var(--font-page); color: var(--danger); }
+.bs-merge { display: grid; gap: var(--space-2); inline-size: 100%; }
+.bs-merge__results { display: grid; margin: 0; padding: 0; list-style: none; }
+.bs-merge__results .bs-btn { justify-content: flex-start; text-align: start; }
+
+/* Search answer with several matches */
+.bs-answer__list { flex-basis: 100%; margin: 0; padding-left: var(--space-4); color: var(--ink-muted); }
+
+/* Year shelf: header line, the month caption, the empty year */
+.bs-year__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.bs-year__case { position: relative; }
+.bs-year__caption { position: absolute; z-index: 5; bottom: calc(100% + var(--space-2)); left: clamp(0px, var(--x, 0px), calc(100% - 240px)); max-inline-size: 240px; cursor: default; }
+.bs-year__books { display: grid; margin: 0; padding: 0; list-style: none; }
+.bs-year__books .bs-btn { justify-content: flex-start; padding: 0; text-align: start; }
+.bs-year__empty { position: absolute; inset: 0 0 10px; display: grid; place-items: center; margin: 0; font: 400 15px/22px var(--font-ui); color: var(--spine-text-light); }
+
+/* Remote browser full screen */
+.bs-session--full { min-block-size: 100dvh; }
+.bs-session__body--page { inline-size: 100%; max-inline-size: 480px; margin: 0 auto; }
+@media (min-width: 768px) { .bs-session__body--page .bs-session__actions { margin-top: var(--space-4); } }
+.bs-session__frame { inline-size: min(100%, 390px); block-size: 100%; min-block-size: 600px; border: 0; background: var(--surface); }
+.bs-skeleton { display: grid; gap: var(--space-3); inline-size: 220px; }
+.bs-skeleton span { display: block; block-size: 40px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--hairline); }
+.bs-skeleton span:first-child { block-size: 20px; inline-size: 60%; border: 0; background: var(--hairline); }
+.bs-skeleton span:nth-last-of-type(1) { background: var(--hairline); }
+.bs-skeleton p { margin: var(--space-1) 0 0; text-align: center; font: 400 12px/16px var(--font-ui); color: var(--ink-muted); }
+
+/* Numbered instructions (Kindle export) */
+.bs-steps { display: grid; gap: var(--space-2); margin: 0; padding-left: var(--space-6); font: 400 15px/22px var(--font-ui); color: var(--ink); }
+.bs-steps a { color: var(--accent-text); text-underline-offset: 3px; }
+
+/* Token shown once */
+.bs-token { display: grid; gap: var(--space-2); }
+.bs-token__value { display: block; padding: var(--space-3); background: var(--paper); border: 1px solid var(--hairline); border-radius: var(--radius-sm); font: 500 14px/20px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); overflow-wrap: anywhere; user-select: all; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bs-closed.is-taking, .bs-spread.is-opening { animation: none; }
 }
