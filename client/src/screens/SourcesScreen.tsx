@@ -6,7 +6,7 @@ import { requestKindleExport, syncLitres, uploadKindleExport, type SyncResult } 
 import { Field, Ico } from "@/components/ui"
 import type { ApiError } from "@/lib/api"
 import { useShelf } from "@/lib/shelf"
-import { syncResult, errorMessage } from "@/lib/vocab"
+import { errorMessage, isActive, syncResult } from "@/lib/vocab"
 import type { Duplicate, Source } from "@/lib/types"
 import { useOnline } from "@/lib/useOnline"
 
@@ -62,7 +62,7 @@ function SourceRow({ source, onChange }: { source: Source; onChange: (s: Source)
   if (source.status === "ready") meta = t("sources.exportReady")
   const session = source.session
   if (session?.status === "done" && session.result) meta = syncResult(t, session.result)
-  if (session && ["queued", "connecting", "live", "collecting"].includes(session.status)) meta = t("sources.collecting")
+  if (session && isActive(session.status)) meta = t("sources.collecting")
   if (session?.status === "interrupted" && session.interruption !== "aborted") meta = t("sources.interrupted")
   if (result) meta = syncResult(t, result)
   const failed = error ?? (source.status === "error" || source.status === "needs_login" ? t(`sourceErrors.${source.error ?? source.status}`, { defaultValue: t("sourceErrors.generic") }) : null)

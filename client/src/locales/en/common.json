@@ -234,7 +234,7 @@
       "library": "Library",
       "highlights": "Highlights"
     },
-    "canLeave": "You can leave this screen. The result will appear as a banner above the bookcase.",
+    "canLeave": "You can leave this screen. The result will appear on the Sources screen.",
     "failure": {
       "timeout": "Time is up",
       "provider_refused": "{{store}} did not let you in",

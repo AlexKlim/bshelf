@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next"
-import type { BookSummary, Edition, Format, SearchResult, Status } from "./types"
+import type { BookSummary, Edition, Format, RemoteStatus, SearchResult, Status } from "./types"
 
 const ru = (lng: string) => lng.startsWith("ru")
 
@@ -114,6 +114,8 @@ export function answerLine(t: TFunction, lng: string, result: SearchResult) {
       return t("answer.not_found")
   }
 }
+
+export const isActive = (status: RemoteStatus) => status !== "done" && status !== "interrupted"
 
 export function syncResult(t: TFunction, r: { books: number; highlights: number }) {
   return t("sources.result", {
