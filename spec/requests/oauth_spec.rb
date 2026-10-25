@@ -46,6 +46,15 @@ RSpec.describe "OAuth for MCP clients" do
       )
       expect(json).not_to have_key("registration_endpoint")
     end
+
+    it "serves RFC 9728 protected resource metadata at both well-known paths" do
+      %w[/.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/mcp].each do |path|
+        get path
+
+        expect(json).to include("resource" => mcp_resource, "authorization_servers" => [ issuer ],
+          "scopes_supported" => %w[books:read books:write], "bearer_methods_supported" => [ "header" ])
+      end
+    end
   end
 
   describe "authorization code + PKCE" do
@@ -81,6 +90,9 @@ RSpec.describe "OAuth for MCP clients" do
       expect(json).to include("token_type" => "Bearer", "scope" => "books:read books:write", "expires_in" => 3600)
       expect(json["refresh_token"]).to be_present
       expect(Doorkeeper::AccessToken.last.resource).to eq(mcp_resource)
+
+      mcp_call(json["access_token"], "tools/list")
+      expect(response).to have_http_status(:ok)
     end
 
     it "protects the consent form with the session CSRF token" do
@@ -120,6 +132,12 @@ RSpec.describe "OAuth for MCP clients" do
 
       expect(response).to have_http_status(:ok)
       expect(json["refresh_token"]).not_to eq(first["refresh_token"])
+      mcp_call(json["access_token"], "tools/list")
+      expect(response).to have_http_status(:ok)
+
+      post "/oauth/token", params: { grant_type: "refresh_token", refresh_token: first["refresh_token"],
+        client_id: OauthHelpers::CLAUDE_CLIENT_ID }
+      expect(json["error"]).to eq("invalid_grant")
     end
 
     it "rejects a wrong code_verifier" do

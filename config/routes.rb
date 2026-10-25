@@ -7,6 +7,8 @@ Rails.application.routes.draw do
     controllers authorizations: "oauth/authorizations"
     skip_controllers :applications, :authorized_applications, :token_info
   end
+  get ".well-known/oauth-protected-resource(/mcp)", to: "mcp#metadata"
+  match "mcp", to: "mcp#handle", via: %i[get post delete]
 
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
