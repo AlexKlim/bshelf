@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { SearchField } from "@/components/SearchField"
 import i18n from "@/i18n"
+import { book, edition, mockFetch } from "@/test/fixtures"
 import { ShareScreen } from "./ShareScreen"
 
 function serve(slow: string) {
@@ -42,6 +43,22 @@ describe("quick add buttons", () => {
     expect(calls(fetch, "/api/v1/share/add")).toBe(1)
     release()
     expect(await screen.findByText("Written in.")).toBeInTheDocument()
+  })
+
+  it("on the share page say a duplicate the same way the entry form does", async () => {
+    const existing = book({ shelf: "2024", editions: [edition({ format: "audio", status: "done", finished_at: "2024-03-10T00:00:00.000Z" })] })
+    mockFetch((url) =>
+      url.startsWith("/api/v1/share/add")
+        ? [409, { errors: [{ code: "duplicate", field: "title" }], existing }]
+        : [200, { query: "Solaris", answer: { kind: "not_found" }, books: [], message: "", link: null, suggestion: { title: "Solaris", author: null, store: null, external_id: null } }],
+    )
+    render(
+      <MemoryRouter initialEntries={["/share?title=Solaris"]}>
+        <ShareScreen />
+      </MemoryRouter>,
+    )
+    await userEvent.click(await screen.findByRole("button", { name: "Listened to it" }))
+    expect(await screen.findByText("Already on the shelf: Listened · 2024")).toBeInTheDocument()
   })
 
   it("under the search are disabled while Want is being added", async () => {

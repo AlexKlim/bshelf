@@ -8,7 +8,7 @@ import type { ApiError } from "@/lib/api"
 import { useShelf } from "@/lib/shelf"
 import type { BookSummary, Format, SearchResult, ShareAnswer, Status } from "@/lib/types"
 import { useOnline } from "@/lib/useOnline"
-import { errorMessage, primaryEdition, statusLine } from "@/lib/vocab"
+import { duplicateMessage, errorMessage } from "@/lib/vocab"
 
 // Android share_target lands here (GET /share?title&text&url); the server matches links and text.
 export function ShareScreen() {
@@ -54,10 +54,10 @@ export function ShareScreen() {
       setSaved(message)
       reload()
     } catch (e) {
-      const existing = (e as ApiError).body?.existing as BookSummary | undefined
+      const error = e as ApiError
       setError(
-        (e as ApiError).code === "duplicate" && existing
-          ? t("entry.duplicate", { status: statusLine(t, i18n.language, primaryEdition(existing)) })
+        error.code === "duplicate"
+          ? duplicateMessage(t, i18n.language, error.body?.existing as BookSummary | undefined)
           : errorMessage(t, e),
       )
     } finally {
