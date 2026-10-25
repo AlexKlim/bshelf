@@ -13,7 +13,15 @@ class User < ApplicationRecord
   has_many :duplicate_candidates
   has_many :remote_browser_sessions
 
-  def send_devise_notification(notification, *args)
-    devise_mailer.send(notification, self, *args).deliver_later
+  def send_devise_notification(notification, token, *args)
+    DeviseMailJob.perform_later(self, notification.to_s, DeviseMailJob.seal(token), *args)
+  end
+
+  # A reset means someone else may have had the password, so every credential issued with it stops working.
+  def revoke_access!
+    now = Time.current
+    api_tokens.active.update_all(revoked_at: now)
+    Doorkeeper::AccessToken.where(resource_owner_id: id, revoked_at: nil).update_all(revoked_at: now)
+    Doorkeeper::AccessGrant.where(resource_owner_id: id, revoked_at: nil).update_all(revoked_at: now)
   end
 end

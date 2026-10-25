@@ -19,6 +19,7 @@ module Api
         )
         return render_model_errors(user) if user.errors.any?
 
+        user.revoke_access!
         AuditEvent.record!("password_reset", request:, user:)
         head :no_content
       end

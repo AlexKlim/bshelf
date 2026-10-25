@@ -125,6 +125,13 @@ RSpec.describe RemoteBrowserSessionJob do
     expect(session.reload).to have_attributes(status: "interrupted", interruption: "browser_failed")
   end
 
+  it "drops a queued tick whose session was deleted with its account" do
+    tick!
+    user.destroy!
+
+    expect { perform_enqueued_jobs }.not_to raise_error
+  end
+
   it "does nothing for a session that already ended" do
     session.finish!(interruption: "aborted")
 

@@ -31,11 +31,11 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
 | POST | `/confirmation` | `token` | `204` | `422` `confirmation_token: invalid`, `email: already_confirmed`, `email: confirmation_period_expired` |
 | POST | `/confirmation/resend` | `email` | `202` always | `429` (5/hour/IP) |
 | POST | `/password` | `email` | `202` always. Emails `APP_URL/reset-password?token=...` | `429` (5/hour/IP) |
-| PATCH | `/password` | `token`, `password` | `204` | `422` `reset_password_token: invalid` or `expired`, `password: too_short`; `429` (5/hour/IP, counted apart from `POST /password`) |
+| PATCH | `/password` | `token`, `password` | `204`. Revokes every API token and connected assistant of the account | `422` `reset_password_token: invalid` or `expired`, `password: too_short`; `429` (5/hour/IP, counted apart from `POST /password`) |
 | POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 per 3 min per IP, and 10 per 3 min per email) |
 | DELETE | `/session` | | `204` | |
 | GET | `/me` | | `200 { user }` | |
-| DELETE | `/me` | | `204`. Deletes the account and all its data. The client asks the user to type "удалить" first | `403 session_required` |
+| DELETE | `/me` | | `204`. Ends a running remote browser session, then deletes the account and all its data. The client asks the user to type "удалить" first | `403 session_required` |
 | GET | `/api_tokens` | | `200 { api_tokens: [ApiToken] }` (active only) | |
 | POST | `/api_tokens` | `name` | `201 { api_token, token }`. `token` is shown only in this response | `400 blank`, `429` (20/hour/IP) |
 | DELETE | `/api_tokens/:id` | | `204`, the token stops working at once | `404` |
@@ -52,7 +52,7 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
   "connected_at": "...", "last_active_at": "..." }
 ```
 
-Every sign up, confirmation, sign in (and failed attempt for a known email), sign out, password reset request and reset, token issue and revoke, assistant connect and revoke, and account deletion is written to the audit log (not exposed over the API).
+Every sign up, confirmation, sign in (and failed attempt for a known email), sign out, password reset request and reset, token issue and revoke, assistant connect and revoke, and account deletion is written to the audit log (not exposed over the API). Deleting the account clears the IP addresses of its audit rows; the deletion row keeps only the account uuid.
 
 ## Shelf
 
