@@ -64,6 +64,8 @@ jobs:
       - run: npm run lint
       - run: npm run test:run
       - run: npm run build
+      - name: sw.js carries the build version and chunk list
+        run: "! grep -n -e __BUILD__ -e __ASSETS__ ../public/sw.js"
 
   e2e:
     runs-on: ubuntu-latest
