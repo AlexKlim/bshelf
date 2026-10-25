@@ -1,0 +1,23 @@
+<%= render layout: "page" do %>
+  <h1><%= t("oauth.prompt", client: @pre_auth.client.name) %></h1>
+  <p class="muted"><%= t("oauth.redirect", host: URI.parse(@pre_auth.redirect_uri).host) %></p>
+  <ul>
+    <% @pre_auth.scopes.each do |scope| %>
+      <li><%= t(scope, scope: "oauth.scopes") %></li>
+    <% end %>
+  </ul>
+  <% { allow: :post, deny: :delete }.each do |action, method| %>
+    <%= form_tag oauth_authorization_path, method: do %>
+      <% { client_id: @pre_auth.client.uid, redirect_uri: @pre_auth.redirect_uri, state: @pre_auth.state,
+           response_type: @pre_auth.response_type, response_mode: @pre_auth.response_mode, scope: @pre_auth.scope,
+           code_challenge: @pre_auth.code_challenge, code_challenge_method: @pre_auth.code_challenge_method }.each do |name, value| %>
+        <%= hidden_field_tag name, value, id: nil %>
+      <% end %>
+      <% Array.wrap(@pre_auth.resource_indicators).each do |resource| %>
+        <%= hidden_field_tag "resource[]", resource, id: nil %>
+      <% end %>
+      <button type="submit" class="<%= action %>"><%= t("oauth.#{action}") %></button>
+    <% end %>
+  <% end %>
+  <p class="muted"><%= t("oauth.revoke_hint") %></p>
+<% end %>

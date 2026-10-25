@@ -1,0 +1,4 @@
+<%= render layout: "page" do %>
+  <h1><%= t("oauth.error") %></h1>
+  <p class="muted"><%= (local_assigns[:error_response] || @pre_auth.error_response).body[:error] %></p>
+<% end %>

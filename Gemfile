@@ -8,6 +8,8 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 gem "solid_queue", "~> 1.7"
 gem "devise", "~> 5.0"
+gem "doorkeeper", "6.0.0.rc2"
+gem "mcp", "~> 1.8"
 
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"

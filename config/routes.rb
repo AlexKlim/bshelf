@@ -3,6 +3,13 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
+  use_doorkeeper do
+    controllers authorizations: "oauth/authorizations"
+    skip_controllers :applications, :authorized_applications, :token_info
+  end
+  get ".well-known/oauth-protected-resource(/mcp)", to: "mcp#metadata"
+  match "mcp", to: "mcp#handle", via: %i[get post delete]
+
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
       resource :session, only: %i[create destroy]
@@ -13,6 +20,7 @@ Rails.application.routes.draw do
       resource :password, only: %i[create update]
       resource :profile, only: %i[show destroy], path: "me"
       resources :api_tokens, only: %i[index create destroy]
+      resources :assistants, only: %i[index destroy]
 
       resources :shelves, only: %i[index show], path: "shelf"
       resource :search, only: :show
