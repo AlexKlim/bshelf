@@ -32,7 +32,7 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
 | POST | `/confirmation/resend` | `email` | `202` always | `429` (5/hour/IP) |
 | POST | `/password` | `email` | `202` always. Emails `APP_URL/reset-password?token=...` | `429` (5/hour/IP) |
 | PATCH | `/password` | `token`, `password` | `204`. Revokes every API token and connected assistant of the account | `422` `reset_password_token: invalid` or `expired`, `password: too_short`; `429` (5/hour/IP, counted apart from `POST /password`) |
-| POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 per 3 min per IP, and 10 per 3 min per email) |
+| POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 attempts per 3 min per IP; after 10 failed attempts per 3 min for an email, that email answers `429` even with the right password) |
 | DELETE | `/session` | | `204` | |
 | GET | `/me` | | `200 { user }` | |
 | DELETE | `/me` | | `204`. Ends a running remote browser session, then deletes the account and all its data. The client asks the user to type "удалить" first | `403 session_required` |
