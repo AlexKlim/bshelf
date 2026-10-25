@@ -104,7 +104,7 @@ The client shows "Already on the shelf: Listened · 2024" from `existing`.
 
 `DELETE /merges/:id` undoes it: the other book comes back with its original id, fields, editions and statuses, and fields the merge filled are cleared unless they were edited since. The pair is then never merged or proposed again automatically.
 
-A background matcher runs after every catalog lookup. It merges on its own only on the same ISBN, or the same original title and author (plan D6); those merges show up in `BookDetail.merges` so they can be undone. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
+A background matcher runs after every catalog lookup. It merges on its own only on the same ISBN, or the same original title and author; those merges show up in `BookDetail.merges` so they can be undone. An ISBN the catalog filled in only proposes a duplicate, because the catalog found it by title. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
 
 ```json
 // Duplicate
@@ -195,7 +195,7 @@ Only finished editions with a `finished_at` count, by the latest finish in the y
 
 ### Catalog enrichment
 
-Every new book is looked up in Open Library, then Google Books, in a background job, never during the request. The lookup fills only blank fields (`cover_url`, `year`, `language`, `page_count`, `original_title`, `isbn`), so manual values and covers from a store sync win. It sets `match_source` to `catalog`. A book that was just added has no catalog data yet; poll `GET /books/:id` or refetch the shelf later. Rate limited lookups back off and retry; a daily job retries books whose lookup never finished. `GOOGLE_BOOKS_API_KEY` raises the Google quota.
+Every new book is looked up in Open Library, then Google Books, in a background job, never during the request. The lookup fills only blank fields (`cover_url`, `year`, `language`, `page_count`, `original_title`, `isbn`), so manual values and covers from a store sync win. An ISBN is taken only from an ISBN lookup or a catalog entry with the same full title, so a series volume never borrows another volume's ISBN. It sets `match_source` to `catalog`. A book that was just added has no catalog data yet; poll `GET /books/:id` or refetch the shelf later. Rate limited lookups back off and retry; a daily job retries books whose lookup never finished. `GOOGLE_BOOKS_API_KEY` raises the Google quota.
 
 ## MCP (AI assistants)
 

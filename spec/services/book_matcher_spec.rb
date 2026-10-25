@@ -31,6 +31,25 @@ RSpec.describe BookMatcher do
     expect(user.books.ids).to eq([ older.id ])
   end
 
+  it "only proposes, never merges, on an ISBN the catalog supplied" do
+    older = book(title: "Dune", author: "Frank Herbert", isbn: "9780441013593")
+    newer = book(title: "Dune", author: "Frank Herbert", isbn: "9780441013593", isbn_source: "catalog")
+
+    described_class.call(newer)
+
+    expect(user.books.count).to eq(2)
+    expect(DuplicateCandidate.sole).to have_attributes(book_id: older.id, other_book_id: newer.id, reason: "title_author")
+  end
+
+  it "does not merge on an original title that has no letters or digits" do
+    book(title: "Eden", author: "Stanisław Lem")
+    newer = book(title: "Солярис", author: "Stanisław Lem", original_title: "...")
+
+    described_class.call(newer)
+
+    expect(user.books.count).to eq(2)
+  end
+
   it "only proposes a shared title with the same author" do
     a = book(title: "Dune", author: "Frank Herbert")
     b = book(title: "DUNE.", author: "Herbert, Frank")

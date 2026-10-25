@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_100002) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -56,6 +56,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100002) do
     t.datetime "updated_at", null: false
     t.string "cloth"
     t.datetime "enriched_at"
+    t.string "isbn_source"
     t.index ["author"], name: "index_books_on_author", opclass: :gin_trgm_ops, using: :gin
     t.index ["original_title"], name: "index_books_on_original_title", opclass: :gin_trgm_ops, using: :gin
     t.index ["title"], name: "index_books_on_title", opclass: :gin_trgm_ops, using: :gin

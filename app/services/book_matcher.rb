@@ -40,12 +40,17 @@ class BookMatcher
     nil
   end
 
+  # An ISBN the catalog guessed from a title is only as good as that guess, so it proposes instead of merging.
   def self.verdict(a, b)
     authors = TextKey.authors(a.author, b.author)
     isbn = isbn13(a.isbn)
-    return :merge if isbn && isbn == isbn13(b.isbn)
-    return :merge if a.original_title.present? && authors == :same &&
-      TextKey.title(a.original_title) == TextKey.title(b.original_title)
+    if isbn && isbn == isbn13(b.isbn)
+      return :merge unless [ a, b ].any? { it.isbn_source == "catalog" }
+
+      return authors == :same ? "title_author" : "title"
+    end
+    original = TextKey.title(a.original_title)
+    return :merge if original.present? && authors == :same && original == TextKey.title(b.original_title)
     return unless TextKey.titles(a.title, a.original_title).intersect?(TextKey.titles(b.title, b.original_title))
 
     { same: "title_author", unknown: "title" }[authors]

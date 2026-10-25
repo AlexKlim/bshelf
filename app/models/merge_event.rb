@@ -1,7 +1,7 @@
 # A merge moves rows, it never rewrites them: editions keep their readings and statuses, so unmerge only has
 # to move the same ids back and recreate the absorbed book with its original id, uuid and timestamps.
 class MergeEvent < ApplicationRecord
-  FILLABLE = %w[author original_title language isbn year page_count audio_minutes cover_url cloth].freeze
+  FILLABLE = %w[author original_title language isbn isbn_source year page_count audio_minutes cover_url cloth].freeze
   MOVED = { "editions" => Edition, "highlights" => Highlight, "notes" => Note, "merge_events" => MergeEvent }.freeze
 
   belongs_to :user

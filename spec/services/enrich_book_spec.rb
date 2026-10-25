@@ -47,6 +47,22 @@ RSpec.describe EnrichBook do
     expect(book.reload).to have_attributes(year: 1972, language: "pl", page_count: 229, isbn: nil, match_confidence: 0.6)
   end
 
+  it "does not give a series volume the ISBN of another volume" do
+    stub_request(:get, %r{\Ahttps://openlibrary\.org/search\.json}).to_return(status: 200, body: { docs: [] }.to_json)
+    volume = { title: "Ведьмак. Последнее желание", authors: [ "Анджей Сапковский" ], language: "ru",
+      industryIdentifiers: [ { type: "ISBN_13", identifier: "9785170000017" } ] }
+    stub_request(:get, %r{\Ahttps://www\.googleapis\.com/books/v1/volumes})
+      .to_return(status: 200, body: { items: [ { volumeInfo: volume } ] }.to_json)
+    first = create(:book, title: "Ведьмак. Последнее желание", author: "Анджей Сапковский", isbn: "9785170000017")
+    second = create(:book, user: first.user, title: "Ведьмак. Меч предназначения", author: "Анджей Сапковский")
+
+    described_class.call(second)
+    BookMatcher.call(second)
+
+    expect(second.reload.isbn).to be_nil
+    expect(Book.where(id: [ first.id, second.id ]).count).to eq(2)
+  end
+
   it "takes the original title from an ISBN hit" do
     stub_open_library("open_library_isbn.json", isbn: "9785171021906")
     stub_google("google_429.json", status: 429)
