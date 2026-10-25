@@ -92,27 +92,26 @@ RSpec.describe LinkResolver do
   describe ".http_get" do
     before { allow(described_class).to receive(:http_get).and_call_original }
 
-    it "connects to the given ip, returns the redirect and caps the body" do
+    it "connects to the given ip and returns the redirect without reading the body" do
       server = TCPServer.new("127.0.0.1", 0)
-      port = server.addr[1]
       requests = Queue.new
       thread = Thread.new do
-        2.times do |i|
-          client = server.accept
-          requests << client.gets
-          nil until client.gets == "\r\n"
-          body = i.zero? ? "" : "x" * (described_class::MAX_BODY + 1)
-          client.write("HTTP/1.1 301 Moved\r\nLocation: https://www.amazon.com/dp/0156027607\r\n" \
-            "Content-Length: #{body.bytesize}\r\nConnection: close\r\n\r\n#{body}")
-          client.close
-        end
+        client = server.accept
+        requests << client.gets
+        nil until client.gets == "\r\n"
+        client.write("HTTP/1.1 301 Moved\r\nLocation: https://www.amazon.com/dp/0156027607\r\n" \
+          "Content-Length: 100000000\r\n\r\n")
+        sleep 3
+        client.close
       end
-      uri = URI("http://a.co:#{port}/d/1")
+      uri = URI("http://a.co:#{server.addr[1]}/d/1")
 
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       expect(described_class.http_get(uri, "127.0.0.1", 1)).to eq([ 301, "https://www.amazon.com/dp/0156027607" ])
+      expect(Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).to be < 0.5
       expect(requests.pop).to eq("GET /d/1 HTTP/1.1\r\n")
-      expect { described_class.http_get(uri, "127.0.0.1", 1) }.to raise_error(described_class::Failed, "body too large")
     ensure
+      thread&.kill
       thread&.join(1)
       server&.close
     end

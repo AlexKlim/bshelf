@@ -20,7 +20,6 @@ class LinkResolver
   }.freeze
   MAX_REDIRECTS = 3
   BUDGET = 1.5
-  MAX_BODY = 64.kilobytes
   REDIRECTS = [ 301, 302, 303, 307, 308 ].freeze
   ASIN = %r{/(?:dp|gp/product|gp/aw/d|exec/obidos/ASIN)/([A-Z0-9]{10})(?:[/?]|\z)}i
   LITRES_ID = %r{[-/](\d{3,})/?\z}
@@ -59,11 +58,8 @@ class LinkResolver
     http.open_timeout = http.read_timeout = http.write_timeout = http.ssl_timeout = timeout
     http.max_retries = 0
     http.start do
-      http.request_get(uri.request_uri, "User-Agent" => "BookShelf/1.0") do |res|
-        size = 0
-        res.read_body { |chunk| raise Failed, "body too large" if (size += chunk.bytesize) > MAX_BODY }
-        return [ res.code.to_i, res["location"] ]
-      end
+      # Returning before read_body closes the socket: only the status and Location are ever read.
+      http.request_get(uri.request_uri, "User-Agent" => "BookShelf/1.0") { return [ it.code.to_i, it["location"] ] }
     end
   end
 

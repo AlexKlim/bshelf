@@ -173,7 +173,7 @@ How a share is matched, in order:
 2. Otherwise the text: it is split on ` - `, ` | `, `: `, ` by `, `, ` and newlines; store names and words such as "eBook" are dropped. A segment equal to a title or original title (or an ISBN) wins, then a segment contained in a title. Authors alone never match, so "Lem - Solaris" does not answer with another Lem book.
 3. A link that fails to resolve falls back to the text (`link: null`).
 
-Link safety: only Litres and Amazon hosts on ports 80/443, every DNS answer must be public (private, loopback, link-local, CGNAT, multicast and IPv4-mapped forms are refused) and the connection goes to the checked IP. At most 3 redirects, 1.5 s for the whole resolution, 64 KB per response.
+Link safety: only Litres and Amazon hosts on ports 80/443, every DNS answer must be public (private, loopback, link-local, CGNAT, multicast and IPv4-mapped forms are refused) and the connection goes to the checked IP. At most 3 redirects and 1.5 s for the whole resolution; only the status line and headers are read, never a body.
 
 ```json
 // ShareAnswer
