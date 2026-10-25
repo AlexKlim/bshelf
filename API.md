@@ -155,6 +155,63 @@ Only finished editions with a `finished_at` count, by the latest finish in the y
 
 `months` always has 12 entries. `years` lists every year with a finished book, for the year picker. `no_date_count` covers all years. `total_minutes` and `minutes` are null when no duration is known.
 
+## Share (check before buying)
+
+| Method | Path | Body | Success |
+| --- | --- | --- | --- |
+| POST | `/share` | `url`, `text`, `title` (any of them), optional `locale` | `200 ShareAnswer`; `400 blank` when all are empty; `429` (30/min/IP) |
+| POST | `/share/add` | `title`, `author`, `edition: { format, status, store, external_id, finished_at }`, optional `locale` | `201 { book: BookSummary, message }`; `409 duplicate` with `existing`; `422` field codes; `429` |
+
+Both work with the Bearer token (iOS Shortcut) and the cookie session (Android share target page).
+
+How a share is matched, in order:
+1. The first `http(s)` URL in `url` or `text`. Litres: the id at the end of the path (`.../solyaris-6450429/`). Amazon: the ASIN after `/dp/`, `/gp/product/`, `/gp/aw/d/`. Short links (`a.co`, `amzn.to`, `amzn.eu`, ...) are followed by redirect, the page itself is never read. The id is looked up in the caller's editions (`store` + `external_id`). Imports must store the Litres art id and the ASIN there.
+2. Otherwise the text: it is split on ` - `, ` | `, `: `, ` by `, `, ` and newlines; store names and words such as "eBook" are dropped. A segment equal to a title or original title (or an ISBN) wins, then a segment contained in a title. Authors alone never match, so "Lem - Solaris" does not answer with another Lem book.
+3. A link that fails to resolve falls back to the text (`link: null`).
+
+Link safety: only Litres and Amazon hosts on ports 80/443, every DNS answer must be public (private, loopback, link-local, CGNAT, multicast and IPv4-mapped forms are refused) and the connection goes to the checked IP. At most 3 redirects, 1.5 s for the whole resolution, 64 KB per response.
+
+```json
+// ShareAnswer
+{
+  "query": "Solaris",
+  "answer": { "kind": "listened", "book_id": "uuid" },
+  "books": [ BookSummary ],
+  "message": "Listened · Mar 2024",
+  "link": { "store": "amazon", "external_id": "0156027607" },
+  "suggestion": null
+}
+```
+
+`answer.kind` is the search vocabulary (`listened`, `read`, `read_and_listened`, `in_progress`, `owned`, `want`, `similar`, `not_found`) plus `unrecognized` (no usable link and no text). `message` is the ready line in `en` or `ru` (from `locale`, else `Accept-Language`, else `en`), for clients that cannot render `answer`:
+
+| kind | en | ru |
+| --- | --- | --- |
+| listened / read | Listened · Mar 2024 | Прослушал · март 2024 |
+| read_and_listened | Read and listened · 2023, 2024 | Прочитал и прослушал · 2023, 2024 |
+| in_progress | Listening / Reading | Слушаю / Читаю |
+| owned | Owned | На полке |
+| want | In Want since May 2025 | В Хочу с мая 2025 |
+| similar | Similar: 2 books | Похожие: 2 книги |
+| not_found | Not on the shelf | Не на полке |
+| unrecognized | Could not recognize the book | Не удалось распознать книгу |
+
+The date part is left out when the edition has no finish date. For `not_found` and `unrecognized`, `suggestion` is `{ title, author, store, external_id }`: the first two text segments and the resolved link, any of them may be null. Post it to `/share/add` as is: Want / Read / Listened is the first tap (`status` `want` or `done`; Read means `format: ebook`, Listened `format: audio`), the format is the second tap only for Want. `title` is required, so a link-only share without text needs one typed title.
+
+### iOS Shortcut
+
+Installed from "Profile" -> "Install shortcut" (an iCloud link; the client creates an API token and copies it to the clipboard). The shortcut, built by hand:
+
+1. Receives URLs and text from the share sheet. On first run it asks for the token and saves it to a file in Shortcuts.
+2. `Get contents of URL`: `POST https://<host>/api/v1/share`, headers `Authorization: Bearer bsh_...`, `Content-Type: application/json`, JSON body `{ "url": <Shortcut Input as URL>, "text": <Name of Shortcut Input> }`.
+3. `Show notification` with `message`.
+4. If `answer.kind` is `not_found`: `Choose from menu` Want / Read / Listened; for Want a second menu Audio / Ebook. Then `POST /api/v1/share/add` with `title`, `author` from `suggestion`, `edition: { status, format, store, external_id }` and show `message`. If `suggestion.title` is null, `Ask for input` first.
+5. If `answer.kind` is `similar`: `Show result` with `books[].title`, one per line.
+
+### Android
+
+The PWA manifest declares `share_target` -> `GET /share?title=&text=&url=`. That client route posts the three fields to `/share` with the cookie session and renders the same answer and quick add.
+
 ## Error codes
 
 `unauthorized`, `session_required`, `invalid_csrf`, `not_found`, `rate_limited`, `blank`, `invalid_credentials`, `unconfirmed`, `taken`, `invalid`, `too_short`, `too_long`, `inclusion`, `already_confirmed`, `confirmation_period_expired`, `expired`, `duplicate`, `not_implemented`.

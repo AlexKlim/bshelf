@@ -25,6 +25,10 @@ Rails.application.routes.draw do
       resources :merges, only: :destroy
       resource :stats, only: :show
       resources :sources, only: :index
+
+      resource :share, only: :create do
+        post :add
+      end
     end
   end
 

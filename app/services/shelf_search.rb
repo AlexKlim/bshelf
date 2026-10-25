@@ -8,12 +8,12 @@ class ShelfSearch
     @query = query.to_s.squish
   end
 
-  def call
-    books = matches
+  def call = result(matches)
+
+  def result(books)
     exact = books.select { AddBook.normalize(it.title) == AddBook.normalize(query) }
     books = exact if exact.one?
-    shelf = Shelf.new(user)
-    { query:, answer: answer(books), books: shelf.summaries(books.map(&:id)) }
+    { query:, answer: answer(books), books: Shelf.new(user).summaries(books.map(&:id)) }
   end
 
   private

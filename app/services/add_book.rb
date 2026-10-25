@@ -8,13 +8,14 @@ class AddBook
     end
   end
 
-  def self.call(user:, title:, author: nil, format: "unknown", status: "want", source: "manual", **dates)
+  def self.call(user:, title:, author: nil, format: "unknown", status: "want", source: "manual",
+    store: nil, external_id: nil, **dates)
     existing = find_duplicate(user, title, author)
     raise Duplicate, existing if existing
 
     Book.transaction do
       book = user.books.create!(title: title.to_s.squish, author: author.to_s.squish.presence)
-      edition = book.editions.create!(user:, format:, source:)
+      edition = book.editions.create!(user:, format:, source:, store:, external_id: store && external_id)
       reading = edition.create_reading!(user:, status:, status_source: "manual",
         **dates.slice(:started_at, :finished_at))
       StatusChange.create!(user:, reading:, to_status: status, source: "manual")
