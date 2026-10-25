@@ -12,6 +12,7 @@ import {
   updateEdition,
   updateNote,
 } from "@/api"
+import type { ApiError } from "@/lib/api"
 import type { BookDetail, BookSummary, Edition, Highlight, Note, Status } from "@/lib/types"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { formatsOf, statusLine, statusWord, verbForm, errorMessage } from "@/lib/vocab"
@@ -346,14 +347,18 @@ function Highlights({ book }: { book: BookDetail }) {
   const { t } = useTranslation()
   const [items, setItems] = useState<Highlight[]>(book.highlights)
   const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState(false)
   if (book.highlights_count === 0) return null
   const rest = book.highlights_count - items.length
 
   const more = async () => {
     setBusy(true)
+    setFailed(false)
     try {
       const { highlights } = await getHighlights(book.id, items.length)
       setItems([...items, ...highlights])
+    } catch {
+      setFailed(true)
     } finally {
       setBusy(false)
     }
@@ -371,10 +376,11 @@ function Highlights({ book }: { book: BookDetail }) {
           </li>
         ))}
       </ul>
+      {failed && <p className="bs-field__error">{t("book.highlightsError")}</p>}
       {rest > 0 && (
         <div>
-          <button type="button" className="bs-btn bs-btn--quiet" aria-busy={busy} onClick={more}>
-            {t("book.moreHighlights", { count: rest })}
+          <button type="button" className="bs-btn bs-btn--quiet" aria-busy={busy} disabled={busy} onClick={more}>
+            {failed ? t("book.retry") : t("book.moreHighlights", { count: rest })}
           </button>
         </div>
       )}
@@ -410,6 +416,7 @@ function MergeControl({
   }, [open, query, book.id])
 
   const fail = (e: unknown) => setError(errorMessage(t, e))
+  const undo = (id: string) => unmerge(id).then(onReload, (e: ApiError) => (e.status === 404 ? onReload() : fail(e)))
 
   const merges = book.merges ?? []
   if (merges.length > 0) {
@@ -421,7 +428,7 @@ function MergeControl({
             type="button"
             className="bs-btn bs-btn--quiet bs-btn--sm"
             disabled={disabled}
-            onClick={() => unmerge(m.id).then(onReload, fail)}
+            onClick={() => undo(m.id)}
           >
             {merges.length === 1 ? t("book.unmerge") : t("book.unmergeOne", { title: m.title })}
           </button>

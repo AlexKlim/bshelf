@@ -91,6 +91,7 @@
     "loading": "Opening the book",
     "loadError": "Could not load the book.",
     "retry": "Try again",
+    "highlightsError": "Could not load more highlights.",
     "page": "Page {{n}}",
     "cover": "Cover",
     "boughtTwice": "You bought this book twice",

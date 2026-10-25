@@ -152,14 +152,37 @@ function Duplicates() {
 
   if (!items) return null
 
+  const fail = (e: unknown) => setError(errorMessage(t, e))
+  const drop = (d: Duplicate) => setItems(items.filter((x) => x.id !== d.id))
+
+  const dismiss = (d: Duplicate) => {
+    setError(null)
+    dismissDuplicate(d.id).then(
+      () => drop(d),
+      (e: ApiError) => (e.status === 404 ? drop(d) : fail(e)),
+    )
+  }
+
+  const undo = (mergeId: string) => {
+    setError(null)
+    unmerge(mergeId).then(
+      () => {
+        setMerged(null)
+        reload()
+      },
+      (e: ApiError) => (e.status === 404 ? setMerged(null) : fail(e)),
+    )
+  }
+
   const merge = async (d: Duplicate) => {
+    setError(null)
     try {
       const { book, merge_id } = await mergeBooks(d.books[0].id, d.books[1].id)
-      setItems(items.filter((x) => x.id !== d.id))
+      drop(d)
       setMerged({ title: book.title, mergeId: merge_id })
       reload()
     } catch (e) {
-      setError(errorMessage(t, e))
+      fail(e)
     }
   }
 
@@ -172,7 +195,7 @@ function Duplicates() {
         <div className="bs-banner bs-banner--notice" role="status">
           <p className="bs-banner__text">{t("duplicates.merged", { title: merged.title })}</p>
           {merged.mergeId && (
-            <button type="button" className="bs-btn bs-btn--quiet" onClick={() => unmerge(merged.mergeId!).then(() => (setMerged(null), reload()))}>
+            <button type="button" className="bs-btn bs-btn--quiet" onClick={() => undo(merged.mergeId!)}>
               {t("book.unmerge")}
             </button>
           )}
@@ -190,7 +213,7 @@ function Duplicates() {
               </span>
             ))}
           </div>
-          <button type="button" className="bs-btn bs-btn--quiet" onClick={() => dismissDuplicate(d.id).then(() => setItems(items.filter((x) => x.id !== d.id)))}>
+          <button type="button" className="bs-btn bs-btn--quiet" onClick={() => dismiss(d)}>
             {t("duplicates.notDuplicate")}
           </button>
           <button type="button" className="bs-btn bs-btn--secondary" onClick={() => merge(d)}>
