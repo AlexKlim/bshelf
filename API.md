@@ -66,8 +66,10 @@ Every sign up, confirmation, sign in (and failed attempt for a known email), sig
 | PATCH | `/notes/:id` | `body` | `200 { note }` |
 | DELETE | `/notes/:id` | | `204` |
 | GET | `/books/:id/highlights` | `offset`, `limit` | `200 { highlights: [Highlight], count }` |
-| POST | `/books/:id/merge` | `other_id` | `501 not_implemented` (catalog lane, ET7) |
-| DELETE | `/merges/:id` | | `501 not_implemented` (catalog lane, ET7) |
+| POST | `/books/:id/merge` | `other_id` | `200 { book: BookDetail, merge_id }`; `422 { code: "invalid", field: "other_id" }` for the book itself |
+| DELETE | `/merges/:id` | | `200 { books: [BookSummary, BookSummary] }` (survivor, restored); `409 already_unmerged` |
+| GET | `/duplicates` | | `200 { duplicates: [Duplicate] }`, open ones only |
+| DELETE | `/duplicates/:id` | | `204`, dismissed for good |
 | GET | `/stats` | `year` (default: current) | `200 Stats` |
 | GET | `/sources` | | `200 { sources: [Source] }` |
 
@@ -85,6 +87,21 @@ A book with the same title (case and spacing ignored) and the same author (or an
 ```
 
 The client shows "Already on the shelf: Listened · 2024" from `existing`.
+
+### Merge, unmerge and possible duplicates
+
+`POST /books/:id/merge` folds `other_id` into `:id`: editions with their statuses, notes and highlights move over, blank fields of `:id` are filled from the other book, and the other book disappears (its id answers `404`). `merge_id` lets the client offer "Undo".
+
+`DELETE /merges/:id` undoes it: the other book comes back with its original id, fields, editions and statuses, and fields the merge filled are cleared unless they were edited since. The pair is then never merged or proposed again automatically.
+
+A background matcher runs after every catalog lookup. It merges on its own only on the same ISBN, or the same original title and author (plan D6); those merges show up in `BookDetail.merges` so they can be undone. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
+
+```json
+// Duplicate
+{ "id": "uuid", "reason": "title_author | title", "created_at": "...", "books": [ BookSummary, BookSummary ] }
+```
+
+`title_author`: same title and same author. `title`: same title, one author missing or in another script.
 
 ### Change status
 
@@ -124,7 +141,10 @@ If several books match and exactly one has the query as its whole title, only th
   "started_at": null, "finished_at": "2024-03-10T00:00:00.000Z", "total_minutes": null
 }
 // BookDetail = BookSummary +
-{ "isbn": null, "match_source": "manual", "notes": [ Note ], "highlights": [ Highlight ], "highlights_count": 12 }
+{
+  "isbn": null, "match_source": "manual", "notes": [ Note ], "highlights": [ Highlight ], "highlights_count": 12,
+  "merges": [ { "id": "uuid", "title": "Solaris", "author": "Stanisław Lem", "created_at": "..." } ]
+}
 // highlights holds the first 5; page the rest with /books/:id/highlights
 // Note
 { "id": "uuid", "body": "text", "created_at": "...", "updated_at": "..." }
@@ -135,6 +155,8 @@ If several books match and exactly one has the query as its whole title, only th
 ```
 
 `cloth` is the spine cloth (design README «Корешки»): `oxblood`, `bottle`, `navy`, `plum`, `slate`, `ochre`, `sage` or `linen`, the nearest to the cover's dominant colour in OKLab, or a stable pick by book id while there is no cover. Never null. `language` (ISO 639-1, sets the spine text direction), `page_count` and `audio_minutes` (spine width) are null until a source or the catalog knows them.
+
+`merges` lists merges into this book that can still be undone with `DELETE /merges/:id`.
 
 `store`: `litres`, `amazon` or null. `source`: `manual`, `share`, `mcp`, `litres`, `kindle_export`, `kindle_browser`. `status_source`: `manual`, `litres`, `kindle_browser`, `kindle_export`, `purchase`. `Source.error` is a code.
 
@@ -163,7 +185,7 @@ Every new book is looked up in Open Library, then Google Books, in a background 
 
 ## Error codes
 
-`unauthorized`, `session_required`, `invalid_csrf`, `not_found`, `rate_limited`, `blank`, `invalid_credentials`, `unconfirmed`, `taken`, `invalid`, `too_short`, `too_long`, `inclusion`, `already_confirmed`, `confirmation_period_expired`, `expired`, `duplicate`, `not_implemented`.
+`unauthorized`, `session_required`, `invalid_csrf`, `not_found`, `rate_limited`, `blank`, `invalid_credentials`, `unconfirmed`, `taken`, `invalid`, `too_short`, `too_long`, `inclusion`, `already_confirmed`, `confirmation_period_expired`, `expired`, `duplicate`, `already_unmerged`, `not_implemented`.
 
 ## Health
 

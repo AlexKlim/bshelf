@@ -192,26 +192,4 @@ RSpec.describe "Books, editions, notes and highlights" do
       expect(response).to have_http_status(:not_found)
     end
   end
-
-  describe "merge and unmerge" do
-    it "is not implemented yet but still scopes ids" do
-      a = create(:book, user:)
-      b = create(:book, user:)
-
-      post "/api/v1/books/#{a.uuid}/merge", params: { other_id: b.uuid }, as: :json
-      expect(response).to have_http_status(:not_implemented)
-      expect(error_codes).to eq([ "not_implemented" ])
-
-      post "/api/v1/books/#{a.uuid}/merge", params: { other_id: stranger.uuid }, as: :json
-      expect(response).to have_http_status(:not_found)
-
-      event = MergeEvent.create!(user:, book: a)
-      delete "/api/v1/merges/#{event.uuid}"
-      expect(response).to have_http_status(:not_implemented)
-
-      foreign = MergeEvent.create!(user: stranger.user, book: stranger)
-      delete "/api/v1/merges/#{foreign.uuid}"
-      expect(response).to have_http_status(:not_found)
-    end
-  end
 end

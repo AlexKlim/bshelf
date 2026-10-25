@@ -14,6 +14,9 @@ class EnrichBookJob < ApplicationJob
 
   def perform(book_id)
     book = Book.find_by(id: book_id)
-    EnrichBook.call(book) if book
+    return unless book
+
+    EnrichBook.call(book)
+    BookMatcher.call(book)
   end
 end

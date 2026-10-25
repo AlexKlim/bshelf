@@ -4,6 +4,7 @@ class Book < ApplicationRecord
   has_many :readings, through: :editions
   has_many :highlights
   has_many :notes
+  has_many :merge_events
 
   validates :title, presence: true, length: { maximum: 500 }
   validates :author, length: { maximum: 500 }

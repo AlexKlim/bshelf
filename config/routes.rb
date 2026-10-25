@@ -23,6 +23,7 @@ Rails.application.routes.draw do
       end
       resources :editions, only: :update
       resources :merges, only: :destroy
+      resources :duplicates, only: %i[index destroy]
       resource :stats, only: :show
       resources :sources, only: :index
     end

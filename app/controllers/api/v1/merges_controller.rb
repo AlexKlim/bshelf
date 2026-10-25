@@ -1,10 +1,12 @@
 module Api
   module V1
-    # Unmerge belongs to the catalog lane (ET7) together with BookMatcher.
     class MergesController < BaseController
       def destroy
-        current_user.merge_events.find_by!(uuid: params[:id])
-        render_error(:not_implemented, status: :not_implemented)
+        event = current_user.merge_events.find_by!(uuid: params[:id])
+        books = event.unmerge!
+        return render_error(:already_unmerged, status: :conflict) unless books
+
+        render json: { books: Shelf.new(current_user).summaries(books.map(&:id)) }
       end
     end
   end

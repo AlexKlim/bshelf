@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_100001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -71,6 +71,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100001) do
     t.index ["key"], name: "index_catalog_entries_on_key", unique: true
   end
 
+  create_table "duplicate_candidates", force: :cascade do |t|
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.bigint "other_book_id", null: false
+    t.string "reason", null: false
+    t.datetime "dismissed_at"
+    t.datetime "created_at", null: false
+    t.index ["book_id", "other_book_id"], name: "index_duplicate_candidates_on_book_id_and_other_book_id", unique: true
+    t.index ["other_book_id"], name: "index_duplicate_candidates_on_other_book_id"
+    t.index ["user_id"], name: "index_duplicate_candidates_on_user_id"
+    t.index ["uuid"], name: "index_duplicate_candidates_on_uuid", unique: true
+    t.check_constraint "book_id < other_book_id", name: "duplicate_candidates_ordered_pair"
+  end
+
   create_table "editions", force: :cascade do |t|
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
     t.bigint "user_id", null: false
@@ -113,6 +128,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100001) do
     t.datetime "unmerged_at"
     t.datetime "created_at", null: false
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.jsonb "filled", default: {}, null: false
     t.index ["book_id"], name: "index_merge_events_on_book_id"
     t.index ["user_id"], name: "index_merge_events_on_user_id"
     t.index ["uuid"], name: "index_merge_events_on_uuid", unique: true
@@ -340,6 +356,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100001) do
   add_foreign_key "api_tokens", "users", on_delete: :cascade
   add_foreign_key "audit_events", "users", on_delete: :nullify
   add_foreign_key "books", "users", on_delete: :cascade
+  add_foreign_key "duplicate_candidates", "books", column: "other_book_id", on_delete: :cascade
+  add_foreign_key "duplicate_candidates", "books", on_delete: :cascade
+  add_foreign_key "duplicate_candidates", "users", on_delete: :cascade
   add_foreign_key "editions", "books", on_delete: :cascade
   add_foreign_key "editions", "users", on_delete: :cascade
   add_foreign_key "highlights", "books", on_delete: :cascade
