@@ -37,7 +37,7 @@ describe("App shell", () => {
 
     await userEvent.click(screen.getByRole("tab", { name: "Sources" }))
 
-    expect(screen.getByRole("heading", { name: "Sources" })).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "Sources" })).toBeInTheDocument()
   })
 
   it("shows the empty bookcase with its three paths", async () => {
