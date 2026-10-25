@@ -14,6 +14,7 @@ module BookSerializer
       cover_url: book.cover_url,
       cloth: book.cloth || Cloth.for_uuid(book.uuid),
       shelf: shelf_key,
+      bought_twice: book.editions.filter_map(&:store).uniq.size > 1,
       editions: book.editions.sort_by(&:id).map { edition(it) }
     }
   end

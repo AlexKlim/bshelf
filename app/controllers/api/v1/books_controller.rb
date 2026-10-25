@@ -34,13 +34,20 @@ module Api
         render_book(book, merge_id: MergeEvent.merge!(book, other).uuid)
       end
 
+      def add_edition
+        AddBook.add_edition(book, **edition_params)
+        render_book(book, status: :created)
+      rescue ActiveRecord::RecordInvalid => e
+        render_model_errors(e.record)
+      end
+
       private
 
       def book = @book ||= current_user.books.find_by!(uuid: params[:id])
 
       # Nested because a top-level "format" key would be read as the request format.
       def edition_params
-        attrs = params.fetch(:edition, {}).permit(:format, :status, :started_at, :finished_at).to_h.symbolize_keys
+        attrs = params.fetch(:edition, {}).permit(:format, :store, :status, :started_at, :finished_at).to_h.symbolize_keys
         { format: "unknown", status: "want" }.merge(attrs.compact_blank)
       end
 

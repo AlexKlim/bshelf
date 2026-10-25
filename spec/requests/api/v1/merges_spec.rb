@@ -94,5 +94,36 @@ RSpec.describe "Merges, duplicates and editions" do
     end
   end
 
+  describe "POST /api/v1/books/:id/editions" do
+    it "adds a format with a manual status and flags a book bought in two stores" do
+      audio.editions.first.update!(store: "litres")
+
+      post "/api/v1/books/#{audio.uuid}/editions",
+        params: { edition: { format: "ebook", store: "amazon", status: "in_progress", started_at: "2025-01-02" } }, as: :json
+
+      expect(response).to have_http_status(:created)
+      expect(json["book"]).to include("shelf" => "now", "bought_twice" => true)
+      expect(json["book"]["editions"].last).to include("format" => "ebook", "store" => "amazon",
+        "status" => "in_progress", "status_source" => "manual", "started_at" => "2025-01-02T00:00:00.000Z")
+    end
+
+    it "defaults to want with an unknown format and is not bought twice" do
+      post "/api/v1/books/#{audio.uuid}/editions", as: :json
+
+      expect(response).to have_http_status(:created)
+      expect(json["book"]["bought_twice"]).to be(false)
+      expect(json["book"]["editions"].last).to include("format" => "unknown", "status" => "want")
+    end
+
+    it "returns field codes and scopes the book" do
+      post "/api/v1/books/#{audio.uuid}/editions", params: { edition: { store: "ozon" } }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]).to eq([ { "field" => "store", "code" => "inclusion" } ])
+
+      post "/api/v1/books/#{stranger.uuid}/editions", as: :json
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   def audio_shelf = Shelf.new(user).key_for(audio)
 end

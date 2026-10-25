@@ -66,6 +66,7 @@ Every sign up, confirmation, sign in (and failed attempt for a known email), sig
 | PATCH | `/notes/:id` | `body` | `200 { note }` |
 | DELETE | `/notes/:id` | | `204` |
 | GET | `/books/:id/highlights` | `offset`, `limit` | `200 { highlights: [Highlight], count }` |
+| POST | `/books/:id/editions` | `edition: { format, store, status, started_at, finished_at }` | `201 { book: BookDetail }`, `422` field codes |
 | POST | `/books/:id/merge` | `other_id` | `200 { book: BookDetail, merge_id }`; `422 { code: "invalid", field: "other_id" }` for the book itself |
 | DELETE | `/merges/:id` | | `200 { books: [BookSummary, BookSummary] }` (survivor, restored); `409 already_unmerged` |
 | GET | `/duplicates` | | `200 { duplicates: [Duplicate] }`, open ones only |
@@ -87,6 +88,10 @@ A book with the same title (case and spacing ignored) and the same author (or an
 ```
 
 The client shows "Already on the shelf: Listened · 2024" from `existing`.
+
+### Add a format
+
+`POST /books/:id/editions` adds another format or a copy from another store to a book already on the shelf, with the same defaults and manual status as adding a book. `edition.store` is `litres`, `amazon` or omitted. An existing "want" edition is kept; the shelf already prefers the stronger status.
 
 ### Merge, unmerge and possible duplicates
 
@@ -131,7 +136,7 @@ If several books match and exactly one has the query as its whole title, only th
 {
   "id": "uuid", "title": "Solaris", "author": "Stanisław Lem", "original_title": null,
   "language": null, "year": null, "page_count": null, "audio_minutes": null, "cover_url": null,
-  "cloth": "navy", "shelf": "2024",
+  "cloth": "navy", "shelf": "2024", "bought_twice": false,
   "editions": [ Edition ]
 }
 // Edition
@@ -156,7 +161,7 @@ If several books match and exactly one has the query as its whole title, only th
 
 `cloth` is the spine cloth (design README «Корешки»): `oxblood`, `bottle`, `navy`, `plum`, `slate`, `ochre`, `sage` or `linen`, the nearest to the cover's dominant colour in OKLab, or a stable pick by book id while there is no cover. Never null. `language` (ISO 639-1, sets the spine text direction), `page_count` and `audio_minutes` (spine width) are null until a source or the catalog knows them.
 
-`merges` lists merges into this book that can still be undone with `DELETE /merges/:id`.
+`bought_twice` is true when the book has editions from both stores ("You bought this book twice"). `merges` lists merges into this book that can still be undone with `DELETE /merges/:id`.
 
 `store`: `litres`, `amazon` or null. `source`: `manual`, `share`, `mcp`, `litres`, `kindle_export`, `kindle_browser`. `status_source`: `manual`, `litres`, `kindle_browser`, `kindle_export`, `purchase`. `Source.error` is a code.
 
