@@ -108,7 +108,7 @@ export type RemoteSession = {
   queue_position?: number | null
   expires_at?: string | null
   seconds_left?: number | null
-  login_seconds?: number | null
+  login_window_seconds?: number | null
   created_at?: string
   steps: { key: string; state: "done" | "pending" }[]
   result: RemoteResult | null

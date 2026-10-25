@@ -22,7 +22,7 @@ function remember(purpose: Purpose, id: string | null) {
 }
 
 function loginWindowMs(session: RemoteSession) {
-  if (session.login_seconds) return session.login_seconds * 1000
+  if (session.login_window_seconds) return session.login_window_seconds * 1000
   if (session.expires_at && session.created_at) return Date.parse(session.expires_at) - Date.parse(session.created_at)
   return null
 }

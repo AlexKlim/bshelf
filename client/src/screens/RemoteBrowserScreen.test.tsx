@@ -78,7 +78,7 @@ describe("RemoteBrowserScreen", () => {
     serve((url) =>
       url.endsWith("/viewer")
         ? [200, { url: "/view", expires_at: "2026-01-01T00:01:00Z" }]
-        : [200, { session: session({ status: "live", login_seconds: 600, seconds_left: 300 }) }],
+        : [200, { session: session({ status: "live", login_window_seconds: 600, seconds_left: 300 }) }],
     )
     const { container } = renderScreen("kindle")
     await screen.findByRole("timer")

@@ -14,4 +14,4 @@ The calls in `pending.ts` and the optional fields in `lib/types.ts` below are no
 
 - `StatsBook.cloth`: without it the year shelf draws the book in `spine-blank`.
 - `Stats.listened` and `Stats.read`: without them the summary falls back to `by_format.audio` and `by_format.ebook`.
-- `RemoteSession.login_seconds` and `created_at`: the sign-in window for the time bar (`login_seconds`, else `expires_at - created_at`). Without either, only the countdown is shown.
+- `RemoteSession.login_window_seconds` and `created_at`: the sign-in window for the time bar (`login_window_seconds`, else `expires_at - created_at`). Without either, only the countdown is shown.
