@@ -151,6 +151,7 @@
 .bs-banner__text b { font-weight: 600; }
 .bs-banner--error { background: var(--danger-soft); color: var(--danger); }
 .bs-banner--notice { background: var(--notice-soft); color: var(--ink); }
+.bs-retry { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; font: 400 15px/22px var(--font-ui); color: var(--ink-muted); }
 .bs-banner .bs-btn--quiet { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- Search "Have I read..." ---------- */

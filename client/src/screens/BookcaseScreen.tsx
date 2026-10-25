@@ -97,12 +97,12 @@ export function BookcaseScreen() {
   let body
   if (!shelves && shelf.error) {
     body = (
-      <div className="bs-banner bs-banner--error" role="alert">
-        <p className="bs-banner__text">{t("shelf.loadError")}</p>
+      <p className="bs-retry">
+        {t("shelf.loadError")}
         <button type="button" className="bs-btn bs-btn--quiet" onClick={shelf.reload}>
           {t("book.retry")}
         </button>
-      </div>
+      </p>
     )
   } else if (!shelves) {
     body = <BookcaseSkeleton />
