@@ -8,7 +8,7 @@ The calls in `pending.ts` and the optional fields in `lib/types.ts` below are no
 - `POST /api/v1/sources/kindle_export/request` -> `204`.
 - `POST /api/v1/sources/kindle_export/upload`, multipart `archive` (zip) -> `200 { books, highlights }`, `422 invalid_archive`.
 - The server answers all three with `501 not_implemented` for now. The client treats `501` and `404` as "not available yet" (`notOfferedYet`) and keeps the typed password.
-- `Source` for `kindle_export` with `status: "requested"` and `requested_at` shows the waiting state; `status: "ready"` shows "Upload archive".
+- `Source` for `kindle_export` with `status: "requested"` and `requested_at` shows the waiting state; `status: "ready"` shows "Upload archive". The server cannot store these yet: the `source_connections.status` CHECK constraint allows only `never`, `ok`, `error` and `needs_login`, so `requested` and `ready` need a migration that widens it.
 
 ## Optional fields
 
