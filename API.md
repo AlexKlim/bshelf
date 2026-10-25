@@ -206,7 +206,7 @@ Outside `/api/v1`. A remote MCP server over Streamable HTTP for Claude and ChatG
 | POST | `/mcp` | MCP JSON-RPC, stateless, JSON responses. `Authorization: Bearer <OAuth access token>` only; API tokens (`bsh_...`) are not accepted |
 | GET | `/.well-known/oauth-protected-resource`, `/.well-known/oauth-protected-resource/mcp` | RFC 9728 metadata: `resource` = `APP_URL/mcp`, `authorization_servers` = [`APP_URL`] |
 | GET | `/.well-known/oauth-authorization-server` | RFC 8414 metadata (CIMD, PKCE S256, `none` client auth) |
-| GET, POST, DELETE | `/oauth/authorize` | Consent page (server-rendered, ru or en by `Accept-Language`), allow, deny. `GET` answers `429` after 20 requests per minute per IP |
+| GET, POST, DELETE | `/oauth/authorize` | Consent page (server-rendered in en or ru, chosen like share answers: `locale`, then the first supported `Accept-Language` language, else en), allow, deny. `GET` answers `429` after 20 requests per minute per IP |
 | POST | `/oauth/token` | Code and refresh token exchange; refresh tokens rotate; access tokens live 1 hour |
 | POST | `/oauth/revoke` | RFC 7009 |
 
@@ -255,12 +255,13 @@ Link safety: only Litres and Amazon hosts on ports 80/443, every DNS answer must
 }
 ```
 
-`answer.kind` is the search vocabulary (`listened`, `read`, `read_and_listened`, `in_progress`, `owned`, `want`, `similar`, `not_found`) plus `unrecognized` (no usable link and no text). `message` is the ready line in `en` or `ru` (from `locale`, else `Accept-Language`, else `en`), for clients that cannot render `answer`:
+`answer.kind` is the search vocabulary (`listened`, `read`, `read_and_listened`, `in_progress`, `owned`, `want`, `similar`, `not_found`) plus `unrecognized` (no usable link and no text). `message` is the ready line in `en` or `ru` (from `locale`, else the first supported language in `Accept-Language`, else `en`), for clients that cannot render `answer`:
 
 | kind | en | ru |
 | --- | --- | --- |
-| listened / read | Listened · Mar 2024 | Прослушал · март 2024 |
-| read_and_listened | Read and listened · 2023, 2024 | Прочитал и прослушал · 2023, 2024 |
+| listened | Listened · Mar 2024 | Слушали · март 2024 |
+| read | Read · 2023 | Читали · 2023 |
+| read_and_listened | Read and listened · 2023, 2024 | Читали и слушали · 2023, 2024 |
 | in_progress | Listening / Reading | Слушаю / Читаю |
 | owned | Owned | На полке |
 | want | In Want since May 2025 | В Хочу с мая 2025 |

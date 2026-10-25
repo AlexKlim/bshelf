@@ -1,8 +1,8 @@
 ru:
   share:
-    listened: "Прослушал"
-    read: "Прочитал"
-    read_and_listened: "Прочитал и прослушал"
+    listened: "Слушали"
+    read: "Читали"
+    read_and_listened: "Читали и слушали"
     listening: "Слушаю"
     reading: "Читаю"
     owned: "На полке"

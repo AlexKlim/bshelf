@@ -87,7 +87,7 @@ class ShareCheck
     editions = result[:books].first&.dig(:editions) || []
     case kind
     when "listened" then line(:listened, month_year(finished(editions, audio: true)))
-    when "read" then line(:read, month_year(finished(editions, audio: false)))
+    when "read" then line(:read, finished(editions, audio: false)&.year)
     when "read_and_listened"
       years = [ finished(editions, audio: false), finished(editions, audio: true) ].compact.map(&:year).uniq.sort
       line(:read_and_listened, years.join(", ").presence)

@@ -95,6 +95,16 @@ RSpec.describe "OAuth for MCP clients" do
       expect(response).to have_http_status(:ok)
     end
 
+    it "renders the consent page in the language the share answers use" do
+      sign_in_as(user)
+
+      get "/oauth/authorize", params: authorize_params, headers: { "Accept-Language" => "ru-RU,ru;q=0.9" }
+      expect(response.body).to include("claude.ai просит доступ к вашей полке")
+
+      get "/oauth/authorize", params: authorize_params
+      expect(response.body).to include("claude.ai asks for access to your shelf")
+    end
+
     it "protects the consent form with the session CSRF token" do
       sign_in_as(user)
       ActionController::Base.allow_forgery_protection = true

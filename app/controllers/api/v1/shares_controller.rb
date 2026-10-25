@@ -1,10 +1,9 @@
 module Api
   module V1
     class SharesController < BaseController
-      LOCALES = %w[en ru].freeze
+      include RequestLocale
 
       limit_rate to: 30, within: 1.minute, only: %i[create add]
-      around_action :with_locale
 
       def create
         text = [ params[:title], params[:text] ].compact_blank.join("\n")
@@ -42,11 +41,6 @@ module Api
       def store_edition(attrs) = current_user.editions.find_by(attrs.slice(:store, :external_id))
 
       def bearer_writes? = true
-
-      def with_locale(&)
-        requested = [ params[:locale], *request.headers["Accept-Language"].to_s.scan(/[a-z]{2}/i) ].compact.map(&:downcase)
-        I18n.with_locale(requested.find { LOCALES.include?(it) } || "en", &)
-      end
 
       def summary(book) = BookSerializer.summary(book.reload, Shelf.new(current_user).key_for(book))
 
