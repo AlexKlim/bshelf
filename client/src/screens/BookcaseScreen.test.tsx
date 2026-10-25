@@ -35,19 +35,23 @@ describe("BookcaseScreen", () => {
   })
 })
 
-describe("BookcaseScreen on desktop", () => {
+describe("BookcaseScreen opening a book", () => {
   const solaris = book({ id: "sol", title: "Solaris" })
   const dune = book({ id: "dune", title: "Dune" })
   const original = window.matchMedia
 
-  beforeEach(async () => {
-    await i18n.changeLanguage("en")
+  const prefer = (reduced: boolean) => {
     window.matchMedia = ((query: string) => ({
-      matches: query.includes("min-width: 1200px") || query.includes("reduced-motion"),
+      matches: reduced && query.includes("reduced-motion"),
       media: query,
       addEventListener: () => {},
       removeEventListener: () => {},
     })) as unknown as typeof window.matchMedia
+  }
+
+  beforeEach(async () => {
+    await i18n.changeLanguage("en")
+    prefer(false)
     mockFetch((url) => {
       if (url.startsWith("/api/v1/shelf")) return [200, { shelves: [{ key: "2024", count: 2, books: [solaris, dune] }] }]
       if (url.startsWith("/api/v1/sources")) return [200, { sources: [], banner: null }]
@@ -70,6 +74,31 @@ describe("BookcaseScreen on desktop", () => {
   const spread = () => screen.queryByRole("heading", { level: 1, name: "Solaris" })
   const spine = (title: string) => document.querySelector<HTMLElement>(`.bs-spine[aria-label^="${title},"]`)!
 
+  it("flies the book out of the clicked spine inside a dialog over the bookcase", async () => {
+    renderAt()
+    await screen.findByRole("region", { name: "2024 · 2" })
+    spine("Solaris").getBoundingClientRect = () => new DOMRect(100, 200, 30, 160)
+    await userEvent.click(spine("Solaris"))
+
+    const dialog = await screen.findByRole("dialog", { name: "Solaris" })
+    const fly = dialog.querySelector<HTMLElement>(".bs-book.bs-fly")!
+    expect(fly.style.getPropertyValue("--from-x")).toBe("115px")
+    expect(fly.style.getPropertyValue("--from-y")).toBe("280px")
+    expect(dialog.querySelector(".bs-flap")).toHaveTextContent("Solaris")
+    expect(screen.getByRole("region", { name: "2024 · 2", hidden: true })).toBeInTheDocument()
+  })
+
+  it("just shows the open book when motion is reduced", async () => {
+    prefer(true)
+    renderAt()
+    await screen.findByRole("region", { name: "2024 · 2" })
+    await userEvent.click(spine("Solaris"))
+
+    const dialog = await screen.findByRole("dialog", { name: "Solaris" })
+    expect(dialog.querySelector(".bs-book")).toBeInTheDocument()
+    expect(dialog.querySelector(".bs-fly, .bs-flap")).toBeNull()
+  })
+
   it("moves focus to the spread heading when a book opens and back to its spine when it closes", async () => {
     renderAt()
     await screen.findByRole("region", { name: "2024 · 2" })
@@ -82,34 +111,23 @@ describe("BookcaseScreen on desktop", () => {
     expect(spine("Solaris")).toHaveFocus()
   })
 
-  it("ignores Esc typed in a field", async () => {
-    renderAt("/?book=sol")
-    await waitFor(() => expect(spread()).toBeInTheDocument())
-    await userEvent.click(screen.getByRole("searchbox"))
-    await userEvent.keyboard("{Escape}")
-    expect(spread()).toBeInTheDocument()
+  it("returns focus to the list row that opened the book", async () => {
+    localStorage.setItem("bs:view", "list")
+    renderAt()
+    await screen.findByRole("region", { name: "2024 · 2" })
+    const row = document.querySelector<HTMLElement>('.bs-row[data-book="sol"]')!
+    await userEvent.click(row)
+    await waitFor(() => expect(spread()).toHaveFocus())
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }))
+    await waitFor(() => expect(spread()).toBeNull())
+    expect(row).toHaveFocus()
   })
 
-  it("un-pulls a spine with Esc without closing the open book", async () => {
+  it("ignores Esc typed in a field inside the book", async () => {
     renderAt("/?book=sol")
-    await waitFor(() => expect(spread()).toBeInTheDocument())
-    spine("Solaris").focus()
-    await userEvent.keyboard("{ArrowRight}")
-    expect(spine("Dune")).toHaveClass("is-pulled")
-
+    await userEvent.click(await screen.findByRole("button", { name: "Add note" }))
     await userEvent.keyboard("{Escape}")
-    expect(spine("Dune")).not.toHaveClass("is-pulled")
-    expect(spread()).toBeInTheDocument()
-  })
-
-  it("leaves Esc to an open dialog", async () => {
-    renderAt("/?book=sol")
-    await waitFor(() => expect(spread()).toBeInTheDocument())
-    await userEvent.click(screen.getByRole("button", { name: "Add book" }))
-    expect(await screen.findByRole("dialog")).toBeInTheDocument()
-
-    await userEvent.keyboard("{Escape}")
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
     expect(spread()).toBeInTheDocument()
   })
 })

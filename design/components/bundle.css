@@ -3,8 +3,8 @@
 /* Book Shelf components. Colors, sizes and fonts come from tokens.css. Motion has no token family, so it lives here. */
 :root {
   --dur-pull: 180ms;
-  --dur-take: 260ms;
-  --dur-open: 320ms;
+  --dur-take: 420ms;
+  --dur-open: 560ms;
   --ease-book: cubic-bezier(.2, .7, .2, 1);
   --ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--focus);
 }
@@ -255,10 +255,24 @@
 .bs-dialog__close { position: fixed; top: var(--space-2); right: var(--space-2); z-index: 22; background: var(--paper); color: var(--ink); border-radius: var(--radius-pill); box-shadow: var(--shadow-sheet); }
 .bs-dialog__close:focus-visible { outline: none; box-shadow: var(--ring); }
 
-.bs-closed.is-taking { animation: bs-take var(--dur-take) var(--ease-book) both; }
-.bs-spread.is-opening { animation: bs-open var(--dur-open) var(--ease-book) both; }
-@keyframes bs-take { from { transform: perspective(900px) translateY(24px) rotateY(80deg) scale(.7); opacity: .4; } to { transform: none; opacity: 1; } }
-@keyframes bs-open { from { transform: scaleX(.5); opacity: .5; } to { transform: none; opacity: 1; } }
+/* Take and open: the closed book flies out of its spine (--from-x, --from-y are the spine centre relative to the book), then the cover board turns over */
+.bs-book__frame { position: relative; }
+.bs-flap { position: absolute; inset: 0 0 0 50%; z-index: 4; display: grid; place-items: center; border-radius: 0 4px 4px 0; background-image: linear-gradient(90deg, var(--spine-shade), transparent 7%); box-shadow: inset 6px 0 10px -6px var(--spine-shade); transform-origin: left center; backface-visibility: hidden; pointer-events: none; animation: bs-flap var(--dur-open) cubic-bezier(.45, .05, .3, 1) var(--dur-take) both; }
+.bs-fly { animation: bs-fly var(--dur-take) var(--ease-book) both; }
+.bs-fly > .bs-book__frame { animation: bs-shift var(--dur-open) var(--ease-book) var(--dur-take) both; }
+.bs-fly > .bs-book__frame > .bs-spread { animation: bs-reveal var(--dur-open) linear var(--dur-take) both; }
+@container (max-width: 639px) {
+  .bs-flap { left: 0; border-radius: 4px; }
+  .bs-fly > .bs-book__frame, .bs-fly > .bs-book__frame > .bs-spread { animation: none; }
+}
+.bs-scrim[data-state="open"] { animation: bs-fade var(--dur-pull) ease-out both; }
+.bs-scrim[data-state="closed"], .bs-dialog--book[data-state="closed"] { animation: bs-fade var(--dur-pull) ease-in reverse both; }
+.bs-dialog--book[data-state="closed"] .bs-book { animation: bs-fly var(--dur-pull) var(--ease-book) reverse both; }
+@keyframes bs-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bs-fly { from { transform: translate(var(--from-x, 0px), var(--from-y, 0px)) scale(.16) rotateY(75deg); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes bs-shift { from { transform: translateX(-25%); } to { transform: none; } }
+@keyframes bs-reveal { 0%, 49% { clip-path: inset(-60px -60px -60px 50%); } 50%, 100% { clip-path: inset(-60px); } }
+@keyframes bs-flap { from { transform: perspective(2200px) rotateY(0); } to { transform: perspective(2200px) rotateY(-180deg); } }
 
 .bs-colophon__edition { flex-direction: column; }
 .bs-colophon__line { display: inline-flex; align-items: center; gap: var(--space-2); min-block-size: var(--touch-min); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
@@ -306,5 +320,6 @@
 .bs-token__value { display: block; padding: var(--space-3); background: var(--paper); border: 1px solid var(--hairline); border-radius: var(--radius-sm); font: 500 14px/20px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); overflow-wrap: anywhere; user-select: all; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bs-closed.is-taking, .bs-spread.is-opening { animation: none; }
+  .bs-fly, .bs-fly > .bs-book__frame, .bs-fly > .bs-book__frame > .bs-spread, .bs-scrim, .bs-dialog--book, .bs-dialog--book .bs-book { animation: none !important; }
+  .bs-flap { display: none; }
 }

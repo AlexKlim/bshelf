@@ -3,14 +3,22 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { Ico } from "./ui"
 
-export function Overlay({ open, label, onClose, children }: { open: boolean; label: string; onClose: () => void; children: ReactNode }) {
+type Props = {
+  open: boolean
+  label: string
+  onClose: () => void
+  children: ReactNode
+} & Pick<Dialog.DialogContentProps, "className" | "onEscapeKeyDown" | "onCloseAutoFocus">
+
+export function Overlay({ open, label, onClose, children, className, ...content }: Props) {
   const { t } = useTranslation()
   return (
     <Dialog.Root open={open} onOpenChange={(next) => !next && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="bs-scrim" />
         <Dialog.Content
-          className="bs-dialog"
+          {...content}
+          className={className ? `bs-dialog ${className}` : "bs-dialog"}
           aria-describedby={undefined}
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 import {
   addEdition,
@@ -14,24 +14,26 @@ import {
 } from "@/api"
 import type { ApiError } from "@/lib/api"
 import type { BookDetail, BookSummary, Edition, Highlight, Note, Status } from "@/lib/types"
+import { findOpener } from "@/lib/opener"
 import { useMediaQuery } from "@/lib/useMediaQuery"
-import { formatsOf, statusLine, statusWord, verbForm, errorMessage } from "@/lib/vocab"
+import { statusLine, statusWord, verbForm, errorMessage } from "@/lib/vocab"
 import { Choices, Ico } from "./ui"
 
 type ViewProps = {
   bookId: string
   summary?: BookSummary
   disabled?: boolean
-  focusTitle?: boolean
   onChanged: () => void
 }
 
-export function BookView({ bookId, summary, disabled, focusTitle, onChanged }: ViewProps) {
+export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
   const { t } = useTranslation()
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
   const [detail, setDetail] = useState<BookDetail | null>(null)
   const [error, setError] = useState(false)
-  const [taken, setTaken] = useState(reduced)
+  const [from, setFrom] = useState<CSSProperties | null>(null)
+  const [opened, setOpened] = useState(reduced)
+  const frame = useRef<HTMLDivElement>(null)
 
   const load = () => {
     setError(false)
@@ -45,140 +47,142 @@ export function BookView({ bookId, summary, disabled, focusTitle, onChanged }: V
     getBook(bookId)
       .then(({ book }) => live && setDetail(book))
       .catch(() => live && setError(true))
-    const timer = window.setTimeout(() => live && setTaken(true), reduced ? 0 : 260)
     return () => {
       live = false
-      window.clearTimeout(timer)
     }
-  }, [bookId, reduced])
+  }, [bookId])
 
   const shown = detail ?? summary
-  if (!taken || (!detail && !error)) {
-    return shown ? <BookCover book={shown} animate={!reduced} /> : <p className="bs-sr">{t("book.loading")}</p>
-  }
+  const ready = !!(shown || error)
 
-  if (!detail) {
-    return (
-      <div className="bs-book">
-        <article className={`bs-spread bs-cloth--${shown?.cloth ?? "blank"}`}>
-          <section className="bs-page bs-page--left bs-title-page">
-            {shown && <h1 className="bs-book__title">{shown.title}</h1>}
-          </section>
-          <section className="bs-page bs-page--right">
-            <p className="bs-page__error">{t("book.loadError")}</p>
-            <div>
-              <button type="button" className="bs-btn bs-btn--quiet" onClick={load}>
-                {t("book.retry")}
-              </button>
-            </div>
-          </section>
-        </article>
+  useLayoutEffect(() => {
+    const book = frame.current?.parentElement
+    if (opened || from || !book) return
+    const spine = findOpener(bookId)?.getBoundingClientRect()
+    const r = book.getBoundingClientRect()
+    const dx = spine ? spine.left + spine.width / 2 - (r.left + r.width / 2) : 0
+    const dy = spine ? spine.top + spine.height / 2 - (r.top + r.height / 2) : 0
+    setFrom({ "--from-x": `${Math.round(dx)}px`, "--from-y": `${Math.round(dy)}px` } as CSSProperties)
+  }, [bookId, ready, opened, from])
+
+  if (!ready) return <p className="bs-sr">{t("book.loading")}</p>
+
+  const flying = !opened && from
+  return (
+    <div className={`bs-book${flying ? " bs-fly" : ""}`} style={from ?? undefined}>
+      <div className="bs-book__frame" ref={frame}>
+        <BookSpread
+          book={detail ?? shown!}
+          error={error}
+          disabled={disabled}
+          onBook={(book) => {
+            setDetail(book)
+            onChanged()
+          }}
+          onReload={() => {
+            load()
+            onChanged()
+          }}
+        />
+        {!opened && shown && (
+          <div
+            className={`bs-flap bs-cloth--${shown.cloth}`}
+            aria-hidden="true"
+            onAnimationEnd={(e) => e.target === e.currentTarget && setOpened(true)}
+          >
+            {shown.cover_url ? (
+              <img className="bs-closed__jacket" src={shown.cover_url} alt="" />
+            ) : (
+              <div className="bs-closed__label">
+                {shown.author && <span className="bs-closed__author">{shown.author}</span>}
+                <span className="bs-closed__title">{shown.title}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    )
-  }
-
-  return (
-    <BookSpread
-      book={detail}
-      animate={!reduced}
-      disabled={disabled}
-      focusTitle={focusTitle}
-      onBook={(book) => {
-        setDetail(book)
-        onChanged()
-      }}
-      onReload={() => {
-        load()
-        onChanged()
-      }}
-    />
-  )
-}
-
-export function BookCover({ book, animate }: { book: BookSummary; animate?: boolean }) {
-  const { t } = useTranslation()
-  const formats = formatsOf(book)
-  return (
-    <div
-      className={`bs-closed bs-cloth--${book.cloth}${animate ? " is-taking" : ""}`}
-      role="img"
-      aria-label={`${book.title}${book.author ? `, ${book.author}` : ""}. ${formats.map((f) => t(`format.${f}`)).join(", ")}`}
-    >
-      {book.cover_url ? (
-        <img className="bs-closed__jacket" src={book.cover_url} alt="" />
-      ) : (
-        <div className="bs-closed__label">
-          {book.author && <span className="bs-closed__author">{book.author}</span>}
-          <span className="bs-closed__title">{book.title}</span>
-        </div>
-      )}
-      <span className="bs-closed__format">
-        {formats.map((f) => (
-          <Ico key={f} name={f} />
-        ))}
-      </span>
     </div>
   )
 }
 
 type SpreadProps = {
-  book: BookDetail
-  animate?: boolean
+  book: BookSummary | BookDetail
+  error?: boolean
   disabled?: boolean
-  focusTitle?: boolean
   onBook: (book: BookDetail) => void
   onReload: () => void
 }
 
-export function BookSpread({ book, animate, disabled, focusTitle, onBook, onReload }: SpreadProps) {
+export function BookSpread({ book, error, disabled, onBook, onReload }: SpreadProps) {
   const { t } = useTranslation()
   const cloth = book.cloth
+  const detail = "notes" in book ? book : null
   const title = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
-    if (focusTitle) title.current?.focus({ preventScroll: true })
-  }, [focusTitle])
+    title.current?.focus({ preventScroll: true })
+  }, [])
+
+  let rest
+  if (detail) {
+    rest = (
+      <>
+        <Notes book={detail} disabled={disabled} onBook={onBook} />
+        <Highlights book={detail} />
+        <div className="bs-spread__foot">
+          <MergeControl book={detail} disabled={disabled} onBook={onBook} onReload={onReload} />
+        </div>
+      </>
+    )
+  } else if (error) {
+    rest = (
+      <>
+        <p className="bs-page__error">{t("book.loadError")}</p>
+        <div>
+          <button type="button" className="bs-btn bs-btn--quiet" onClick={onReload}>
+            {t("book.retry")}
+          </button>
+        </div>
+      </>
+    )
+  } else {
+    rest = <p className="bs-sr">{t("book.loading")}</p>
+  }
 
   return (
-    <div className="bs-book">
-      <article className={`bs-spread bs-cloth--${cloth}${animate ? " is-opening" : ""}`} aria-labelledby="book-title">
-        <section className="bs-page bs-page--left bs-title-page" aria-label={t("book.page", { n: 2 })}>
-          {book.cover_url ? (
-            <img className="bs-cover" src={book.cover_url} alt={t("book.cover")} />
-          ) : (
-            <div className={`bs-cover bs-cloth--${cloth}`} role="img" aria-label={t("book.cover")}>
-              {book.title}
-            </div>
-          )}
-          {book.author && <p className="bs-book__author">{book.author}</p>}
-          <h1 className="bs-book__title" id="book-title" tabIndex={-1} ref={title}>
+    <article className={`bs-spread bs-cloth--${cloth}`} aria-labelledby="book-title">
+      <section className="bs-page bs-page--left bs-title-page" aria-label={t("book.page", { n: 2 })}>
+        {book.cover_url ? (
+          <img className="bs-cover" src={book.cover_url} alt={t("book.cover")} />
+        ) : (
+          <div className={`bs-cover bs-cloth--${cloth}`} role="img" aria-label={t("book.cover")}>
             {book.title}
-          </h1>
-          <span className="bs-ornament" aria-hidden="true" />
-          <ul className="bs-colophon">
-            {book.editions.map((edition) => (
-              <EditionLine key={edition.id} edition={edition} disabled={disabled} onSaved={onReload} />
-            ))}
-          </ul>
-          <AddFormat book={book} disabled={disabled} onBook={onBook} />
-          {book.bought_twice && <p className="bs-book__twice">{t("book.boughtTwice")}</p>}
-          <p className="bs-page__folio" aria-hidden="true">
-            2
-          </p>
-        </section>
-        <section className="bs-page bs-page--right" aria-label={t("book.page", { n: 3 })}>
-          <p className="bs-page__head">{book.title}</p>
-          <Notes book={book} disabled={disabled} onBook={onBook} />
-          <Highlights book={book} />
-          <div className="bs-spread__foot">
-            <MergeControl book={book} disabled={disabled} onBook={onBook} onReload={onReload} />
           </div>
-          <p className="bs-page__folio" aria-hidden="true">
-            3
-          </p>
-        </section>
-      </article>
-    </div>
+        )}
+        {book.author && <p className="bs-book__author">{book.author}</p>}
+        <h1 className="bs-book__title" id="book-title" tabIndex={-1} ref={title}>
+          {book.title}
+        </h1>
+        <span className="bs-ornament" aria-hidden="true" />
+        <ul className="bs-colophon">
+          {book.editions.map((edition) => (
+            <EditionLine key={edition.id} edition={edition} disabled={disabled} onSaved={onReload} />
+          ))}
+        </ul>
+        {detail && <AddFormat book={detail} disabled={disabled} onBook={onBook} />}
+        {book.bought_twice && <p className="bs-book__twice">{t("book.boughtTwice")}</p>}
+        <p className="bs-page__folio" aria-hidden="true">
+          2
+        </p>
+      </section>
+      <section className="bs-page bs-page--right" aria-label={t("book.page", { n: 3 })}>
+        <p className="bs-page__head">{book.title}</p>
+        {rest}
+        <p className="bs-page__folio" aria-hidden="true">
+          3
+        </p>
+      </section>
+    </article>
   )
 }
 

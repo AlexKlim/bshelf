@@ -4,19 +4,15 @@ body { margin: 0; background: var(--wall); color: var(--ink); font-family: var(-
 .app__main { flex: 1; min-inline-size: 0; padding: var(--space-4); }
 .app__tabs { position: sticky; bottom: 0; z-index: 10; }
 
-.bs-shelfscreen { display: grid; gap: var(--space-6); align-items: start; max-inline-size: 1080px; margin: 0 auto; }
-.bs-shelfscreen.is-split { max-inline-size: none; }
+.bs-shelfscreen { max-inline-size: 960px; margin: 0 auto; }
 .bs-shelfscreen__case { display: grid; gap: var(--space-3); min-inline-size: 0; }
 .bs-shelfscreen__case > .bs-case, .bs-shelfscreen__case > .bs-empty { margin-top: var(--space-6); }
 .bs-shelfscreen__tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.bs-shelfscreen__book { position: sticky; top: calc(var(--header-h) + var(--space-4)); display: grid; justify-items: end; gap: var(--space-2); max-block-size: calc(100dvh - var(--header-h) - var(--space-8)); overflow-y: auto; scrollbar-gutter: stable; padding: 0 var(--space-2) var(--space-4); }
-.bs-shelfscreen__book > .bs-book { inline-size: 100%; }
 .bs-searchbox { display: grid; gap: var(--space-1); }
 .bs-searchbox > .bs-answer:empty { display: none; }
 
 @media (min-width: 1200px) {
   .app__main { padding: var(--space-6) var(--space-8); }
-  .bs-shelfscreen.is-split { grid-template-columns: minmax(0, 1fr) minmax(680px, 1.15fr); }
 }
 
 .bs-screen { display: grid; gap: var(--space-4); align-content: start; max-inline-size: 720px; margin: 0 auto; }
