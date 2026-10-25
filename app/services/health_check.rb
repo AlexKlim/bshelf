@@ -1,11 +1,11 @@
-# Section 8 signals over the last day. Alerts are structured error log lines (event "alert"),
-# so whatever reads the logs (Railway log alerts today) pages the operator; no email (eng D5).
+# Sync, share, remote browser and job signals over the last day. Alerts are structured error log lines
+# (event "alert"), so whatever reads the logs (Railway log alerts today) pages the operator; there is no email.
 class HealthCheck
   WINDOW = 24.hours
   MIN_SYNCS = 4
   SYNC_FAILURE_RATE = 0.5
   SHARE_P95_MS = 2000
-  ALERT_ERRORS = %w[schema_changed page_changed provider_refused].freeze
+  ALERT_ERRORS = %w[page_changed provider_refused].freeze
 
   def self.call(now: Time.current) = new(now).call
 

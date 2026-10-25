@@ -22,7 +22,7 @@ RSpec.describe "Remote browser sessions" do
       start
       expect(response).to have_http_status(:created)
       expect(json["session"]).to include("purpose" => "kindle", "status" => "connecting", "queue_position" => nil,
-        "steps" => [], "result" => nil, "interruption" => nil)
+        "steps" => [], "result" => nil, "interruption" => nil, "login_window_seconds" => 300)
       id = json["session"]["id"]
 
       start
@@ -67,6 +67,10 @@ RSpec.describe "Remote browser sessions" do
       expect(response).to have_http_status(:not_found)
       post "/api/v1/remote_browser_sessions/#{other.uuid}/viewer", as: :json
       expect(response).to have_http_status(:not_found)
+      delete "/api/v1/remote_browser_sessions/#{other.uuid}", as: :json
+      expect(response).to have_http_status(:not_found)
+      expect(other.reload.status).to eq("live")
+      expect(steel.released).to be_empty
     end
 
     it "gives a viewer only for a live session" do
@@ -107,6 +111,17 @@ RSpec.describe "Remote browser sessions" do
           get "/api/v1/remote_browser_sessions/#{session.uuid}/view/#{path}"
           expect(response).to have_http_status(:not_found), path
         end
+      end
+
+      it "forwards only the query of the session's own viewer path" do
+        session.update!(viewer_path: "v1/sessions/debug?pageId=abc")
+        url = viewer_url(session)
+        expect(steel).to receive(:view).with(session.steel_session_id, "v1/sessions/debug", "pageId=abc").twice.and_call_original
+
+        get "#{url}&host=attacker.example"
+        expect(response).to have_http_status(:ok)
+        get "/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/debug?pageId=other"
+        expect(response).to have_http_status(:ok)
       end
 
       it "rejects requests without a token or cookie" do

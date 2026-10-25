@@ -4,8 +4,6 @@ class ShareCheck
   NOISE = /amazon|litres|литрес|audible|kindle store|\Abooks\z|аудиокниг|слушать|читать|скачать|онлайн/i
   FORMAT_WORDS = /\b(?:kindle edition|audible audiobook|audiobook|ebook|paperback|hardcover)\b/i
   ISBN = /\A(?:97[89])?\d{9}[\dX]\z/
-  SAME_TITLE = "lower(regexp_replace(trim(title), '\\s+', ' ', 'g')) IN (:t) OR " \
-    "lower(regexp_replace(trim(coalesce(original_title, '')), '\\s+', ' ', 'g')) IN (:t)"
   MAX_TEXT = 2000
 
   def self.status_label(status, format)
@@ -50,21 +48,32 @@ class ShareCheck
   def by_text
     return if segments.empty?
 
-    exact = user.books.where(SAME_TITLE, t: segments.map { AddBook.normalize(it) }).or(user.books.where(isbn: isbns))
+    keys = segments.map { TextKey.title(it) }.compact_blank
+    exact = user.books.where(title_key: keys).or(user.books.where(original_title_key: keys)).or(user.books.where(isbn: isbns))
     books = with_editions(exact)
     return [ segments.first, books ] if books.any?
 
-    segments.each do |segment|
-      next if segment.length < 4
+    contained
+  end
 
-      like = "%#{Book.sanitize_sql_like(segment)}%"
-      books = with_editions(user.books.where("title ILIKE :like OR original_title ILIKE :like", like:))
-      return [ segment, books ] if books.any?
+  # The first segment, in share order, that some title contains. One query covers every segment.
+  # ponytail: one row cap for all segments can cut matches when a segment hits many titles; split the query if seen.
+  def contained
+    long = segments.select { it.length >= 4 }
+    return if long.empty?
+
+    likes = long.map { "%#{Book.sanitize_sql_like(it)}%" }
+    scope = user.books.where("title ILIKE ANY (ARRAY[:likes]) OR original_title ILIKE ANY (ARRAY[:likes])", likes:)
+    found = with_editions(scope, limit: ShelfSearch::LIMIT * long.size)
+    long.each do |segment|
+      needle = segment.downcase
+      books = found.select { |book| [ book.title, book.original_title ].compact.any? { it.downcase.include?(needle) } }
+      return [ segment, books.first(ShelfSearch::LIMIT) ] if books.any?
     end
     nil
   end
 
-  def with_editions(scope) = scope.includes(editions: :reading).order(:title).limit(ShelfSearch::LIMIT).to_a
+  def with_editions(scope, limit: ShelfSearch::LIMIT) = scope.includes(editions: :reading).order(:title).limit(limit).to_a
 
   def segments
     @segments ||= text.gsub(URL, " ").split(SEPARATORS)
@@ -87,7 +96,7 @@ class ShareCheck
     editions = result[:books].first&.dig(:editions) || []
     case kind
     when "listened" then line(:listened, month_year(finished(editions, audio: true)))
-    when "read" then line(:read, month_year(finished(editions, audio: false)))
+    when "read" then line(:read, finished(editions, audio: false)&.year)
     when "read_and_listened"
       years = [ finished(editions, audio: false), finished(editions, audio: true) ].compact.map(&:year).uniq.sort
       line(:read_and_listened, years.join(", ").presence)

@@ -11,9 +11,9 @@ class ShelfSearch
   def call = result(matches)
 
   def result(books)
-    exact = books.select { AddBook.normalize(it.title) == AddBook.normalize(query) }
+    exact = books.select { it.title_key == TextKey.title(query) }
     books = exact if exact.one?
-    { query:, answer: answer(books), books: Shelf.new(user).summaries(books.map(&:id)) }
+    { query:, answer: answer(books), books: books.empty? ? [] : Shelf.new(user).summaries_of(books) }
   end
 
   private

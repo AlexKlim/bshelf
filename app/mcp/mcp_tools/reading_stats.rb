@@ -14,9 +14,7 @@ module McpTools
       books = stats[:months].flat_map { it[:books] }
       books = books.select { it[:author].to_s.downcase.include?(author.downcase) } if author.present?
       data = {
-        year: stats[:year], author: author.presence, total: books.size,
-        listened: books.count { it[:formats].include?("audio") },
-        read: books.count { (it[:formats] - [ "audio" ]).any? },
+        year: stats[:year], author: author.presence, total: books.size, **YearStats.counts(books),
         top_authors: stats[:top_authors], years: stats[:years],
         books: books.map { it.slice(:id, :title, :author, :formats, :finished_at) }
       }.compact

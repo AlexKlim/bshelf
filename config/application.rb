@@ -23,6 +23,16 @@ module Bshelf
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use config.session_store, config.session_options
 
+    # Vite fingerprints everything under /assets. index.html, sw.js and the manifest keep their names,
+    # so they must be revalidated or a deploy never reaches an installed client.
+    config.public_file_server.headers = { "cache-control" => "no-cache" }
+    config.middleware.insert_before ActionDispatch::Static, Rack::Static, urls: [ "/assets" ],
+      root: config.root.join("public").to_s, cascade: true,
+      header_rules: [ [ :all, { "cache-control" => "public, max-age=#{1.year.to_i}, immutable" } ] ]
+
+    # Railway's edge reaches the app from the shared address space, so its hops are proxies, not clients.
+    config.action_dispatch.trusted_proxies = ActionDispatch::RemoteIp::TRUSTED_PROXIES + [ IPAddr.new("100.64.0.0/10") ]
+
     config.active_job.queue_adapter = :solid_queue
     config.x.app_url = ENV.fetch("APP_URL", "http://localhost:5173")
   end

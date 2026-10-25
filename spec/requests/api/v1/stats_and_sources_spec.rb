@@ -32,6 +32,20 @@ RSpec.describe "Stats and sources" do
       expect(json["top_authors"]).to eq([ { "author" => "Herbert", "count" => 1 }, { "author" => "Lem", "count" => 1 } ])
     end
 
+    it "counts listened and read books like the assistant does and gives each row its cloth" do
+      both = done("Dune", "Herbert", "audio", "2025-03-10")
+      create(:reading, edition: create(:edition, book: both, format: "unknown"), status: "done",
+        status_source: "manual", finished_at: Time.zone.parse("2025-05-02"))
+      covered = done("Solaris", "Lem", "personal_doc", "2025-05-20")
+      covered.update_columns(cloth: "navy")
+
+      get "/api/v1/stats", params: { year: 2025 }
+
+      expect(json).to include("total" => 2, "listened" => 1, "read" => 2)
+      rows = json["months"].flat_map { it["books"] }.to_h { [ it["title"], it["cloth"] ] }
+      expect(rows).to eq("Dune" => Cloth.for_uuid(both.uuid), "Solaris" => "navy")
+    end
+
     it "handles a year without finished books" do
       get "/api/v1/stats", params: { year: 2001 }
 
@@ -68,6 +82,15 @@ RSpec.describe "Stats and sources" do
       kindle = json["sources"].find { it["kind"] == "kindle_browser" }
       expect(kindle).to include("books_count" => 1)
       expect(kindle["session"]).to eq("id" => running.uuid, "status" => "connecting", "result" => nil, "interruption" => nil)
+    end
+
+    it "answers 501 for the source actions that do not exist yet" do
+      %w[litres/sync kindle_export/request kindle_export/upload].each do |action|
+        post "/api/v1/sources/#{action}", as: :json
+
+        expect(response).to have_http_status(:not_implemented), action
+        expect(json).to eq("errors" => [ { "code" => "not_implemented" } ])
+      end
     end
 
     describe "banner" do

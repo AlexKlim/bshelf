@@ -8,11 +8,14 @@ class AddBook
     end
   end
 
+  # The per-user lock makes the duplicate check and the insert one step, so two quick adds of one title
+  # (a double tap, a share and a Shortcut) cannot both pass the check.
   def self.call(user:, title:, author: nil, **edition)
-    existing = find_duplicate(user, title, author)
-    raise Duplicate, existing if existing
-
     Book.transaction do
+      Book.connection.execute(Book.sanitize_sql([ "SELECT pg_advisory_xact_lock(hashtext(?))", "add_book:#{user.id}" ]))
+      existing = find_duplicate(user, title, author)
+      raise Duplicate, existing if existing
+
       book = user.books.create!(title: title.to_s.squish, author: author.to_s.squish.presence)
       add_edition(book, **edition)
       book
@@ -21,25 +24,21 @@ class AddBook
 
   def self.add_edition(book, format: "unknown", status: "want", source: "manual", store: nil,
     external_id: nil, **dates)
+    dates = ReadingDates.parse(dates)
     Book.transaction do
       edition = book.editions.create!(user: book.user, format:, source:, store:,
         external_id: store && external_id)
-      reading = edition.create_reading!(user: book.user, status:, status_source: "manual",
-        **dates.slice(:started_at, :finished_at))
+      reading = edition.create_reading!(user: book.user, status:, status_source: "manual", **dates)
       StatusChange.create!(user: book.user, reading:, to_status: status, source: "manual")
       edition
     end
   end
 
+  # Same title key; with an author given, also the same author by the matcher's rule.
   def self.find_duplicate(user, title, author)
-    title = normalize(title)
-    return if title.empty?
+    key = TextKey.title(title)
+    return if key.empty?
 
-    scope = user.books.where("lower(regexp_replace(trim(title), '\\s+', ' ', 'g')) = ?", title)
-    author = normalize(author)
-    scope = scope.where("lower(regexp_replace(trim(coalesce(author, '')), '\\s+', ' ', 'g')) = ?", author) if author.present?
-    scope.order(:id).first
+    user.books.where(title_key: key).order(:id).find { author.blank? || TextKey.authors(author, it.author) == :same }
   end
-
-  def self.normalize(value) = value.to_s.unicode_normalize(:nfc).downcase.squish
 end

@@ -5,7 +5,15 @@ class StatusResolver
   SOURCE_RANK = { "purchase" => 0, "kindle_export" => 1, "kindle_browser" => 2, "litres" => 3, "manual" => 4 }.freeze
   DATE_FIELDS = %i[started_at finished_at total_minutes].freeze
 
-  def self.manual!(reading, status:, **dates) = new(reading).apply(status:, source: "manual", **dates)
+  # A person who marks a book finished (or started) without a date means today; a stored date or an
+  # explicit empty value wins.
+  DEFAULT_DATE = { "done" => :finished_at, "in_progress" => :started_at }.freeze
+
+  def self.manual!(reading, status:, **dates)
+    field = DEFAULT_DATE[status]
+    dates[field] = Time.current if field && reading.status != status && !dates.key?(field) && reading[field].nil?
+    new(reading).apply(status:, source: "manual", **dates)
+  end
 
   def self.automatic!(reading, status:, source:, **dates)
     raise ArgumentError, "manual is not an automatic source" if source == "manual"
@@ -21,7 +29,7 @@ class StatusResolver
 
   # Manual writes set exactly the date fields passed (nil clears). Automatic writes only fill
   # what they know and never touch a manual row, a stronger source, or a later status,
-  # except a purchase moving "want" to "owned".
+  # except a purchase moving "want" to "owned": buying a wanted book is news no other source carries.
   def apply(status:, source:, **dates)
     raise ArgumentError, "unknown status #{status}" unless STATUS_RANK.key?(status)
 
@@ -59,7 +67,7 @@ class StatusResolver
       (readings.status_source <> 'manual'
         AND #{rank_case("readings.status_source", SOURCE_RANK)} <= :source_rank
         AND #{rank_case("readings.status", STATUS_RANK)} <= :status_rank)
-      OR (readings.status = 'want' AND :status = 'owned')
+      OR (readings.status = 'want' AND :status = 'owned' AND :source = 'purchase')
     SQL
   end
 

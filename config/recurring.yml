@@ -5,6 +5,12 @@ production:
   enrich_missing_books:
     class: EnrichMissingBooksJob
     schedule: every day at 4am
+  prune_catalog_entries:
+    command: "CatalogEntry.prune"
+    schedule: every day at 3:30am
+  remote_browser_dispatch:
+    command: "RemoteBrowserSession.dispatch!"
+    schedule: every minute
   health_check:
     class: HealthCheckJob
     schedule: every hour at minute 5

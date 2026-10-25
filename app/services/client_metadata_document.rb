@@ -5,6 +5,7 @@
 class ClientMetadataDocument
   HOSTS = %w[claude.ai chatgpt.com].freeze
   TTL = 1.day
+  FAILURE_TTL = 5.minutes
 
   def self.client_id?(client_id)
     uri = URI.parse(client_id.to_s)
@@ -20,12 +21,21 @@ class ClientMetadataDocument
     app = Doorkeeper::Application.find_by(uid: client_id)
     return app if app && app.updated_at > TTL.ago
 
+    failed = "client_metadata_document:failed:#{client_id}"
+    return app if Rails.cache.exist?(failed)
+
     redirect_uris = fetch_redirect_uris(client_id)
-    return app if redirect_uris.blank?
+    if redirect_uris.blank?
+      Rails.cache.write(failed, true, expires_in: FAILURE_TTL)
+      return app
+    end
 
     app ||= Doorkeeper::Application.new(uid: client_id, name: URI.parse(client_id).host, confidential: false)
     app.update!(redirect_uri: redirect_uris.join("\n"), scopes: Doorkeeper.config.scopes.to_s, updated_at: Time.current)
     app
+  # Two first requests for one client race to create it; the uid check or the unique index stops the loser.
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+    Doorkeeper::Application.find_by(uid: client_id)
   end
 
   # A failed refresh keeps the stored application, so a flaky client host does not disconnect anyone.

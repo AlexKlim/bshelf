@@ -117,12 +117,51 @@ RSpec.describe RemoteBrowserSessionJob do
     expect(session.reload.status).to eq("live")
   end
 
-  it "fails cleanly when Steel is down" do
+  it "fails cleanly when Steel is down without blaming the store" do
     allow(steel).to receive(:create_session).and_raise(RemoteBrowser::BrowserFailed)
 
     tick!
 
     expect(session.reload).to have_attributes(status: "interrupted", interruption: "browser_failed")
+    expect(user.source_connections).to be_empty
+  end
+
+  it "releases the new browser when the person aborted while it was connecting" do
+    allow(steel).to receive(:create_session).and_wrap_original do |original|
+      session.finish!(interruption: "aborted")
+      original.call
+    end
+
+    tick!
+
+    expect(session.reload).to have_attributes(status: "interrupted", interruption: "aborted", steel_session_id: nil)
+    expect(steel.released).to eq(steel.created)
+    expect(steel.created.size).to eq(1)
+  end
+
+  it "keeps a long collection alive while the collector reports progress" do
+    tick!
+    allow(collector).to receive(:collect) do |s, &progress|
+      travel(10.minutes)
+      progress.call(nil)
+      travel(10.minutes)
+      RemoteBrowserSession.dispatch!
+      expect(s.reload.status).to eq("collecting")
+      { books: 1, highlights: 0 }
+    end
+
+    tick!
+
+    expect(session.reload.status).to eq("done")
+  ensure
+    travel_back
+  end
+
+  it "drops a queued tick whose session was deleted with its account" do
+    tick!
+    user.destroy!
+
+    expect { perform_enqueued_jobs }.not_to raise_error
   end
 
   it "does nothing for a session that already ended" do

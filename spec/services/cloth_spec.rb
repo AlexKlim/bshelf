@@ -28,6 +28,17 @@ RSpec.describe Cloth do
     expect(described_class.from_image("<html>")).to be_nil
   end
 
+  it "decodes only JPEG, PNG, WebP and GIF covers" do
+    image = (Vips::Image.black(40, 60) + [ 30, 90, 70 ]).cast(:uchar)
+
+    %i[pngsave_buffer webpsave_buffer gifsave_buffer].each do |save|
+      expect(described_class.from_image(image.public_send(save))).to eq("bottle"), save.to_s
+    end
+    expect(described_class.from_image(image.tiffsave_buffer)).to be_nil
+    expect(described_class.from_image(%(<svg xmlns="http://www.w3.org/2000/svg"><rect fill="#1e5a46" width="9" height="9"/></svg>)))
+      .to be_nil
+  end
+
   it "hashes a uuid to a stable cloth" do
     uuid = SecureRandom.uuid
 

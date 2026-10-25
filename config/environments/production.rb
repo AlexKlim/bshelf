@@ -1,11 +1,12 @@
 require "active_support/core_ext/integer/time"
 
+required = %w[APP_URL MAIL_FROM SMTP_ADDRESS SMTP_USERNAME SMTP_PASSWORD].select { ENV[it].blank? }
+raise "Set #{required.join(", ")} to boot in production" if required.any?
+
 Rails.application.configure do
   config.enable_reloading = false
   config.eager_load = true
   config.consider_all_requests_local = false
-
-  config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
   config.assume_ssl = true
   config.force_ssl = true

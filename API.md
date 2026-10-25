@@ -1,6 +1,6 @@
 # Book Shelf API v1
 
-REST JSON under `/api/v1`. The React client and future share and MCP lanes build against this file. Request specs in `spec/requests/api/v1` are the executable version of it.
+REST JSON under `/api/v1`. The React client, the share targets and scripts build against this file. Request specs in `spec/requests/api/v1` are the executable version of it.
 
 ## Conventions
 
@@ -10,16 +10,16 @@ REST JSON under `/api/v1`. The React client and future share and MCP lanes build
   { "errors": [ { "code": "taken", "field": "email" } ] }
   ```
   `field` is present when the error belongs to an input. Some errors carry extra keys (see `duplicate`).
-- **Dates.** ISO 8601 in UTC. Inputs accept `YYYY-MM-DD` or a full timestamp; an empty string clears a date.
+- **Dates.** ISO 8601 in UTC. Inputs accept `YYYY-MM-DD` or a full ISO 8601 timestamp from 1900 to the end of next year; an empty string clears a date. Anything else answers `422 { code: "invalid", field }` (`started_at`, `finished_at`).
 - **Status vocabulary** (per edition): `want`, `owned`, `in_progress`, `done`. **Formats:** `audio`, `ebook`, `personal_doc`, `unknown`. The client picks "Reading"/"Listening" and "Read"/"Listened" by format (design README).
-- **Shelf keys:** `now`, `want`, `owned`, a year such as `2025`, `no_date`. Order: now, want, owned, years descending, no_date. A book sits on exactly one shelf: `now` if any edition is `in_progress`, else the year of its latest finished edition (`no_date` when finished without a date), else `owned`, else `want`. Design D5 has no shelf for owned books; the client may show `owned` or fold it into another shelf.
+- **Shelf keys:** `now`, `want`, `owned`, a year such as `2025`, `no_date`. Order: now, want, owned, years descending, no_date. A book sits on exactly one shelf: `now` if any edition is `in_progress`, else the year of its latest finished edition (`no_date` when finished without a date), else `owned`, else `want`. The design has no shelf for owned books; the client may show `owned` or fold it into another shelf.
 
 ## Authentication
 
 Two ways in, both scoped to one user. Another user's id always returns `404 not_found`.
 
 1. **Cookie session** (the SPA, same origin). Every API response sets a readable `CSRF-TOKEN` cookie; send its value as `X-CSRF-Token` on every non-GET request. Missing or wrong token: `403 invalid_csrf`. The session lasts 30 days.
-2. **Bearer API token** (iOS Shortcut, Android share target, scripts): `Authorization: Bearer bsh_...`. No CSRF. Tokens cannot reach `/session`, `/api_tokens` or `DELETE /me` (`403 session_required`). An unknown or revoked token: `401 unauthorized`, no fallback to the cookie.
+2. **Bearer API token** (iOS Shortcut, Android share target, scripts): `Authorization: Bearer bsh_...`. No CSRF. A token may call `GET` endpoints and `POST /share`, `POST /share/add`; every other write (books, editions, notes, merges, duplicates, remote browser) and `/api_tokens`, `/assistants`, `DELETE /me`, `DELETE /session` answer `403 session_required`. An unknown or revoked token: `401 unauthorized`, no fallback to the cookie.
 
 No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limited`.
 
@@ -31,11 +31,11 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
 | POST | `/confirmation` | `token` | `204` | `422` `confirmation_token: invalid`, `email: already_confirmed`, `email: confirmation_period_expired` |
 | POST | `/confirmation/resend` | `email` | `202` always | `429` (5/hour/IP) |
 | POST | `/password` | `email` | `202` always. Emails `APP_URL/reset-password?token=...` | `429` (5/hour/IP) |
-| PATCH | `/password` | `token`, `password` | `204` | `422` `reset_password_token: invalid` or `expired`, `password: too_short`; `429` |
-| POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 per 3 min/IP) |
+| PATCH | `/password` | `token`, `password` | `204`. Revokes every API token and connected assistant of the account | `422` `reset_password_token: invalid` or `expired`, `password: too_short`; `429` (5/hour/IP, counted apart from `POST /password`) |
+| POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 per 3 min per IP, and 10 per 3 min per email) |
 | DELETE | `/session` | | `204` | |
 | GET | `/me` | | `200 { user }` | |
-| DELETE | `/me` | | `204`. Deletes the account and all its data. The client asks the user to type "удалить" first | `403 session_required` |
+| DELETE | `/me` | | `204`. Ends a running remote browser session, then deletes the account and all its data. The client asks the user to type "удалить" first | `403 session_required` |
 | GET | `/api_tokens` | | `200 { api_tokens: [ApiToken] }` (active only) | |
 | POST | `/api_tokens` | `name` | `201 { api_token, token }`. `token` is shown only in this response | `400 blank`, `429` (20/hour/IP) |
 | DELETE | `/api_tokens/:id` | | `204`, the token stops working at once | `404` |
@@ -47,12 +47,13 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
 { "id": "uuid", "email": "reader@example.com", "created_at": "2026-10-25T10:00:00.000Z" }
 // ApiToken
 { "id": "uuid", "name": "iPhone shortcut", "created_at": "...", "last_used_at": null }
-// Assistant: name is the client's host; last_active_at moves at most hourly, on token refresh
+// Assistant: name is the client's host; connected_at is the first grant or token ever issued to it,
+// last_active_at the latest token (it moves at most hourly, on token refresh)
 { "id": "uuid", "name": "claude.ai", "client_id": "https://claude.ai/...", "scopes": [ "books:read", "books:write" ],
   "connected_at": "...", "last_active_at": "..." }
 ```
 
-Every sign up, confirmation, sign in (and failed attempt for a known email), sign out, password reset request and reset, token issue and revoke, assistant connect and revoke, and account deletion is written to the audit log (not exposed over the API).
+Every sign up, confirmation, sign in (and failed attempt for a known email), sign out, password reset request and reset, token issue and revoke, assistant connect and revoke, and account deletion is written to the audit log (not exposed over the API). Deleting the account clears the IP addresses of its audit rows; the deletion row keeps only the account uuid.
 
 ## Shelf
 
@@ -78,6 +79,7 @@ Every sign up, confirmation, sign in (and failed attempt for a known email), sig
 | DELETE | `/duplicates/:id` | | `204`, dismissed for good |
 | GET | `/stats` | `year` (default: current) | `200 Stats` |
 | GET | `/sources` | | `200 { sources: [Source], banner: Banner \| null }` (see Sources) |
+| POST | `/sources/litres/sync`, `/sources/kindle_export/request`, `/sources/kindle_export/upload` | | Not implemented yet: always `501 not_implemented`, so the client can show "not available yet" |
 
 Any `:id` that is not the caller's: `404 not_found`. Edition fields go in a nested `edition` object because a top-level `format` key is the request format in Rails.
 
@@ -85,7 +87,7 @@ Any `:id` that is not the caller's: `404 not_found`. Edition fields go in a nest
 
 `edition.format` defaults to `unknown`, `edition.status` to `want`. The status is recorded as manual, so imports never overwrite it.
 
-A book with the same title (case and spacing ignored) and the same author (or any author, if none is given) already on the shelf:
+A book with the same title (case, punctuation and diacritics ignored, the matcher's rule) and the same author (one name contained in the other, e.g. "Herbert" and "Frank Herbert"; any author if none is given) already on the shelf:
 
 ```json
 // 409
@@ -100,11 +102,11 @@ The client shows "Already on the shelf: Listened · 2024" from `existing`.
 
 ### Merge, unmerge and possible duplicates
 
-`POST /books/:id/merge` folds `other_id` into `:id`: editions with their statuses, notes and highlights move over, blank fields of `:id` are filled from the other book, and the other book disappears (its id answers `404`). `merge_id` lets the client offer "Undo".
+`POST /books/:id/merge` folds `other_id` into `:id`: editions with their statuses, notes and highlights move over, blank fields of `:id` are filled from the other book, its possible duplicates (dismissed ones too) now pair with `:id`, and the other book disappears (its id answers `404`). `merge_id` lets the client offer "Undo".
 
-`DELETE /merges/:id` undoes it: the other book comes back with its original id, fields, editions and statuses, and fields the merge filled are cleared unless they were edited since. The pair is then never merged or proposed again automatically.
+`DELETE /merges/:id` undoes it: the other book comes back with its original id, fields, editions and statuses, and fields the merge filled are cleared unless they were edited since. Its possible duplicates return to it. The pair is then never merged or proposed again automatically.
 
-A background matcher runs after every catalog lookup. It merges on its own only on the same ISBN, or the same original title and author (plan D6); those merges show up in `BookDetail.merges` so they can be undone. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
+A background matcher runs after every catalog lookup. It merges on its own only on the same ISBN, or the same original title and author; those merges show up in `BookDetail.merges` so they can be undone. An ISBN the catalog filled in only proposes a duplicate, because the catalog found it by title. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
 
 ```json
 // Duplicate
@@ -115,13 +117,13 @@ A background matcher runs after every catalog lookup. It merges on its own only 
 
 ### Change status
 
-`PATCH /editions/:id` sets a manual status. A date key that is sent replaces the stored value (empty string clears it); a key that is not sent keeps the stored value. Unknown status: `422 { code: "inclusion", field: "status" }`.
+`PATCH /editions/:id` sets a manual status. A date key that is sent replaces the stored value (empty string clears it); a key that is not sent keeps the stored value. Moving an edition to `done` without sending `finished_at` sets it to now when none is stored, so a book marked Read lands on this year's shelf; moving to `in_progress` does the same for `started_at`. Adding a finished book without a date (`POST /books`, `/share/add`, MCP) keeps it on `no_date`. Unknown status: `422 { code: "inclusion", field: "status" }`.
 
 ### Search answer
 
 `answer.kind`, plus `book_id` when exactly one book matched:
 
-| kind | Design D11 line |
+| kind | Line |
 | --- | --- |
 | `listened` | "Listened · Mar 2024" (dates from the audio edition) |
 | `read` | "Read · 2023" |
@@ -183,19 +185,21 @@ Only finished editions with a `finished_at` count, by the latest finish in the y
   "year": 2025,
   "years": [ 2025, 2024 ],
   "total": 18,
+  "listened": 11,
+  "read": 9,
   "by_format": { "audio": 11, "ebook": 7 },
   "total_minutes": null,
-  "months": [ { "month": 1, "books": [ { "id": "uuid", "title": "...", "author": "...", "formats": [ "audio" ], "finished_at": "...", "minutes": null } ] } ],
+  "months": [ { "month": 1, "books": [ { "id": "uuid", "title": "...", "author": "...", "cloth": "navy", "formats": [ "audio" ], "finished_at": "...", "minutes": null } ] } ],
   "no_date_count": 3,
   "top_authors": [ { "author": "Lem", "count": 3 } ]
 }
 ```
 
-`months` always has 12 entries. `years` lists every year with a finished book, for the year picker. `no_date_count` covers all years. `total_minutes` and `minutes` are null when no duration is known.
+`listened` counts books with a finished audio edition, `read` books with any other finished format (the MCP `reading_stats` tool counts the same way), so a book can count in both. `cloth` follows the BookSummary rule. `months` always has 12 entries. `years` lists every year with a finished book, for the year picker. `no_date_count` covers all years. `total_minutes` and `minutes` are null when no duration is known.
 
 ### Catalog enrichment
 
-Every new book is looked up in Open Library, then Google Books, in a background job, never during the request. The lookup fills only blank fields (`cover_url`, `year`, `language`, `page_count`, `original_title`, `isbn`), so manual values and covers from a store sync win. It sets `match_source` to `catalog`. A book that was just added has no catalog data yet; poll `GET /books/:id` or refetch the shelf later. Rate limited lookups back off and retry; a daily job retries books whose lookup never finished. `GOOGLE_BOOKS_API_KEY` raises the Google quota.
+Every new book is looked up in Open Library, then Google Books, in a background job, never during the request. The lookup fills only blank fields (`cover_url`, `year`, `language`, `page_count`, `original_title`, `isbn`), so manual values and covers from a store sync win. An ISBN is taken only from an ISBN lookup or a catalog entry with the same full title, so a series volume never borrows another volume's ISBN. It sets `match_source` to `catalog`. A book that was just added has no catalog data yet; poll `GET /books/:id` or refetch the shelf later. Rate limited lookups back off and retry; a daily job retries books whose lookup never finished. Cached catalog answers expire after 30 days and a daily job deletes them. `GOOGLE_BOOKS_API_KEY` raises the Google quota.
 
 ## MCP (AI assistants)
 
@@ -206,7 +210,7 @@ Outside `/api/v1`. A remote MCP server over Streamable HTTP for Claude and ChatG
 | POST | `/mcp` | MCP JSON-RPC, stateless, JSON responses. `Authorization: Bearer <OAuth access token>` only; API tokens (`bsh_...`) are not accepted |
 | GET | `/.well-known/oauth-protected-resource`, `/.well-known/oauth-protected-resource/mcp` | RFC 9728 metadata: `resource` = `APP_URL/mcp`, `authorization_servers` = [`APP_URL`] |
 | GET | `/.well-known/oauth-authorization-server` | RFC 8414 metadata (CIMD, PKCE S256, `none` client auth) |
-| GET, POST, DELETE | `/oauth/authorize` | Consent page (server-rendered, ru or en by `Accept-Language`), allow, deny |
+| GET, POST, DELETE | `/oauth/authorize` | Consent page (server-rendered in en or ru, chosen like share answers: `locale`, then the first supported `Accept-Language` language, else en), allow, deny. `GET` answers `429` after 20 requests per minute per IP |
 | POST | `/oauth/token` | Code and refresh token exchange; refresh tokens rotate; access tokens live 1 hour |
 | POST | `/oauth/revoke` | RFC 7009 |
 
@@ -221,7 +225,7 @@ Tools return `structuredContent` with codes and data (the REST shapes: search an
 | `add_book` | `title`, `author`, `status` (default `want`), `format` (default `unknown`), `finished_at` (`YYYY-MM-DD`) | `{ code: "added" or "duplicate", book: BookSummary }`; the edition `source` is `mcp` |
 | `reading_stats` | `year` (default current), `author` (substring) | `{ year, author, total, listened, read, top_authors, years, books }` |
 
-### SPA contract (client lane)
+### SPA contract
 
 - **Login with `return_to`.** A signed-out user who opens `/oauth/authorize` is sent to `APP_URL/login?return_to=<path>`. After `POST /session` succeeds, the SPA does a full page load (`window.location.assign`) to `return_to` when it starts with `/oauth/authorize`, and ignores it otherwise. Sign up and email confirmation keep `return_to` through to the login.
 - **Profile > Assistants.** List from `GET /assistants` (name, connected date) with a revoke button calling `DELETE /assistants/:id`. The empty state can explain how to connect: in Claude, Customize > Connectors > Add custom connector, URL `APP_URL/mcp`.
@@ -255,12 +259,13 @@ Link safety: only Litres and Amazon hosts on ports 80/443, every DNS answer must
 }
 ```
 
-`answer.kind` is the search vocabulary (`listened`, `read`, `read_and_listened`, `in_progress`, `owned`, `want`, `similar`, `not_found`) plus `unrecognized` (no usable link and no text). `message` is the ready line in `en` or `ru` (from `locale`, else `Accept-Language`, else `en`), for clients that cannot render `answer`:
+`answer.kind` is the search vocabulary (`listened`, `read`, `read_and_listened`, `in_progress`, `owned`, `want`, `similar`, `not_found`) plus `unrecognized` (no usable link and no text). `message` is the ready line in `en` or `ru` (from `locale`, else the first supported language in `Accept-Language`, else `en`), for clients that cannot render `answer`:
 
 | kind | en | ru |
 | --- | --- | --- |
-| listened / read | Listened · Mar 2024 | Прослушал · март 2024 |
-| read_and_listened | Read and listened · 2023, 2024 | Прочитал и прослушал · 2023, 2024 |
+| listened | Listened · Mar 2024 | Слушали · март 2024 |
+| read | Read · 2023 | Читали · 2023 |
+| read_and_listened | Read and listened · 2023, 2024 | Читали и слушали · 2023, 2024 |
 | in_progress | Listening / Reading | Слушаю / Читаю |
 | owned | Owned | На полке |
 | want | In Want since May 2025 | В Хочу с мая 2025 |
@@ -304,6 +309,7 @@ Cookie session only (`403 session_required` for API tokens). Screen flow: `desig
   "queue_position": 1,            // only while queued
   "expires_at": "...",            // end of the 5:00 sign-in, set when live
   "seconds_left": 287,            // only while live
+  "login_window_seconds": 300,    // length of the whole sign-in window, for the timer's full scale
   "steps": [ { "key": "library", "state": "done" }, { "key": "highlights", "state": "pending" } ],
   "result": { "books": 12, "highlights": 40 },  // when done
   "interruption": null,           // aborted | timeout | provider_refused | deploy_interrupted | browser_failed
@@ -315,9 +321,9 @@ Flow: show the disclosure, `POST` with `disclosure_accepted: true`, then poll `G
 
 Reconnect: when the page becomes visible again, `GET` the session; if it is still `live`, `POST .../viewer` again and reload the iframe. The timer keeps running, the browser is the same.
 
-Live view security (OV-1): Steel sits on the private network only (`STEEL_URL`, must be `*.internal`, `localhost` or a private IP, checked at boot). `viewer` returns a token that works once, for 1 minute, only for its session and only for the session's owner. The first request trades it for an httponly, `SameSite=Strict` cookie scoped to `/api/v1/remote_browser_sessions/:id/view`, which covers the page's subresources until the sign-in time ends or the session leaves `live`. Responses carry `Cache-Control: no-store` and `frame-ancestors 'self'`.
+Live view security: Steel sits on the private network only (`STEEL_URL`, must be `*.internal`, `localhost` or a private IP, checked at boot). `viewer` returns a token that works once, for 1 minute, only for its session and only for the session's owner. The first request trades it for an httponly, `SameSite=Strict` cookie scoped to `/api/v1/remote_browser_sessions/:id/view`, which covers the page's subresources until the sign-in time ends or the session leaves `live`. Only the viewer path Steel issued for the session is proxied, with the query Steel gave it; the query the client sends is never forwarded. Responses carry `Cache-Control: no-store` and `frame-ancestors 'self'`.
 
-Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the rest wait in a FIFO queue. One running session per person. `REMOTE_BROWSER_DISABLED=1` is the instance kill switch. A deploy interrupts sessions that are `collecting` (`deploy_interrupted`); `live` sessions carry on in the new process. Every start and finish goes to the audit log; `done` and store refusals update the `kindle_browser` (or `litres`) source.
+Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1), the rest wait in a FIFO queue. One running session per person. `REMOTE_BROWSER_DISABLED=1` is the instance kill switch. A deploy interrupts sessions that are `collecting` (`deploy_interrupted`); `live` sessions carry on in the new process. Every start and finish goes to the audit log; `done`, store refusals (`provider_refused`) and changed store pages (`page_changed`, shown to the person as `browser_failed`) update the `kindle_browser` (or `litres`) source; a failure of our own browser does not. A job sweeps stale sessions every minute: `live` past its sign-in window becomes `timeout`, `connecting` or `collecting` without progress for 15 minutes becomes `deploy_interrupted`.
 
 ## Error codes
 
@@ -325,14 +331,14 @@ Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the re
 
 ## Sources
 
-`Source.session` is the latest remote browser session for that source (`kindle` -> `kindle_browser`, `litres` -> `litres`) while it runs and for a day after it ends, else null. It lets the row show "+12 books, 40 highlights" and reconnect after the app was closed. `books_count` counts editions imported from that source. Error codes so far: `needs_login`, `provider_refused`, `page_changed`, `schema_changed`, `timeout` (adapters add theirs).
+`Source.session` is the latest remote browser session for that source (`kindle` -> `kindle_browser`, `litres` -> `litres`) while it runs and for a day after it ends, else null. It lets the row show "+12 books, 40 highlights" and reconnect after the app was closed. `books_count` counts editions imported from that source. Error codes so far: `needs_login`, `invalid_credentials`, `captcha_required`, `provider_refused`, `page_changed`, `timeout` (adapters add theirs). The first three set `status` to `needs_login`: the person has to sign in to the store again; any other error sets `error`.
 
 `banner` fills the single slot above the shelf, highest priority first:
 
 | kind | when | extra keys |
 | --- | --- | --- |
 | `source_error` | any source in `error` or `needs_login` | `source`, `error` (code, or `needs_login`) |
-| `export_ready` | not emitted yet: needs the Amazon export import (ET5) | |
+| `export_ready` | not emitted yet: needs the Amazon export import | |
 | `litres_reminder` | the last Litres sync is older than 30 days | |
 | `possible_duplicates` | undismissed `GET /duplicates` rows exist; `key` follows the newest pair | `count` |
 
@@ -347,11 +353,11 @@ Adapters report through `SourceConnection.record_sync!(user, kind, error:, statu
 | alert | condition |
 | --- | --- |
 | `sync_failure_rate` | more than 50% of at least 4 syncs of one source failed |
-| `sync_error` | any `schema_changed`, `page_changed` or `provider_refused` |
+| `sync_error` | any `page_changed` or `provider_refused` |
 | `share_slow` | share p95 over 2 s |
 | `job_failures` | failed Solid Queue jobs in the last hour |
 
-Point the platform's log alerting at `"event":"alert"`. Ad hoc dashboard: `bin/rails runner 'pp HealthCheck.call'`. The status journal is `status_changes` (phase 1).
+Point the platform's log alerting at `"event":"alert"`. Ad hoc dashboard: `bin/rails runner 'pp HealthCheck.call'`. The status journal is `status_changes`.
 
 ## Health
 

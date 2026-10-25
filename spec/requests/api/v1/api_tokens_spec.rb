@@ -68,6 +68,35 @@ RSpec.describe "API tokens" do
     expect(User.exists?(user.id)).to be(true)
   end
 
+  it "can read the shelf but not change it with a token" do
+    _token, raw = ApiToken.issue!(user:, name: "Shortcut")
+    book = create(:book, user:, status: "want")
+    note = create(:note, book:)
+    other = create(:book, user:)
+
+    get "/api/v1/books/#{book.uuid}", headers: bearer(raw)
+    expect(response).to have_http_status(:ok)
+
+    [
+      [ :delete, "/api/v1/books/#{book.uuid}", {} ],
+      [ :patch, "/api/v1/books/#{book.uuid}", { title: "Renamed" } ],
+      [ :post, "/api/v1/books", { title: "New" } ],
+      [ :post, "/api/v1/books/#{book.uuid}/editions", {} ],
+      [ :post, "/api/v1/books/#{book.uuid}/merge", { other_id: other.uuid } ],
+      [ :patch, "/api/v1/editions/#{book.editions.first.uuid}", { status: "done" } ],
+      [ :post, "/api/v1/books/#{book.uuid}/notes", { body: "x" } ],
+      [ :patch, "/api/v1/notes/#{note.uuid}", { body: "x" } ],
+      [ :delete, "/api/v1/notes/#{note.uuid}", {} ]
+    ].each do |method, path, params|
+      public_send(method, path, params:, headers: bearer(raw), as: :json)
+      expect(response).to have_http_status(:forbidden), "#{method} #{path}"
+      expect(error_codes).to eq([ "session_required" ])
+    end
+    expect(book.reload).to have_attributes(title: book.title)
+    expect(user.books.count).to eq(2)
+    expect(note.reload.body).to eq("A thought")
+  end
+
   it "requires a name" do
     post "/api/v1/api_tokens", params: { name: "" }, as: :json
 

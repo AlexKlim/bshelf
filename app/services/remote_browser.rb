@@ -3,7 +3,8 @@
 # A collector is any object with:
 #   steps                       -> step keys shown while collecting, e.g. %w[library highlights]
 #   logged_in?(session)         -> polled every tick while the person signs in
-#   collect(session) { |step| } -> { books:, highlights: }; yields each finished step key
+#   collect(session) { |step| } -> { books:, highlights: }; yields each finished step key, and nil at
+#                                  least every few minutes during a long step so the session is not swept
 # Both may raise ProviderRefused (the store blocked the sign in) or PageChanged.
 # session.websocket_url is the CDP endpoint of the Steel browser.
 module RemoteBrowser

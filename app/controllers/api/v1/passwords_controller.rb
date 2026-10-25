@@ -2,7 +2,8 @@ module Api
   module V1
     class PasswordsController < BaseController
       skip_before_action :authenticate!
-      limit_rate to: 5, within: 1.hour, only: %i[create update]
+      limit_rate to: 5, within: 1.hour, only: :create, name: "request"
+      limit_rate to: 5, within: 1.hour, only: :update, name: "reset"
 
       # Always 202 so the endpoint does not reveal which emails have accounts.
       def create
@@ -18,6 +19,7 @@ module Api
         )
         return render_model_errors(user) if user.errors.any?
 
+        user.revoke_access!
         AuditEvent.record!("password_reset", request:, user:)
         head :no_content
       end

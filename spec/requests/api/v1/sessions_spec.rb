@@ -37,6 +37,13 @@ RSpec.describe "Sessions" do
       expect(error_codes).to eq([ "unconfirmed" ])
     end
 
+    it "records the client address forwarded by the platform edge" do
+      post "/api/v1/session", params: { email: user.email, password: "password123" },
+        headers: { "X-Forwarded-For" => "203.0.113.9, 100.64.0.2" }, env: { "REMOTE_ADDR" => "100.64.0.7" }, as: :json
+
+      expect(AuditEvent.find_by!(action: "sign_in").ip).to eq("203.0.113.9")
+    end
+
     it "rate limits sign in attempts" do
       10.times { post "/api/v1/session", params: { email: user.email, password: "nope" }, as: :json }
       post "/api/v1/session", params: { email: user.email, password: "password123" }, as: :json

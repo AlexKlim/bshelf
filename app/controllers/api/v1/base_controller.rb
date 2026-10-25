@@ -21,9 +21,11 @@ module Api
         with: -> { render_error(:invalid_csrf, status: :forbidden) }
       rescue_from ActionController::ParameterMissing,
         with: ->(e) { render_error(:blank, field: e.param, status: :bad_request) }
+      rescue_from ReadingDates::Invalid,
+        with: ->(e) { render_error(:invalid, field: e.field, status: :unprocessable_content) }
 
-      def self.limit_rate(to:, within:, only:)
-        rate_limit to:, within:, only:, store: RATE_LIMIT_STORE,
+      def self.limit_rate(to:, within:, only:, name: nil, by: -> { request.remote_ip })
+        rate_limit to:, within:, only:, name:, by:, store: RATE_LIMIT_STORE,
           with: -> { render_error(:rate_limited, status: :too_many_requests) }
       end
 
@@ -41,9 +43,14 @@ module Api
 
       def bearer_request? = request.authorization.present?
 
+      # A token lives in a Shortcut or a script, so it may read the shelf and use share, nothing else.
       def authenticate!
-        render_error(:unauthorized, status: :unauthorized) unless current_user
+        return render_error(:unauthorized, status: :unauthorized) unless current_user
+
+        require_session! unless request.get? || request.head? || bearer_writes?
       end
+
+      def bearer_writes? = false
 
       def require_session!
         render_error(:session_required, status: :forbidden) if bearer_request?

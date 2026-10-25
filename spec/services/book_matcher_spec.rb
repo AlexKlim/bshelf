@@ -31,6 +31,39 @@ RSpec.describe BookMatcher do
     expect(user.books.ids).to eq([ older.id ])
   end
 
+  it "only proposes, never merges, on an ISBN the catalog supplied" do
+    older = book(title: "Dune", author: "Frank Herbert", isbn: "9780441013593")
+    newer = book(title: "Dune", author: "Frank Herbert", isbn: "9780441013593", isbn_source: "catalog")
+
+    described_class.call(newer)
+
+    expect(user.books.count).to eq(2)
+    expect(DuplicateCandidate.sole).to have_attributes(book_id: older.id, other_book_id: newer.id, reason: "title_author")
+  end
+
+  it "does not merge on an original title that has no letters or digits" do
+    book(title: "Eden", author: "Stanisław Lem")
+    newer = book(title: "Солярис", author: "Stanisław Lem", original_title: "...")
+
+    described_class.call(newer)
+
+    expect(user.books.count).to eq(2)
+  end
+
+  it "compares only books that share an ISBN or a title's first word" do
+    target = book(title: "Dune Messiah", author: "Frank Herbert", isbn: "0-441-17269-7")
+    book(title: "Dune", author: "Frank Herbert")
+    by_isbn = book(title: "Мессия Дюны", author: "Фрэнк Герберт", isbn: "9780441172696")
+    %w[Eden Solaris Fiasco Golem Cyberiad].each { book(title: it, author: "Stanisław Lem") }
+    allow(TextKey).to receive(:authors).and_call_original
+
+    described_class.call(target)
+
+    # Dune, the ISBN twin, then Dune again in the rerun after the merge; never the five Lem books.
+    expect(TextKey).to have_received(:authors).exactly(3).times
+    expect(Book.exists?(by_isbn.id)).to be(false)
+  end
+
   it "only proposes a shared title with the same author" do
     a = book(title: "Dune", author: "Frank Herbert")
     b = book(title: "DUNE.", author: "Herbert, Frank")

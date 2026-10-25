@@ -21,12 +21,13 @@ RSpec.describe HealthCheck do
     expect(described_class.call[:summary][:syncs]["kindle_export"]).to include(total: 4, failed: 1)
   end
 
-  it "alerts at once on a changed schema or a refused provider" do
-    SourceConnection.record_sync!(user, "litres", error: "schema_changed")
+  it "alerts at once on a changed page or a refused provider" do
+    SourceConnection.record_sync!(user, "litres", error: "page_changed")
     SourceConnection.record_sync!(user, "kindle_browser", error: "provider_refused")
+    SourceConnection.record_sync!(user, "kindle_export", error: "schema_changed")
 
     expect(alerts).to contain_exactly(
-      { alert: "sync_error", source: "litres", error: "schema_changed", count: 1 },
+      { alert: "sync_error", source: "litres", error: "page_changed", count: 1 },
       { alert: "sync_error", source: "kindle_browser", error: "provider_refused", count: 1 }
     )
   end
@@ -61,6 +62,14 @@ RSpec.describe HealthCheck do
 
       expect(row.reload).to have_attributes(status: "ok", error: nil, last_sync_at: be_present)
       expect(MetricEvent.where(name: "sync.litres").pluck(:outcome)).to contain_exactly("needs_login", "ok")
+    end
+
+    it "asks the person to sign in again when the store rejected the login" do
+      %w[needs_login invalid_credentials captcha_required].each do |error|
+        row = SourceConnection.record_sync!(user, "litres", error:)
+        expect(row).to have_attributes(status: "needs_login", error:)
+      end
+      expect(SourceConnection.record_sync!(user, "litres", error: "timeout").status).to eq("error")
     end
   end
 end

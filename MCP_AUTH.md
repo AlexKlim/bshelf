@@ -1,4 +1,4 @@
-# MCP authorization: gate 0 findings (ET1, eng D11)
+# MCP authorization: how assistants connect
 
 Checked 2026-10-25 against primary sources. Question: how do Claude (web, desktop, mobile) and ChatGPT register as OAuth clients of a remote MCP server today, what must the server expose, and does Doorkeeper cover it.
 
@@ -57,7 +57,7 @@ Cited CVEs: both exist and both are in **doorkeeper-openid_connect**, not core D
 
 We do not use doorkeeper-openid_connect or DCR, so neither applies. Core Doorkeeper has no open advisory in OSV; the newest is CVE-2023-34246, fixed in 5.6.6.
 
-## Hosted provider comparison (needed by eng D11: CIMD is required and released Doorkeeper lacks it)
+## Hosted provider comparison (CIMD is required and released Doorkeeper lacks it)
 
 | | A: Doorkeeper 6.0.0.rc2 + own CIMD lookup for allowlisted hosts | B: Doorkeeper pinned to a main commit | C: WorkOS AuthKit, Standalone Connect |
 | --- | --- | --- | --- |
@@ -71,7 +71,7 @@ We do not use doorkeeper-openid_connect or DCR, so neither applies. Core Doorkee
 
 C keeps us off our own OAuth code but adds a vendor, a second token format and remote revocation for a single-owner self-hosted app. B puts unreleased code on the auth path. A keeps every OAuth step in Doorkeeper except resolving a CIMD `client_id` into a Doorkeeper application, and the host allowlist removes the SSRF and impersonation surface the CIMD draft warns about. When Doorkeeper 6.0 ships #1956, our lookup is replaced by `use_client_id_metadata_documents` + `allow_client_id_metadata_document`.
 
-## Decision (eng D11 rule: build only what the clients use)
+## Decision (build only what the clients use)
 
 - **Client registration: CIMD only**, Doorkeeper 6.0.0.rc2 + own allowlisted CIMD lookup (option A). Both target clients prefer CIMD and use it whenever the AS advertises it. Allowed `client_id` hosts: `claude.ai`, `chatgpt.com`.
 - **No DCR** (deprecated, not needed once CIMD is advertised, and the cited CVEs live there). **No pre-registered clients**: no UI for them, the user would have to paste ids.

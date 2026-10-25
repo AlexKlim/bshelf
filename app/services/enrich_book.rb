@@ -41,27 +41,33 @@ class EnrichBook
   def complete? = book.cover_url && book.year && book.language && book.page_count
 
   def pick(candidates, by_isbn:)
-    return [ candidates.first, ISBN_CONFIDENCE ] if by_isbn && candidates.any?
+    return [ candidates.first, ISBN_CONFIDENCE, true ] if by_isbn && candidates.any?
 
     titles = TextKey.titles(book.title, book.original_title)
+    full_titles = [ book.title, book.original_title ].map { TextKey.title(it) }.compact_blank
     candidates.each do |candidate|
       next unless TextKey.titles(candidate["title"]).intersect?(titles)
 
+      exact = full_titles.include?(TextKey.title(candidate["title"]))
       case TextKey.authors(book.author, Array(candidate["authors"]).join(" "))
-      when :same then return [ candidate, TITLE_AUTHOR_CONFIDENCE ]
-      when :unknown then return [ candidate, TITLE_CONFIDENCE ]
+      when :same then return [ candidate, TITLE_AUTHOR_CONFIDENCE, exact ]
+      when :unknown then return [ candidate, TITLE_CONFIDENCE, exact ]
       end
     end
     nil
   end
 
-  def apply(candidate, confidence)
+  # A shared series name ("Ведьмак. Последнее желание" and "Ведьмак. Меч предназначения") is enough to borrow
+  # a cover, but an ISBN identifies one volume, so it is taken only from the same full title or an ISBN hit.
+  def apply(candidate, confidence, exact)
     book.cover_url ||= candidate["cover_url"]
     book.year ||= candidate["year"]
     book.language ||= candidate["language"]
     book.page_count ||= candidate["page_count"]
-    # ISBN is a confident merge key in BookMatcher, so a title-only hit must not plant one.
-    book.isbn ||= candidate["isbn"] if confidence >= TITLE_AUTHOR_CONFIDENCE
+    if book.isbn.blank? && candidate["isbn"].present? && exact && confidence >= TITLE_AUTHOR_CONFIDENCE
+      book.isbn = candidate["isbn"]
+      book.isbn_source = "catalog"
+    end
     work = candidate["work_title"]
     book.original_title ||= work if confidence == ISBN_CONFIDENCE && TextKey.title(work) != TextKey.title(book.title)
     book.match_source = "catalog"

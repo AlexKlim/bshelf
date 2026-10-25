@@ -87,6 +87,32 @@ RSpec.describe "Registration, confirmation and password reset" do
       expect(AuditEvent.where(user:, action: "password_reset")).to exist
     end
 
+    it "signs out every API token and assistant on reset" do
+      _record, raw = ApiToken.issue!(user:, name: "Shortcut")
+      mcp_token(user)
+      Doorkeeper::AccessGrant.create!(application: claude_app, resource_owner_id: user.id, expires_in: 60,
+        redirect_uri: OauthHelpers::CLAUDE_CALLBACK, scopes: "books:read")
+      token = user.send_reset_password_instructions
+
+      patch "/api/v1/password", params: { token:, password: "new-password" }, as: :json
+
+      expect(response).to have_http_status(:no_content)
+      get "/api/v1/me", headers: bearer(raw)
+      expect(response).to have_http_status(:unauthorized)
+      expect(Doorkeeper::AccessToken.where(resource_owner_id: user.id, revoked_at: nil)).to be_empty
+      expect(Doorkeeper::AccessGrant.where(resource_owner_id: user.id, revoked_at: nil)).to be_empty
+    end
+
+    it "never puts the raw reset token in the job queue" do
+      post "/api/v1/password", params: { email: user.email }, as: :json
+      queued = enqueued_jobs.inspect
+      perform_enqueued_jobs
+
+      token = ActionMailer::Base.deliveries.last.body.encoded[/token=([^\s&]+)/, 1]
+      expect(token).to be_present
+      expect(queued).not_to include(token)
+    end
+
     it "rejects a bad token" do
       patch "/api/v1/password", params: { token: "nope", password: "new-password" }, as: :json
 

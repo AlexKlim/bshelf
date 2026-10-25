@@ -34,5 +34,24 @@ RSpec.describe "Profile" do
       get "/api/v1/me"
       expect(response).to have_http_status(:unauthorized)
     end
+
+    it "releases the account's running remote browser before deleting it" do
+      session = live_session(user)
+      sign_in_as(user)
+
+      delete "/api/v1/me"
+
+      expect(response).to have_http_status(:no_content)
+      expect(steel.released).to eq([ session.steel_session_id ])
+      expect(RemoteBrowserSession.exists?(session.id)).to be(false)
+    end
+
+    it "keeps no IP address of the deleted account in the audit log" do
+      sign_in_as(user)
+
+      delete "/api/v1/me"
+
+      expect(AuditEvent.where(action: %w[sign_in account_deleted]).pluck(:ip)).to eq([ nil, nil ])
+    end
   end
 end

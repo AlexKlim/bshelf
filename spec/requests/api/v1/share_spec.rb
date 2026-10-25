@@ -45,7 +45,32 @@ RSpec.describe "Share" do
     expect(json["link"]).to eq("store" => "litres", "external_id" => "6450429")
 
     share(url: "https://www.litres.ru/audiobook/stanislav-lem/solyaris-6450429/", locale: "ru-RU,ru;q=0.9")
-    expect(json["message"]).to eq("Прослушал · март 2024")
+    expect(json["message"]).to eq("Слушали · март 2024")
+  end
+
+  it "answers read with the year only, in both languages" do
+    book = create(:book, user:, title: "Solaris")
+    edition_on_shelf(book, format: "ebook", store: "amazon", external_id: "B0B7QSV2RK", status: "done",
+      finished_at: Time.zone.local(2023, 5, 1))
+
+    share(url: "https://www.amazon.com/dp/B0B7QSV2RK")
+    expect(json["message"]).to eq("Read · 2023")
+
+    share(url: "https://www.amazon.com/dp/B0B7QSV2RK", locale: "ru")
+    expect(json["message"]).to eq("Читали · 2023")
+  end
+
+  it "picks the language from the first supported Accept-Language tag, else English" do
+    create(:book, user:, title: "Solaris", status: "want")
+
+    share(text: "Solaris", locale: "de-RU, en;q=0.8")
+    expect(json["message"]).to start_with("In Want since ")
+
+    share(text: "Solaris", locale: "de-DE, ru;q=0.8")
+    expect(json["message"]).to start_with("В Хочу с ")
+
+    share(text: "Solaris", locale: "fr-CA")
+    expect(json["message"]).to start_with("In Want since ")
   end
 
   it "answers read and listened with both years through a short Amazon link" do
@@ -60,6 +85,9 @@ RSpec.describe "Share" do
 
     expect(json["answer"]["kind"]).to eq("read_and_listened")
     expect(json["message"]).to eq("Read and listened · 2023, 2024")
+
+    share(text: "Solaris by Stanislaw Lem https://a.co/d/3xYz9Q1", locale: "ru")
+    expect(json["message"]).to eq("Читали и слушали · 2023, 2024")
   end
 
   it "answers want with the month it was added, in Russian" do
@@ -86,9 +114,33 @@ RSpec.describe "Share" do
   it "splits a Litres page title on a long dash" do
     book = create(:book, user:, title: "Солярис", status: "owned")
 
-    share(text: "Солярис — Станислав Лем, слушать онлайн аудиокнигу")
+    share(text: "Солярис \u2014 Станислав Лем, слушать онлайн аудиокнигу")
 
     expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
+  end
+
+  it "matches a title or original title regardless of punctuation and accents" do
+    book = create(:book, user:, title: "Пикник на обочине", original_title: "Piknik na obochine", status: "owned")
+
+    share(text: "Пикник на обочине! | Литрес")
+    expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
+
+    share(text: "Píknik na obochine: a novel")
+    expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
+  end
+
+  it "looks every text segment up in one query" do
+    book = create(:book, user:, title: "The Cyberiad: Fables for the Cybernetic Age", status: "want")
+    likes = 0
+    counter = ->(*, payload) { likes += 1 if payload[:sql].include?("ILIKE") }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      share(text: "Stanislaw Lem | Fables | Cyberiad, illustrated")
+    end
+
+    expect(json["answer"]).to eq("kind" => "want", "book_id" => book.uuid)
+    expect(json["query"]).to eq("Fables")
+    expect(likes).to eq(1)
   end
 
   it "does not answer for another book by the same author" do
@@ -147,6 +199,18 @@ RSpec.describe "Share" do
     expect(LinkResolver).not_to have_received(:lookup)
   end
 
+  it "answers from the text within 2 seconds when the short link hangs" do
+    book = create(:book, user:, title: "Solaris", status: "owned")
+    allow(LinkResolver).to receive(:http_get) { sleep 5 }
+
+    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    share(text: "Solaris https://a.co/d/1")
+
+    expect(Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).to be < 2
+    expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
+    expect(json["link"]).to be_nil
+  end
+
   it "keeps p95 under 2 seconds" do
     create_list(:book, 30, user:, status: "done")
     book = create(:book, user:, title: "Solaris")
@@ -194,6 +258,28 @@ RSpec.describe "Share" do
       expect(response).to have_http_status(:conflict)
     end
 
+    it "answers 409 with the book that won a race for the same store id" do
+      winner = create(:book, user:, title: "Solaris")
+      allow(AddBook).to receive(:call).and_wrap_original do |original, **args|
+        create(:edition, book: winner, store: "amazon", external_id: "0156027607")
+        original.call(**args)
+      end
+
+      add(title: "Solaris (Kindle)", edition: { store: "amazon", external_id: "0156027607" })
+
+      expect(response).to have_http_status(:conflict)
+      expect(json["existing"]["id"]).to eq(winner.uuid)
+      expect(user.books.count).to eq(1)
+    end
+
+    it "matches an existing store id only together with its store" do
+      create(:edition, book: create(:book, user:, title: "Solaris"), store: "amazon", external_id: "6450429")
+
+      add(title: "Eden", edition: { external_id: "6450429" })
+
+      expect(response).to have_http_status(:created)
+    end
+
     it "validates status, format and store" do
       add(title: "Solaris", edition: { status: "loved" })
       expect(response).to have_http_status(:unprocessable_content)
@@ -204,6 +290,10 @@ RSpec.describe "Share" do
 
       add(edition: { status: "want" })
       expect(response).to have_http_status(:bad_request)
+
+      add(title: "Solaris", edition: { status: "done", finished_at: "2024-02-30" })
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]).to eq([ { "code" => "invalid", "field" => "finished_at" } ])
     end
   end
 end

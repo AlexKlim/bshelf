@@ -4,6 +4,7 @@ module Api
       skip_before_action :authenticate!, only: :create
       before_action :require_session!, only: :destroy
       limit_rate to: 10, within: 3.minutes, only: :create
+      limit_rate to: 10, within: 3.minutes, only: :create, name: "email", by: -> { params[:email].to_s.strip.downcase }
 
       def create
         user = User.find_for_authentication(email: params.require(:email))

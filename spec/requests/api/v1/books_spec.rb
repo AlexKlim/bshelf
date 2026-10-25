@@ -39,6 +39,15 @@ RSpec.describe "Books, editions, notes and highlights" do
       expect(json["existing"]["editions"].first).to include("status" => "done", "format" => "audio")
     end
 
+    it "compares titles and authors the way the matcher does" do
+      existing = create(:book, user:, title: "Dune", author: "Frank Herbert")
+
+      post "/api/v1/books", params: { title: "DUNE.", author: "Herbert" }, as: :json
+
+      expect(response).to have_http_status(:conflict)
+      expect(json["existing"]["id"]).to eq(existing.uuid)
+    end
+
     it "treats a different author as a different book" do
       create(:book, user:, title: "Solaris", author: "Lem", status: "done")
 
@@ -58,6 +67,20 @@ RSpec.describe "Books, editions, notes and highlights" do
       post "/api/v1/books", params: { author: "Z" }, as: :json
       expect(response).to have_http_status(:bad_request)
       expect(json["errors"]).to eq([ { "code" => "blank", "field" => "title" } ])
+    end
+
+    it "rejects a finish date it cannot read instead of dropping it" do
+      post "/api/v1/books", params: { title: "X", edition: { status: "done", finished_at: "someday" } }, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]).to eq([ { "code" => "invalid", "field" => "finished_at" } ])
+      expect(user.books).to be_empty
+    end
+
+    it "adds a finished book without a date to no date" do
+      post "/api/v1/books", params: { title: "Long ago", edition: { status: "done" } }, as: :json
+
+      expect(json["book"]["shelf"]).to eq("no_date")
     end
   end
 
@@ -119,6 +142,44 @@ RSpec.describe "Books, editions, notes and highlights" do
       patch "/api/v1/editions/#{edition.uuid}", params: { status: "done", finished_at: "" }, as: :json
 
       expect(json["book"]["shelf"]).to eq("no_date")
+    end
+
+    it "rejects a date that is not a real date in range and keeps the stored one" do
+      edition.reading.update!(started_at: Time.zone.parse("2025-03-01"))
+
+      [ "someday", "2025-13-45", "0002-01-01", "3025-01-01" ].each do |value|
+        patch "/api/v1/editions/#{edition.uuid}", params: { status: "in_progress", started_at: value }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_content), value
+        expect(json["errors"]).to eq([ { "code" => "invalid", "field" => "started_at" } ])
+      end
+      expect(edition.reading.reload.started_at).to eq(Time.zone.parse("2025-03-01"))
+    end
+
+    it "dates a book marked finished now when it has no finish date yet" do
+      freeze_time
+
+      patch "/api/v1/editions/#{edition.uuid}", params: { status: "done" }, as: :json
+
+      expect(json["book"]["shelf"]).to eq(Date.current.year.to_s)
+      expect(edition.reading.reload.finished_at).to eq(Time.current)
+    end
+
+    it "dates the start when a wanted book moves to reading" do
+      edition.reading.update!(status: "want", status_source: "manual")
+      freeze_time
+
+      patch "/api/v1/editions/#{edition.uuid}", params: { status: "in_progress" }, as: :json
+
+      expect(edition.reading.reload.started_at).to eq(Time.current)
+    end
+
+    it "keeps a stored finish date when the book is marked finished again" do
+      edition.reading.update!(finished_at: Time.zone.parse("2023-05-01"))
+
+      patch "/api/v1/editions/#{edition.uuid}", params: { status: "done" }, as: :json
+
+      expect(json["book"]["shelf"]).to eq("2023")
     end
 
     it "rejects an unknown status" do

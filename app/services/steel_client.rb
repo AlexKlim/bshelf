@@ -1,8 +1,8 @@
 require "net/http"
 
-# Self-hosted Steel (eng D4). The live view has no auth of its own (OV-1), so Steel must sit on
+# Self-hosted Steel. The live view has no auth of its own, so Steel must sit on
 # the private network and only Rails, after its token check, talks to it.
-# ponytail: endpoint shapes follow the steel-browser README; pin them after the ET2 spike.
+# ponytail: endpoint shapes follow the steel-browser README; pin them once tried against a real Steel.
 class SteelClient
   Session = Data.define(:id, :websocket_url, :viewer_path)
   TIMEOUT = 5

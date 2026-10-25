@@ -87,6 +87,25 @@ RSpec.describe MergeEvent do
     expect(DuplicateCandidate.open.count).to eq(0)
   end
 
+  it "hands the absorbed book's possible duplicates to the survivor and gives them back on unmerge" do
+    open_other = create(:book, user:, title: "Солярис (сборник)")
+    dismissed_other = create(:book, user:, title: "Solaris (film)")
+    open_pair = DuplicateCandidate.record!(absorbed, open_other, reason: "title")
+    dismissed_pair = DuplicateCandidate.record!(absorbed, dismissed_other, reason: "title_author", dismissed_at: 1.day.ago)
+    before = [ open_pair, dismissed_pair ].map { it.reload.attributes }
+
+    event = described_class.merge!(survivor, absorbed)
+
+    pairs = DuplicateCandidate.involving(survivor).map { [ it.other_id(survivor), it.reason, it.dismissed_at.present? ] }
+    expect(pairs).to contain_exactly([ open_other.id, "title", false ], [ dismissed_other.id, "title_author", true ])
+
+    event.unmerge!
+
+    expect(DuplicateCandidate.where(id: before.map { it["id"] }).map(&:attributes)).to match_array(before)
+    expect(DuplicateCandidate.involving(survivor).map { [ it.other_id(survivor), it.dismissed_at.present? ] })
+      .to eq([ [ absorbed.id, true ] ])
+  end
+
   describe "chained merges" do
     let!(:third) { book_with_edition(title: "Solaris (film tie-in)", format: "audio", store: nil, status: "want") }
     let!(:before) { [ survivor, absorbed, third ].map { snapshot(it) } }
