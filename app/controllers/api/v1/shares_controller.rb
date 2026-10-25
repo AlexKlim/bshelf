@@ -10,7 +10,11 @@ module Api
         text = [ params[:title], params[:text] ].compact_blank.join("\n")
         return render_error(:blank, field: :url, status: :bad_request) if params[:url].blank? && text.blank?
 
-        render json: ShareCheck.new(current_user, url: params[:url].to_s.first(2048), text:).call
+        result, duration_ms = MetricEvent.measure do
+          ShareCheck.new(current_user, url: params[:url].to_s.first(2048), text:).call
+        end
+        MetricEvent.record!("share", outcome: result[:answer][:kind], user: current_user, duration_ms:)
+        render json: result
       end
 
       def add

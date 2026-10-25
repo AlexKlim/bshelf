@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_25_000006) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_030001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -106,6 +106,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_000006) do
     t.index ["book_id"], name: "index_merge_events_on_book_id"
     t.index ["user_id"], name: "index_merge_events_on_user_id"
     t.index ["uuid"], name: "index_merge_events_on_uuid", unique: true
+  end
+
+  create_table "metric_events", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "outcome", null: false
+    t.bigint "user_id"
+    t.integer "duration_ms"
+    t.datetime "created_at", null: false
+    t.index ["name", "created_at"], name: "index_metric_events_on_name_and_created_at"
+    t.index ["user_id"], name: "index_metric_events_on_user_id"
   end
 
   create_table "notes", force: :cascade do |t|
@@ -336,6 +346,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_000006) do
   add_foreign_key "highlights", "users", on_delete: :cascade
   add_foreign_key "merge_events", "books", on_delete: :cascade
   add_foreign_key "merge_events", "users", on_delete: :cascade
+  add_foreign_key "metric_events", "users", on_delete: :nullify
   add_foreign_key "notes", "books", on_delete: :cascade
   add_foreign_key "notes", "users", on_delete: :cascade
   add_foreign_key "readings", "editions", on_delete: :cascade
