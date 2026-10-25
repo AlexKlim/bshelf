@@ -8,6 +8,7 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 gem "solid_queue", "~> 1.7"
 gem "devise", "~> 5.0"
+gem "ruby-vips", "~> 2.3", require: false
 
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -16,6 +17,10 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
   gem "rspec-rails", "~> 8.0"
   gem "factory_bot_rails", "~> 6.5"
+end
+
+group :test do
+  gem "webmock", "~> 3.25"
 end
 
 group :development do

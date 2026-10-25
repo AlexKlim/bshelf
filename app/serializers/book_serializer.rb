@@ -12,6 +12,7 @@ module BookSerializer
       page_count: book.page_count,
       audio_minutes: book.audio_minutes,
       cover_url: book.cover_url,
+      cloth: book.cloth || Cloth.for_uuid(book.uuid),
       shelf: shelf_key,
       editions: book.editions.sort_by(&:id).map { edition(it) }
     }

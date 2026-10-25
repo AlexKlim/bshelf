@@ -44,6 +44,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+      - run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libvips42t64
       - run: bin/rails db:test:prepare
       - run: bundle exec rspec
 

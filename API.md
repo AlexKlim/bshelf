@@ -114,7 +114,7 @@ If several books match and exactly one has the query as its whole title, only th
 {
   "id": "uuid", "title": "Solaris", "author": "Stanisław Lem", "original_title": null,
   "language": null, "year": null, "page_count": null, "audio_minutes": null, "cover_url": null,
-  "shelf": "2024",
+  "cloth": "navy", "shelf": "2024",
   "editions": [ Edition ]
 }
 // Edition
@@ -133,6 +133,8 @@ If several books match and exactly one has the query as its whole title, only th
 // Source (one row per kind: litres, kindle_export, kindle_browser)
 { "kind": "litres", "status": "never | ok | error | needs_login", "last_sync_at": null, "error": null }
 ```
+
+`cloth` is the spine cloth (design README «Корешки»): `oxblood`, `bottle`, `navy`, `plum`, `slate`, `ochre`, `sage` or `linen`, the nearest to the cover's dominant colour in OKLab, or a stable pick by book id while there is no cover. Never null. `language` (ISO 639-1, sets the spine text direction), `page_count` and `audio_minutes` (spine width) are null until a source or the catalog knows them.
 
 `store`: `litres`, `amazon` or null. `source`: `manual`, `share`, `mcp`, `litres`, `kindle_export`, `kindle_browser`. `status_source`: `manual`, `litres`, `kindle_browser`, `kindle_export`, `purchase`. `Source.error` is a code.
 
@@ -154,6 +156,10 @@ Only finished editions with a `finished_at` count, by the latest finish in the y
 ```
 
 `months` always has 12 entries. `years` lists every year with a finished book, for the year picker. `no_date_count` covers all years. `total_minutes` and `minutes` are null when no duration is known.
+
+### Catalog enrichment
+
+Every new book is looked up in Open Library, then Google Books, in a background job, never during the request. The lookup fills only blank fields (`cover_url`, `year`, `language`, `page_count`, `original_title`, `isbn`), so manual values and covers from a store sync win. It sets `match_source` to `catalog`. A book that was just added has no catalog data yet; poll `GET /books/:id` or refetch the shelf later. Rate limited lookups back off and retry; a daily job retries books whose lookup never finished. `GOOGLE_BOOKS_API_KEY` raises the Google quota.
 
 ## Error codes
 
