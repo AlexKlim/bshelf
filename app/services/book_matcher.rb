@@ -1,6 +1,12 @@
-# Plan D6: only ISBN or original title + author merge on their own; a shared title is a possible duplicate
-# for the shelf banner. The older book survives so its id stays stable for the client.
+# Only ISBN or original title + author merge on their own; a shared title is a possible duplicate for the
+# shelf banner. The older book survives so its id stays stable for the client.
 class BookMatcher
+  Row = Data.define(:id, :user_id, :title, :original_title, :author, :isbn, :isbn_source)
+  NORMALIZED_ISBN = "regexp_replace(upper(coalesce(isbn, '')), '[^0-9X]', '', 'g') IN (:isbns)"
+  # Every title key a book matches on (full or core title) starts with the first word of its title or
+  # original title, so books starting with other words can never match.
+  SAME_FIRST_WORD = "split_part(title_key, ' ', 1) IN (:words) OR split_part(original_title_key, ' ', 1) IN (:words)"
+
   attr_reader :book
 
   def self.call(book) = new(book).call
@@ -15,22 +21,32 @@ class BookMatcher
     "#{core}#{check}"
   end
 
-  def initialize(book)
-    @book = book
+  def self.isbn10(isbn13)
+    return unless isbn13&.start_with?("978")
+
+    core = isbn13[3, 9]
+    check = (11 - core.chars.each_with_index.sum { |d, i| d.to_i * (10 - i) } % 11) % 11
+    "#{core}#{check == 10 ? "X" : check}"
   end
 
-  # ponytail: compares against every book of the user in Ruby; fine for a few thousand books per user.
+  def initialize(book)
+    @book = book
+    @isbn = self.class.isbn13(book.isbn)
+    @original = TextKey.title(book.original_title)
+    @titles = TextKey.titles(book.title, book.original_title)
+  end
+
   def call
     candidates = DuplicateCandidate.involving(book).to_a
     seen = candidates.to_set { it.other_id(book) }
     dismissed = candidates.select(&:dismissed_at).to_set { it.other_id(book) }
 
-    book.user.books.where.not(id: book.id).order(:id).each do |other|
+    others.each do |other|
       next if dismissed.include?(other.id)
 
-      verdict = self.class.verdict(book, other)
+      verdict = verdict(other)
       if verdict == :merge
-        survivor, absorbed = [ book, other ].sort_by(&:id)
+        survivor, absorbed = Book.where(id: [ book.id, other.id ]).order(:id).to_a
         MergeEvent.merge!(survivor, absorbed)
         return self.class.call(survivor.reload)
       elsif verdict && !seen.include?(other.id)
@@ -40,18 +56,26 @@ class BookMatcher
     nil
   end
 
+  private
+
+  def others
+    scope = book.user.books.where.not(id: book.id)
+    words = [ book.title_key, book.original_title_key ].compact_blank.map { it.split.first }
+    matches = scope.where(SAME_FIRST_WORD, words:)
+    matches = matches.or(scope.where(NORMALIZED_ISBN, isbns: [ @isbn, self.class.isbn10(@isbn) ].compact)) if @isbn
+    matches.order(:id).pluck(*Row.members).map { Row.new(*it) }
+  end
+
   # An ISBN the catalog guessed from a title is only as good as that guess, so it proposes instead of merging.
-  def self.verdict(a, b)
-    authors = TextKey.authors(a.author, b.author)
-    isbn = isbn13(a.isbn)
-    if isbn && isbn == isbn13(b.isbn)
-      return :merge unless [ a, b ].any? { it.isbn_source == "catalog" }
+  def verdict(other)
+    authors = TextKey.authors(book.author, other.author)
+    if @isbn && @isbn == self.class.isbn13(other.isbn)
+      return :merge unless [ book, other ].any? { it.isbn_source == "catalog" }
 
       return authors == :same ? "title_author" : "title"
     end
-    original = TextKey.title(a.original_title)
-    return :merge if original.present? && authors == :same && original == TextKey.title(b.original_title)
-    return unless TextKey.titles(a.title, a.original_title).intersect?(TextKey.titles(b.title, b.original_title))
+    return :merge if @original.present? && authors == :same && @original == TextKey.title(other.original_title)
+    return unless @titles.intersect?(TextKey.titles(other.title, other.original_title))
 
     { same: "title_author", unknown: "title" }[authors]
   end

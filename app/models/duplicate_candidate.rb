@@ -14,7 +14,7 @@ class DuplicateCandidate < ApplicationRecord
 
   def self.record!(a, b, reason:, dismissed_at: nil)
     first, second = [ a, b ].sort_by(&:id)
-    create_with(user_id: first.user_id, reason:, dismissed_at:).find_or_create_by!(book: first, other_book: second)
+    create_with(user_id: first.user_id, reason:, dismissed_at:).find_or_create_by!(book_id: first.id, other_book_id: second.id)
   end
 
   def other_id(book) = book_id == book.id ? other_book_id : book_id

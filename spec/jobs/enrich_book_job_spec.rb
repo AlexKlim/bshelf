@@ -15,6 +15,20 @@ RSpec.describe EnrichBookJob do
     expect { create(:book) }.to have_enqueued_job(described_class)
   end
 
+  it "hands matching to its own job so the catalog slot is free for the next lookup" do
+    stub_google("google_429.json", status: 429)
+    book.update!(cover_url: "https://cv1.litres.ru/cover.jpg")
+    stub_request(:get, "https://cv1.litres.ru/cover.jpg").to_return(status: 404)
+    clear_enqueued_jobs
+    allow(BookMatcher).to receive(:call)
+
+    expect { described_class.perform_now(book.id) }.to have_enqueued_job(MatchBookJob).with(book)
+    expect(BookMatcher).not_to have_received(:call)
+
+    MatchBookJob.perform_now(book)
+    expect(BookMatcher).to have_received(:call).with(book)
+  end
+
   it "backs off on 429, honouring Retry-After, then gives up" do
     stub_google("google_429.json", status: 429, headers: { "Retry-After" => "600" })
     freeze_time

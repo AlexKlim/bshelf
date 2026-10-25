@@ -19,6 +19,6 @@ class EnrichBookJob < ApplicationJob
     return unless book
 
     EnrichBook.call(book)
-    BookMatcher.call(book)
+    MatchBookJob.perform_later(book)
   end
 end
