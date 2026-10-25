@@ -41,9 +41,14 @@ module Api
 
       def bearer_request? = request.authorization.present?
 
+      # A token lives in a Shortcut or a script, so it may read the shelf and use share, nothing else.
       def authenticate!
-        render_error(:unauthorized, status: :unauthorized) unless current_user
+        return render_error(:unauthorized, status: :unauthorized) unless current_user
+
+        require_session! unless request.get? || request.head? || bearer_writes?
       end
+
+      def bearer_writes? = false
 
       def require_session!
         render_error(:session_required, status: :forbidden) if bearer_request?

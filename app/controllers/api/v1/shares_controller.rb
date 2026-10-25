@@ -36,6 +36,8 @@ module Api
 
       private
 
+      def bearer_writes? = true
+
       def with_locale(&)
         requested = [ params[:locale], *request.headers["Accept-Language"].to_s.scan(/[a-z]{2}/i) ].compact.map(&:downcase)
         I18n.with_locale(requested.find { LOCALES.include?(it) } || "en", &)

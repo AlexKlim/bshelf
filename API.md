@@ -19,7 +19,7 @@ REST JSON under `/api/v1`. The React client and future share and MCP lanes build
 Two ways in, both scoped to one user. Another user's id always returns `404 not_found`.
 
 1. **Cookie session** (the SPA, same origin). Every API response sets a readable `CSRF-TOKEN` cookie; send its value as `X-CSRF-Token` on every non-GET request. Missing or wrong token: `403 invalid_csrf`. The session lasts 30 days.
-2. **Bearer API token** (iOS Shortcut, Android share target, scripts): `Authorization: Bearer bsh_...`. No CSRF. Tokens cannot reach `/session`, `/api_tokens` or `DELETE /me` (`403 session_required`). An unknown or revoked token: `401 unauthorized`, no fallback to the cookie.
+2. **Bearer API token** (iOS Shortcut, Android share target, scripts): `Authorization: Bearer bsh_...`. No CSRF. A token may call `GET` endpoints and `POST /share`, `POST /share/add`; every other write (books, editions, notes, merges, duplicates, remote browser) and `/api_tokens`, `/assistants`, `DELETE /me`, `DELETE /session` answer `403 session_required`. An unknown or revoked token: `401 unauthorized`, no fallback to the cookie.
 
 No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limited`.
 
