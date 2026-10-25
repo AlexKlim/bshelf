@@ -10,4 +10,6 @@ class CatalogEntry < ApplicationRecord
     upsert({ key:, data: }, unique_by: :key)
     data
   end
+
+  def self.prune = where(updated_at: ...TTL.ago).in_batches.delete_all
 end

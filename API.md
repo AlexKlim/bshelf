@@ -195,7 +195,7 @@ Only finished editions with a `finished_at` count, by the latest finish in the y
 
 ### Catalog enrichment
 
-Every new book is looked up in Open Library, then Google Books, in a background job, never during the request. The lookup fills only blank fields (`cover_url`, `year`, `language`, `page_count`, `original_title`, `isbn`), so manual values and covers from a store sync win. An ISBN is taken only from an ISBN lookup or a catalog entry with the same full title, so a series volume never borrows another volume's ISBN. It sets `match_source` to `catalog`. A book that was just added has no catalog data yet; poll `GET /books/:id` or refetch the shelf later. Rate limited lookups back off and retry; a daily job retries books whose lookup never finished. `GOOGLE_BOOKS_API_KEY` raises the Google quota.
+Every new book is looked up in Open Library, then Google Books, in a background job, never during the request. The lookup fills only blank fields (`cover_url`, `year`, `language`, `page_count`, `original_title`, `isbn`), so manual values and covers from a store sync win. An ISBN is taken only from an ISBN lookup or a catalog entry with the same full title, so a series volume never borrows another volume's ISBN. It sets `match_source` to `catalog`. A book that was just added has no catalog data yet; poll `GET /books/:id` or refetch the shelf later. Rate limited lookups back off and retry; a daily job retries books whose lookup never finished. Cached catalog answers expire after 30 days and a daily job deletes them. `GOOGLE_BOOKS_API_KEY` raises the Google quota.
 
 ## MCP (AI assistants)
 
