@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import i18n from "@/i18n"
@@ -27,15 +27,18 @@ describe("App shell", () => {
     serve()
     render(<MemoryRouter initialEntries={["/stats"]}><App initialUser={user} /></MemoryRouter>)
 
-    expect(screen.getAllByRole("tab")).toHaveLength(3)
-    expect(screen.getByRole("tab", { name: "Stats" })).toHaveAttribute("aria-selected", "true")
+    const nav = screen.getByRole("navigation", { name: "Sections" })
+    expect(within(nav).getAllByRole("link")).toHaveLength(3)
+    expect(within(nav).getByRole("link", { name: "Stats" })).toHaveAttribute("aria-current", "page")
+    expect(within(nav).getByRole("link", { name: "Bookcase" })).not.toHaveAttribute("aria-current")
+    expect(screen.queryByRole("tab")).toBeNull()
   })
 
   it("navigates between tabs", async () => {
     serve()
     render(<MemoryRouter><App initialUser={user} /></MemoryRouter>)
 
-    await userEvent.click(screen.getByRole("tab", { name: "Sources" }))
+    await userEvent.click(screen.getByRole("link", { name: "Sources" }))
 
     expect(await screen.findByRole("heading", { name: "Sources" })).toBeInTheDocument()
   })
@@ -62,6 +65,6 @@ describe("App shell", () => {
     await i18n.changeLanguage("ru")
     render(<MemoryRouter><App initialUser={user} /></MemoryRouter>)
 
-    expect(screen.getByRole("tab", { name: "Шкаф" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Шкаф" })).toBeInTheDocument()
   })
 })

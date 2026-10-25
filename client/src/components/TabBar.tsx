@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { useLocation, useNavigate } from "react-router-dom"
+import { NavLink } from "react-router-dom"
 
 const TABS = [
   { path: "/", key: "shelf" },
@@ -9,22 +9,13 @@ const TABS = [
 
 export function TabBar({ top = false }: { top?: boolean }) {
   const { t } = useTranslation()
-  const { pathname } = useLocation()
-  const navigate = useNavigate()
 
   return (
-    <nav className={top ? "bs-tabs bs-tabs--top" : "bs-tabs"} role="tablist" aria-label={t("tabs.label")}>
+    <nav className={top ? "bs-tabs bs-tabs--top" : "bs-tabs"} aria-label={t("tabs.label")}>
       {TABS.map((tab) => (
-        <button
-          key={tab.key}
-          type="button"
-          role="tab"
-          className="bs-tab"
-          aria-selected={tab.path === "/" ? pathname === "/" : pathname.startsWith(tab.path)}
-          onClick={() => navigate(tab.path)}
-        >
+        <NavLink key={tab.key} to={tab.path} end={tab.path === "/"} className="bs-tab">
           {t(`tabs.${tab.key}`)}
-        </button>
+        </NavLink>
       ))}
     </nav>
   )

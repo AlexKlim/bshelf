@@ -166,11 +166,11 @@
 
 /* ---------- Tab bar ---------- */
 .bs-tabs { display: flex; background: var(--surface); border-top: 1px solid var(--hairline); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.bs-tab { position: relative; flex: 1; display: grid; place-items: center; min-block-size: 56px; border: 0; background: transparent; color: var(--ink-muted); font: 500 13px/18px var(--font-ui); cursor: pointer; }
-.bs-tab[aria-selected="true"] { color: var(--accent-text); }
-.bs-tab[aria-selected="true"]::before { content: ""; position: absolute; inset: 0 28% auto; block-size: 3px; background: var(--accent); border-radius: 0 0 2px 2px; }
+.bs-tab { position: relative; flex: 1; display: grid; place-items: center; min-block-size: 56px; border: 0; background: transparent; color: var(--ink-muted); font: 500 13px/18px var(--font-ui); text-decoration: none; cursor: pointer; }
+.bs-tab[aria-current="page"] { color: var(--accent-text); }
+.bs-tab[aria-current="page"]::before { content: ""; position: absolute; inset: 0 28% auto; block-size: 3px; background: var(--accent); border-radius: 0 0 2px 2px; }
 .bs-tabs--top { border-top: 0; border-bottom: 1px solid var(--hairline); padding-bottom: 0; }
-.bs-tabs--top .bs-tab[aria-selected="true"]::before { inset: auto 28% 0; border-radius: 2px 2px 0 0; }
+.bs-tabs--top .bs-tab[aria-current="page"]::before { inset: auto 28% 0; border-radius: 2px 2px 0 0; }
 
 /* ---------- Year shelf (statistics) ---------- */
 .bs-year { display: grid; gap: var(--space-4); }
