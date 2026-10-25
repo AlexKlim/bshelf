@@ -25,22 +25,33 @@ function csrfToken() {
   return match ? decodeURIComponent(match[1]) : undefined
 }
 
+export const UNAUTHORIZED_EVENT = "bs:unauthorized"
+
 export async function api<T>(path: string, options: { method?: Method; body?: unknown } = {}): Promise<T> {
   const method = options.method ?? "GET"
+  const form = options.body instanceof FormData
   const headers: Record<string, string> = { Accept: "application/json" }
-  if (options.body !== undefined) headers["Content-Type"] = "application/json"
+  if (options.body !== undefined && !form) headers["Content-Type"] = "application/json"
   const token = csrfToken()
   if (method !== "GET" && token) headers["X-CSRF-Token"] = token
 
-  const response = await fetch(`/api/v1${path}`, {
-    method,
-    headers,
-    credentials: "same-origin",
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-  })
+  let response: Response
+  try {
+    response = await fetch(`/api/v1${path}`, {
+      method,
+      headers,
+      credentials: "same-origin",
+      body: options.body === undefined ? undefined : form ? (options.body as FormData) : JSON.stringify(options.body),
+    })
+  } catch {
+    throw new ApiError(0, { errors: [{ code: "network" }] })
+  }
 
   if (response.status === 204) return undefined as T
   const body = await response.json().catch(() => ({}))
-  if (!response.ok) throw new ApiError(response.status, body)
+  if (!response.ok) {
+    if (response.status === 401) window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
+    throw new ApiError(response.status, body)
+  }
   return body as T
 }

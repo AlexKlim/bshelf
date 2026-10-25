@@ -2,9 +2,19 @@
 export type Status = "want" | "owned" | "in_progress" | "done"
 export type Format = "audio" | "ebook" | "personal_doc" | "unknown"
 export type ShelfKey = "now" | "want" | "owned" | "no_date" | `${number}`
+export type Cloth = "oxblood" | "bottle" | "navy" | "plum" | "slate" | "ochre" | "sage" | "linen"
 
 export type User = { id: string; email: string; created_at: string }
 export type ApiToken = { id: string; name: string; created_at: string; last_used_at: string | null }
+export type Assistant = {
+  id: string
+  name: string
+  client_id: string
+  scopes: string[]
+  connected_at: string
+  last_active_at: string | null
+}
+export type Duplicate = { id: string; reason: "title_author" | "title"; created_at: string; books: [BookSummary, BookSummary] }
 
 export type Edition = {
   id: string
@@ -30,7 +40,9 @@ export type BookSummary = {
   page_count: number | null
   audio_minutes: number | null
   cover_url: string | null
+  cloth: Cloth
   shelf: ShelfKey
+  bought_twice?: boolean
   editions: Edition[]
 }
 
@@ -50,6 +62,7 @@ export type BookDetail = BookSummary & {
   notes: Note[]
   highlights: Highlight[]
   highlights_count: number
+  merges?: { id: string; title: string; author: string | null; created_at: string }[]
 }
 
 export type Shelf = { key: ShelfKey; count: number; books: BookSummary[] }
@@ -63,6 +76,7 @@ export type SearchResult = { query: string; answer: SearchAnswer; books: BookSum
 
 export type StatsBook = {
   id: string
+  cloth?: Cloth
   title: string
   author: string | null
   formats: Format[]
@@ -81,9 +95,42 @@ export type Stats = {
   top_authors: { author: string; count: number }[]
 }
 
+export type RemoteInterruption = "aborted" | "timeout" | "provider_refused" | "deploy_interrupted" | "browser_failed"
+export type RemoteStatus = "queued" | "connecting" | "live" | "collecting" | "done" | "interrupted"
+export type RemoteResult = { books: number; highlights: number }
+
+export type RemoteSession = {
+  id: string
+  purpose: "kindle" | "litres"
+  status: RemoteStatus
+  queue_position?: number | null
+  expires_at?: string | null
+  seconds_left?: number | null
+  steps: { key: string; state: "done" | "pending" }[]
+  result: RemoteResult | null
+  interruption: RemoteInterruption | null
+}
+
 export type Source = {
   kind: "litres" | "kindle_export" | "kindle_browser"
-  status: "never" | "ok" | "error" | "needs_login"
+  status: "never" | "ok" | "error" | "needs_login" | "requested" | "ready"
   last_sync_at: string | null
   error: string | null
+  books_count: number
+  session: { id: string; status: RemoteStatus; result: RemoteResult | null; interruption: RemoteInterruption | null } | null
+  requested_at?: string | null
+}
+
+export type Banner =
+  | { kind: "source_error"; source: Source["kind"]; error: string; dismissible: false; key: string }
+  | { kind: "export_ready"; count?: number; dismissible: boolean; key: string }
+  | { kind: "litres_reminder"; dismissible: boolean; key: string }
+  | { kind: "possible_duplicates"; count: number; dismissible: boolean; key: string }
+
+export type ShareSuggestion = { title: string | null; author: string | null; store: "litres" | "amazon" | null; external_id: string | null }
+export type ShareAnswer = Omit<SearchResult, "answer"> & {
+  answer: SearchAnswer | { kind: "unrecognized" }
+  message: string
+  link: { store: string; external_id: string } | null
+  suggestion: ShareSuggestion | null
 }

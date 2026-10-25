@@ -2,20 +2,33 @@
   "app": {
     "name": "Book Shelf"
   },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close"
+  },
   "tabs": {
     "label": "Sections",
     "shelf": "Bookcase",
     "stats": "Stats",
     "sources": "Sources"
   },
-  "profile": {
-    "title": "Profile"
+  "count": {
+    "books_one": "{{count}} book",
+    "books_other": "{{count}} books",
+    "highlights_one": "{{count}} highlight",
+    "highlights_other": "{{count}} highlights"
   },
   "shelf": {
     "now": "Now",
     "want": "Want",
     "owned": "Owned",
-    "noDate": "No date"
+    "noDate": "No date",
+    "empty": "Nothing here yet",
+    "addBook": "Add book",
+    "view": "View",
+    "viewCase": "Bookcase",
+    "viewList": "List",
+    "loadError": "Could not load the bookcase."
   },
   "status": {
     "want": "Want",
@@ -29,11 +42,279 @@
       "ebook": "Read"
     }
   },
+  "line": {
+    "since": "{{status}}{{sep}}since {{date}}"
+  },
   "format": {
     "audio": "Audio",
     "ebook": "E-book",
     "personal_doc": "Document",
     "unknown": "Book"
+  },
+  "store": {
+    "litres": "Litres",
+    "amazon": "Amazon"
+  },
+  "answer": {
+    "listened": "Listened",
+    "read": "Read",
+    "read_and_listened": "Read and listened",
+    "want": "In Want",
+    "want_since": "In Want since {{date}}",
+    "similar_one": "Similar: {{count}} book",
+    "similar_other": "Similar: {{count}} books",
+    "not_found": "Not on the shelf",
+    "unrecognized": "Could not recognize the book"
+  },
+  "search": {
+    "label": "Search the shelf",
+    "placeholder": "Have I read...",
+    "clear": "Clear",
+    "want": "Want",
+    "read": "Read it",
+    "listened": "Listened to it"
+  },
+  "entry": {
+    "title": "Write a book in",
+    "bookTitle": "Title",
+    "author": "Author",
+    "authorPlaceholder": "Who wrote it",
+    "format": "Format",
+    "status": "Status",
+    "when": "When",
+    "save": "Write it in",
+    "saving": "Writing...",
+    "duplicate": "Already on the shelf: {{status}}"
+  },
+  "book": {
+    "label": "Book",
+    "loading": "Opening the book",
+    "loadError": "Could not load the book.",
+    "retry": "Try again",
+    "page": "Page {{n}}",
+    "cover": "Cover",
+    "boughtTwice": "You bought this book twice",
+    "noStatus": "No status",
+    "statusError": "Could not change the status. It is back as it was.",
+    "note": "Note",
+    "notes": "Notes",
+    "addNote": "Add note",
+    "editNote": "Edit note",
+    "deleteNote": "Delete",
+    "saveNote": "Save",
+    "highlights": "Highlights",
+    "moreHighlights_one": "{{count}} more highlight",
+    "moreHighlights_other": "{{count}} more highlights",
+    "merge": "Merge",
+    "mergeWith": "Merge with",
+    "unmerge": "Unmerge editions",
+    "unmergeOne": "Unmerge {{title}}",
+    "addFormat": "Add a format"
+  },
+  "banner": {
+    "offline": "No network. The bookcase is shown from cache.",
+    "error": {
+      "litres": "Litres refused the sign in:",
+      "kindle_browser": "Amazon refused the sign in:",
+      "kindle_export": "The Amazon export failed:"
+    },
+    "signInAgain": "Sign in again",
+    "exportReady_one": "The Amazon export is ready: {{count}} book to import.",
+    "exportReady_other": "The Amazon export is ready: {{count}} books to import.",
+    "import": "Import",
+    "litresReminder": "Time to refresh the shelf: sign in to Litres.",
+    "signIn": "Sign in",
+    "duplicates": "Possible duplicates found: {{count}}.",
+    "review": "Review",
+    "dismiss": "Dismiss"
+  },
+  "sourceErrors": {
+    "generic": "the sync did not finish. Try again.",
+    "invalid_credentials": "wrong password.",
+    "captcha_required": "Litres asks to prove you are not a robot.",
+    "timeout": "the site did not answer in time.",
+    "login_failed": "the sign in did not go through.",
+    "blocked": "the site blocked the sign in. Try later.",
+    "invalid_archive": "this is not a Kindle archive.",
+    "needs_login": "sign in again.",
+    "provider_refused": "the store did not let you in.",
+    "page_changed": "the site changed, the sync is paused until we fix it.",
+    "schema_changed": "the site changed, the sync is paused until we fix it."
+  },
+  "empty": {
+    "title": "The bookcase is empty for now",
+    "lead": "Start with a source: books will stand on the shelves by themselves.",
+    "litresNote": "Audiobooks appear right after you sign in. The password is not stored."
+  },
+  "sources": {
+    "name": {
+      "litres": "Litres",
+      "kindle_browser": "Kindle",
+      "kindle_export": "Amazon export"
+    },
+    "never": "Not connected",
+    "lastSync": "Last sync {{when}}",
+    "exportRequested": "Requested {{when}}, Amazon is preparing the archive",
+    "exportReady": "The archive is ready to upload",
+    "result": "+{{books}}, {{highlights}}",
+    "litresAction": "Sign in and refresh",
+    "kindleAction": "Sync Kindle",
+    "waitingArchive": "Waiting for archive",
+    "requestExport": "Request history",
+    "uploadArchive": "Upload archive",
+    "importing": "Importing...",
+    "loadError": "Could not load the sources.",
+    "toBookcase": "To the bookcase",
+    "litresSignIn": "Sign in to Litres",
+    "litresLogin": "Litres email or phone",
+    "passwordNotStored": "The password is not stored. The sync starts right after the sign in.",
+    "syncing": "Syncing...",
+    "requestKindle": "Request Kindle history",
+    "exportWaiting": "Requested on {{date}}. Amazon is preparing the archive, usually 1-3 days.",
+    "backToSources": "Back to sources",
+    "collecting": "Reading the library...",
+    "interrupted": "The last sync was interrupted"
+  },
+  "export": {
+    "lead": "Amazon gives your Kindle history as an archive. Request it once, then upload it here when the email arrives.",
+    "step1": "Open",
+    "step1Link": "Amazon Privacy Central: Request your data",
+    "step2": "Choose \"Kindle\" and send the request.",
+    "step3": "Confirm the request in the email from Amazon.",
+    "step4": "When the archive is ready, download it and upload it on the Sources tab.",
+    "done": "I have requested it"
+  },
+  "duplicates": {
+    "title": "Possible duplicates",
+    "none": "No duplicates",
+    "merged": "Merged: {{title}}",
+    "notDuplicate": "Not a duplicate"
+  },
+  "stats": {
+    "title": "Year shelf",
+    "total_one": "{{year}}: {{count}} book",
+    "total_other": "{{year}}: {{count}} books",
+    "listened": "{{count}} listened",
+    "read": "{{count}} read",
+    "month_one": "{{month}}: {{count}} book",
+    "month_other": "{{month}}: {{count}} books",
+    "empty": "Nothing finished in {{year}} yet",
+    "topAuthors": "Most often",
+    "loadError": "Could not load the stats."
+  },
+  "remote": {
+    "kindle": {
+      "title": "Sync Kindle",
+      "heading": "Sign in to Amazon",
+      "disclosure": "You sign in to Amazon in a browser on our server.",
+      "frame": "Amazon sign in page in the browser on our server",
+      "store": "Amazon"
+    },
+    "captcha": {
+      "title": "Litres",
+      "heading": "Litres check",
+      "disclosure": "Litres asks to prove you are not a robot. You pass the check in a browser on our server.",
+      "frame": "Litres check in the browser on our server",
+      "store": "Litres"
+    },
+    "factPassword": "The password is not saved",
+    "factSession": "The session is deleted after the sync",
+    "fact2fa": "You can leave for the 2FA code in another app, the sign in will wait",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "queued": "The browser is busy, you are next",
+    "queuePosition": "Place in the queue: {{position}}",
+    "timeLeft": "Time left {{time}}",
+    "connecting": "Connecting to the browser on our server",
+    "collecting": "Reading the library",
+    "step": {
+      "library": "Library",
+      "highlights": "Highlights"
+    },
+    "canLeave": "You can leave this screen. The result will appear as a banner above the bookcase.",
+    "failure": {
+      "timeout": "Time is up",
+      "provider_refused": "{{store}} did not let you in",
+      "deploy_interrupted": "The session was interrupted, sign in again",
+      "browser_failed": "The session was interrupted, sign in again",
+      "aborted": "The session was cancelled"
+    },
+    "again": "Sign in again",
+    "signedIn": "Signed in, the session is deleted after the sync",
+    "done": "Done",
+    "unavailable": "Sync through the browser is not available yet",
+    "unavailableLead": "The server has no browser for this right now. The bookcase works as usual; try again later."
+  },
+  "share": {
+    "title": "Have I read it",
+    "nothing": "Nothing to look up",
+    "looking": "Looking on the shelf...",
+    "saved": "Written in.",
+    "titlePrompt": "Book title",
+    "formatPrompt": "Which format?",
+    "typeTitle": "Type the title to write it in"
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "signOut": "Sign out",
+    "shortcut": "Share shortcut",
+    "shortcutLead": "The shortcut answers \"Have I read it\" from the Share menu in a store. It needs a token, shown only once.",
+    "shortcutTokenName": "Share shortcut",
+    "createToken": "Create token",
+    "tokenOnce": "Copy it now: the token is shown only once.",
+    "copy": "Copy token",
+    "copied": "Copied",
+    "installShortcut": "Install the shortcut",
+    "created": "Created {{date}}",
+    "lastUsed": "Last used {{date}}",
+    "connected": "Connected {{date}}",
+    "revoke": "Revoke",
+    "assistants": "Assistants (MCP)",
+    "noAssistants": "No assistants connected.",
+    "assistantsUnavailable": "Assistants are not available yet.",
+    "deleteTitle": "Delete account",
+    "deleteLead": "The account, the shelf, notes and highlights are deleted at once. This cannot be undone.",
+    "deleteWord": "delete",
+    "deleteLabel": "Type \"{{word}}\" to confirm",
+    "deleteMismatch": "Type the word \"{{word}}\" exactly.",
+    "deleteAction": "Delete everything",
+    "deletedTitle": "Everything is deleted",
+    "deletedLead": "The account and all its books, notes and highlights are gone.",
+    "connectHint": "To connect Claude: Customize > Connectors > Add custom connector, URL {{url}}"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New password",
+    "passwordHint": "At least 8 characters.",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "signInTitle": "Sign in",
+    "forgot": "Forgot password",
+    "noAccount": "No account yet?",
+    "haveAccount": "Already have an account?",
+    "register": "Create account",
+    "registering": "Creating...",
+    "registerTitle": "Create account",
+    "registerLead": "One bookcase for everything you have read and listened to.",
+    "checkTitle": "Check your email",
+    "checkLead": "We sent a link to {{email}}. Open it to confirm the account.",
+    "checkLeadNoEmail": "We sent you a link. Open it to confirm the account.",
+    "resend": "Send the email again",
+    "resent": "Sent again. Check your inbox.",
+    "confirming": "Confirming...",
+    "confirmedTitle": "Email confirmed",
+    "confirmedLead": "Sign in to open your bookcase.",
+    "confirmFailed": "Could not confirm",
+    "forgotTitle": "Reset password",
+    "forgotLead": "We will email you a link to set a new password.",
+    "sendLink": "Send link",
+    "resetSent": "If {{email}} has an account, the link is on its way.",
+    "resetTitle": "New password",
+    "savePassword": "Save password",
+    "passwordChanged": "Password changed",
+    "requestNew": "Request a new link"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
@@ -55,6 +336,11 @@
     "confirmation_period_expired": "The link has expired. Request a new one.",
     "expired": "The link has expired. Request a new one.",
     "duplicate": "Already on the shelf.",
-    "not_implemented": "Not available yet."
+    "not_implemented": "Not available yet.",
+    "already_unmerged": "These editions are already separate.",
+    "accepted": "Confirm that you have read this first.",
+    "unavailable": "Not available right now. Try later.",
+    "not_live": "The sign in has already ended.",
+    "invalid_token": "The link has expired. Try again."
   }
 }

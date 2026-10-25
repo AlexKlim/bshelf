@@ -2,20 +2,37 @@
   "app": {
     "name": "Book Shelf"
   },
+  "common": {
+    "cancel": "Отмена",
+    "close": "Закрыть"
+  },
   "tabs": {
     "label": "Разделы",
     "shelf": "Шкаф",
     "stats": "Статистика",
     "sources": "Источники"
   },
-  "profile": {
-    "title": "Профиль"
+  "count": {
+    "books_one": "{{count}} книга",
+    "books_few": "{{count}} книги",
+    "books_many": "{{count}} книг",
+    "books_other": "{{count}} книги",
+    "highlights_one": "{{count}} хайлайт",
+    "highlights_few": "{{count}} хайлайта",
+    "highlights_many": "{{count}} хайлайтов",
+    "highlights_other": "{{count}} хайлайта"
   },
   "shelf": {
     "now": "Сейчас",
     "want": "Хочу",
     "owned": "На полке",
-    "noDate": "Без даты"
+    "noDate": "Без даты",
+    "empty": "Пока пусто",
+    "addBook": "Добавить книгу",
+    "view": "Вид",
+    "viewCase": "Шкаф",
+    "viewList": "Список",
+    "loadError": "Не удалось загрузить шкаф."
   },
   "status": {
     "want": "Хочу",
@@ -29,11 +46,289 @@
       "ebook": "Прочитал"
     }
   },
+  "line": {
+    "since": "{{status}}{{sep}}с {{date}}"
+  },
   "format": {
     "audio": "Аудио",
     "ebook": "Книга",
     "personal_doc": "Документ",
     "unknown": "Книга"
+  },
+  "store": {
+    "litres": "Литрес",
+    "amazon": "Amazon"
+  },
+  "answer": {
+    "listened": "Слушали",
+    "read": "Читали",
+    "read_and_listened": "Читали и слушали",
+    "want": "В Хочу",
+    "want_since": "В Хочу с {{date}}",
+    "similar_one": "Похожие: {{count}} книга",
+    "similar_few": "Похожие: {{count}} книги",
+    "similar_many": "Похожие: {{count}} книг",
+    "similar_other": "Похожие: {{count}} книги",
+    "not_found": "Не на полке",
+    "unrecognized": "Не удалось распознать книгу"
+  },
+  "search": {
+    "label": "Поиск по полке",
+    "placeholder": "Читал ли я…",
+    "clear": "Очистить",
+    "want": "Хочу",
+    "read": "Читал",
+    "listened": "Слушал"
+  },
+  "entry": {
+    "title": "Записать книгу",
+    "bookTitle": "Название",
+    "author": "Автор",
+    "authorPlaceholder": "Кто написал",
+    "format": "Формат",
+    "status": "Статус",
+    "when": "Когда",
+    "save": "Записать",
+    "saving": "Записываю…",
+    "duplicate": "Уже на полке: {{status}}"
+  },
+  "book": {
+    "label": "Книга",
+    "loading": "Открываю книгу",
+    "loadError": "Не удалось загрузить.",
+    "retry": "Повторить",
+    "page": "Страница {{n}}",
+    "cover": "Обложка",
+    "boughtTwice": "Вы купили эту книгу дважды",
+    "noStatus": "Без статуса",
+    "statusError": "Не удалось сменить статус. Вернули как было.",
+    "note": "Заметка",
+    "notes": "Заметки",
+    "addNote": "Добавить заметку",
+    "editNote": "Изменить заметку",
+    "deleteNote": "Удалить",
+    "saveNote": "Сохранить",
+    "highlights": "Хайлайты",
+    "moreHighlights_one": "Ещё {{count}} хайлайт",
+    "moreHighlights_few": "Ещё {{count}} хайлайта",
+    "moreHighlights_many": "Ещё {{count}} хайлайтов",
+    "moreHighlights_other": "Ещё {{count}} хайлайта",
+    "merge": "Объединить",
+    "mergeWith": "Объединить с",
+    "unmerge": "Разъединить издания",
+    "unmergeOne": "Разъединить: {{title}}",
+    "addFormat": "Добавить формат"
+  },
+  "banner": {
+    "offline": "Нет сети. Шкаф показан из кэша.",
+    "error": {
+      "litres": "Литрес не пустил вход:",
+      "kindle_browser": "Amazon не пустил вход:",
+      "kindle_export": "Выгрузка Amazon не загрузилась:"
+    },
+    "signInAgain": "Войти снова",
+    "exportReady_one": "Выгрузка Amazon готова: {{count}} книга ждёт импорта.",
+    "exportReady_few": "Выгрузка Amazon готова: {{count}} книги ждут импорта.",
+    "exportReady_many": "Выгрузка Amazon готова: {{count}} книг ждут импорта.",
+    "exportReady_other": "Выгрузка Amazon готова: {{count}} книги ждут импорта.",
+    "import": "Импортировать",
+    "litresReminder": "Пора обновить полку: войдите в Литрес.",
+    "signIn": "Войти",
+    "duplicates": "Нашлись возможные дубли: {{count}}.",
+    "review": "Посмотреть",
+    "dismiss": "Скрыть"
+  },
+  "sourceErrors": {
+    "generic": "синк не завершился. Попробуйте ещё раз.",
+    "invalid_credentials": "неверный пароль.",
+    "captcha_required": "Литрес просит подтвердить, что вы не робот.",
+    "timeout": "сайт не ответил вовремя.",
+    "login_failed": "вход не прошёл.",
+    "blocked": "сайт заблокировал вход. Попробуйте позже.",
+    "invalid_archive": "это не архив Kindle.",
+    "needs_login": "войдите снова.",
+    "provider_refused": "магазин не пустил вход.",
+    "page_changed": "сайт изменился, синк на паузе, пока мы не починим.",
+    "schema_changed": "сайт изменился, синк на паузе, пока мы не починим."
+  },
+  "empty": {
+    "title": "Шкаф пока пустой",
+    "lead": "Начните с источника: книги встанут на полки сами.",
+    "litresNote": "Аудиокниги появятся сразу после входа. Пароль не хранится."
+  },
+  "sources": {
+    "name": {
+      "litres": "Литрес",
+      "kindle_browser": "Kindle",
+      "kindle_export": "Выгрузка Amazon"
+    },
+    "never": "Не подключено",
+    "lastSync": "Последний синк {{when}}",
+    "exportRequested": "Запрошена {{when}}, Amazon готовит архив",
+    "exportReady": "Архив готов к загрузке",
+    "result": "+{{books}}, {{highlights}}",
+    "litresAction": "Войти и обновить",
+    "kindleAction": "Sync Kindle",
+    "waitingArchive": "Ждём архив",
+    "requestExport": "Запросить историю",
+    "uploadArchive": "Загрузить архив",
+    "importing": "Импортирую…",
+    "loadError": "Не удалось загрузить источники.",
+    "toBookcase": "К шкафу",
+    "litresSignIn": "Войти в Литрес",
+    "litresLogin": "Email или телефон в Литрес",
+    "passwordNotStored": "Пароль не хранится. Синк идёт сразу после входа.",
+    "syncing": "Синхронизирую…",
+    "requestKindle": "Запросить историю Kindle",
+    "exportWaiting": "Запрошено {{date}}. Amazon готовит архив, обычно 1-3 дня.",
+    "backToSources": "К источникам",
+    "collecting": "Читаем библиотеку…",
+    "interrupted": "Последний синк прервался"
+  },
+  "export": {
+    "lead": "Amazon отдаёт историю Kindle архивом. Запросите его один раз, а когда придёт письмо, загрузите архив сюда.",
+    "step1": "Откройте",
+    "step1Link": "Amazon Privacy Central: запрос данных",
+    "step2": "Выберите «Kindle» и отправьте запрос.",
+    "step3": "Подтвердите запрос в письме от Amazon.",
+    "step4": "Когда архив будет готов, скачайте его и загрузите во вкладке «Источники».",
+    "done": "Я запросил"
+  },
+  "duplicates": {
+    "title": "Возможные дубли",
+    "none": "Дублей нет",
+    "merged": "Объединено: {{title}}",
+    "notDuplicate": "Не дубль"
+  },
+  "stats": {
+    "title": "Полка года",
+    "total_one": "{{year}}: {{count}} книга",
+    "total_few": "{{year}}: {{count}} книги",
+    "total_many": "{{year}}: {{count}} книг",
+    "total_other": "{{year}}: {{count}} книги",
+    "listened": "{{count}} слушал",
+    "read": "{{count}} читал",
+    "month_one": "{{month}}: {{count}} книга",
+    "month_few": "{{month}}: {{count}} книги",
+    "month_many": "{{month}}: {{count}} книг",
+    "month_other": "{{month}}: {{count}} книги",
+    "empty": "Пока нет прочитанных в {{year}}",
+    "topAuthors": "Чаще всего",
+    "loadError": "Не удалось загрузить статистику."
+  },
+  "remote": {
+    "kindle": {
+      "title": "Sync Kindle",
+      "heading": "Вход в Amazon",
+      "disclosure": "Вы входите в Amazon в браузере на нашем сервере.",
+      "frame": "Страница входа Amazon в браузере на сервере",
+      "store": "Amazon"
+    },
+    "captcha": {
+      "title": "Литрес",
+      "heading": "Проверка Литрес",
+      "disclosure": "Литрес просит подтвердить, что вы не робот. Проверка проходит в браузере на нашем сервере.",
+      "frame": "Проверка Литрес в браузере на сервере",
+      "store": "Литрес"
+    },
+    "factPassword": "Пароль не сохраняется",
+    "factSession": "Сессия удаляется после синка",
+    "fact2fa": "За кодом 2FA можно уйти в другое приложение, вход дождётся",
+    "continue": "Продолжить",
+    "cancel": "Отменить",
+    "queued": "Браузер занят, вы следующий",
+    "queuePosition": "Место в очереди: {{position}}",
+    "timeLeft": "Осталось {{time}}",
+    "connecting": "Подключаемся к браузеру на сервере",
+    "collecting": "Читаем библиотеку",
+    "step": {
+      "library": "Библиотека",
+      "highlights": "Хайлайты"
+    },
+    "canLeave": "Можно уйти с этого экрана. Результат появится баннером над шкафом.",
+    "failure": {
+      "timeout": "Время вышло",
+      "provider_refused": "{{store}} не пустил вход",
+      "deploy_interrupted": "Сессия прервана, войдите снова",
+      "browser_failed": "Сессия прервана, войдите снова",
+      "aborted": "Сессия отменена"
+    },
+    "again": "Войти снова",
+    "signedIn": "Вход выполнен, сессия удалится после синка",
+    "done": "Готово",
+    "unavailable": "Синк через браузер пока недоступен",
+    "unavailableLead": "Сейчас на сервере нет браузера для этого. Шкаф работает как обычно, попробуйте позже."
+  },
+  "share": {
+    "title": "Читал ли я",
+    "nothing": "Нечего искать",
+    "looking": "Ищу на полке…",
+    "saved": "Записано.",
+    "titlePrompt": "Название книги",
+    "formatPrompt": "В каком формате?",
+    "typeTitle": "Впишите название, чтобы записать"
+  },
+  "profile": {
+    "title": "Профиль",
+    "language": "Язык",
+    "signOut": "Выйти",
+    "shortcut": "Шорткат «Поделиться»",
+    "shortcutLead": "Шорткат отвечает «Читал ли я» из меню «Поделиться» в магазине. Ему нужен токен, он показывается один раз.",
+    "shortcutTokenName": "Шорткат «Поделиться»",
+    "createToken": "Создать токен",
+    "tokenOnce": "Скопируйте сейчас: токен показывается один раз.",
+    "copy": "Скопировать токен",
+    "copied": "Скопировано",
+    "installShortcut": "Установить шорткат",
+    "created": "Создан {{date}}",
+    "lastUsed": "Последний раз {{date}}",
+    "connected": "Подключён {{date}}",
+    "revoke": "Отозвать",
+    "assistants": "Ассистенты (MCP)",
+    "noAssistants": "Ассистенты не подключены.",
+    "assistantsUnavailable": "Ассистенты пока недоступны.",
+    "deleteTitle": "Удалить аккаунт",
+    "deleteLead": "Аккаунт, полка, заметки и хайлайты удаляются сразу. Отменить нельзя.",
+    "deleteWord": "удалить",
+    "deleteLabel": "Введите «{{word}}», чтобы подтвердить",
+    "deleteMismatch": "Введите слово «{{word}}» точно.",
+    "deleteAction": "Удалить всё",
+    "deletedTitle": "Всё удалено",
+    "deletedLead": "Аккаунта и всех его книг, заметок и хайлайтов больше нет.",
+    "connectHint": "Чтобы подключить Claude: Customize > Connectors > Add custom connector, адрес {{url}}"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Пароль",
+    "newPassword": "Новый пароль",
+    "passwordHint": "Не короче 8 символов.",
+    "signIn": "Войти",
+    "signingIn": "Вхожу…",
+    "signInTitle": "Вход",
+    "forgot": "Забыли пароль",
+    "noAccount": "Ещё нет аккаунта?",
+    "haveAccount": "Уже есть аккаунт?",
+    "register": "Создать аккаунт",
+    "registering": "Создаю…",
+    "registerTitle": "Создать аккаунт",
+    "registerLead": "Один шкаф для всего, что вы прочитали и прослушали.",
+    "checkTitle": "Проверьте почту",
+    "checkLead": "Мы отправили ссылку на {{email}}. Откройте её, чтобы подтвердить аккаунт.",
+    "checkLeadNoEmail": "Мы отправили вам ссылку. Откройте её, чтобы подтвердить аккаунт.",
+    "resend": "Отправить письмо ещё раз",
+    "resent": "Отправили ещё раз. Проверьте почту.",
+    "confirming": "Подтверждаю…",
+    "confirmedTitle": "Email подтверждён",
+    "confirmedLead": "Войдите, чтобы открыть свой шкаф.",
+    "confirmFailed": "Не удалось подтвердить",
+    "forgotTitle": "Сброс пароля",
+    "forgotLead": "Пришлём ссылку, чтобы задать новый пароль.",
+    "sendLink": "Отправить ссылку",
+    "resetSent": "Если у {{email}} есть аккаунт, ссылка уже в пути.",
+    "resetTitle": "Новый пароль",
+    "savePassword": "Сохранить пароль",
+    "passwordChanged": "Пароль изменён",
+    "requestNew": "Запросить новую ссылку"
   },
   "errors": {
     "generic": "Что-то пошло не так. Попробуйте ещё раз.",
@@ -55,6 +350,11 @@
     "confirmation_period_expired": "Ссылка устарела. Запросите новую.",
     "expired": "Ссылка устарела. Запросите новую.",
     "duplicate": "Уже на полке.",
-    "not_implemented": "Пока недоступно."
+    "not_implemented": "Пока недоступно.",
+    "already_unmerged": "Эти издания уже разъединены.",
+    "accepted": "Сначала подтвердите, что прочитали это.",
+    "unavailable": "Сейчас недоступно. Попробуйте позже.",
+    "not_live": "Вход уже закончился.",
+    "invalid_token": "Ссылка устарела. Попробуйте ещё раз."
   }
 }

@@ -9,8 +9,17 @@ function keys(obj: object, prefix = ""): string[] {
   )
 }
 
+const base = (all: string[]) => [...new Set(all.map((k) => k.replace(/_(one|few|many|other)$/, "")))].sort()
+
 it("has the same keys in EN and RU", () => {
-  expect(keys(ru).sort()).toEqual(keys(en).sort())
+  expect(base(keys(ru))).toEqual(base(keys(en)))
+})
+
+it("gives every Russian plural all four forms", () => {
+  const plurals = base(keys(ru).filter((k) => /_(one|few|many|other)$/.test(k)))
+  for (const key of plurals) {
+    expect(["one", "few", "many", "other"].map((f) => `${key}_${f}`).every((k) => keys(ru).includes(k))).toBe(true)
+  }
 })
 
 it("translates every error code listed in API.md", () => {
