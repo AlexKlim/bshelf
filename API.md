@@ -106,7 +106,7 @@ The client shows "Already on the shelf: Listened · 2024" from `existing`.
 
 `DELETE /merges/:id` undoes it: the other book comes back with its original id, fields, editions and statuses, and fields the merge filled are cleared unless they were edited since. Its possible duplicates return to it. The pair is then never merged or proposed again automatically.
 
-A background matcher runs after every catalog lookup. It merges on its own only on the same ISBN, or the same original title and author; those merges show up in `BookDetail.merges` so they can be undone. An ISBN the catalog filled in only proposes a duplicate, because the catalog found it by title. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
+A background matcher runs after every catalog lookup. It merges on its own only on the same original title and author; those merges show up in `BookDetail.merges` so they can be undone. A shared ISBN only proposes a duplicate: every stored ISBN was filled in by the catalog, which found it by title. A shared title (title or original title, case, punctuation and diacritics ignored) becomes a possible duplicate for the shelf banner: confirm with `POST /books/:id/merge`, reject with `DELETE /duplicates/:id`. There is no transliteration, so a Russian and an English edition match only through `original_title`, and authors in different scripts count as unknown.
 
 ```json
 // Duplicate
