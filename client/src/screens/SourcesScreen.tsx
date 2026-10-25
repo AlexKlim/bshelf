@@ -77,7 +77,7 @@ function SourceRow({ source, onChange }: { source: Source; onChange: (s: Source)
       onChange({ ...source, status: "ok", last_sync_at: new Date().toISOString() })
       reload()
     } catch (err) {
-      setError(notOfferedYet(err) ? t("remote.unavailable") : errorMessage(t, err))
+      setError(notOfferedYet(err) ? t("sources.notAvailableYet") : errorMessage(t, err))
     } finally {
       setBusy(false)
     }
@@ -369,9 +369,7 @@ function Unavailable() {
   const { t } = useTranslation()
   return (
     <div className="bs-banner bs-banner--notice" role="status">
-      <p className="bs-banner__text">
-        <b>{t("remote.unavailable")}</b>. {t("remote.unavailableLead")}
-      </p>
+      <p className="bs-banner__text">{t("sources.notAvailableYet")}</p>
     </div>
   )
 }
