@@ -3,12 +3,12 @@ import { resolve } from "node:path"
 
 type Listener = (event: Record<string, unknown>) => void
 
-function loadWorker() {
+function loadWorker(assets: string[] = []) {
   const listeners: Record<string, Listener> = {}
   const store = new Map<string, Response>()
   const deleted: string[] = []
   const cache = {
-    add: vi.fn(async () => {}),
+    add: vi.fn(async (_url: string) => {}),
     put: vi.fn(async (key: Request | string, response: Response) => {
       store.set(typeof key === "string" ? key : new URL(key.url).pathname, response)
     }),
@@ -26,7 +26,7 @@ function loadWorker() {
     clients: { claim: () => {} },
   }
   const network = vi.fn<(request: Request) => Promise<Response>>()
-  const source = readFileSync(resolve(__dirname, "../public/sw.js"), "utf8")
+  const source = readFileSync(resolve(__dirname, "../public/sw.js"), "utf8").replace("/* __ASSETS__ */ []", JSON.stringify(assets))
   new Function("self", "caches", "fetch", source)(self, caches, network)
 
   async function request(path: string, response: Response, mode: RequestMode = "navigate") {
@@ -72,6 +72,14 @@ describe("service worker", () => {
     await sw.request("/", html({ "Cache-Control": "no-store" }))
     await sw.request("/assets/app.js", new Response("x", { headers: { "Cache-Control": "private, no-store" } }), "no-cors")
     expect(sw.store.size).toBe(0)
+  })
+
+  it("precaches the shell and every built chunk on install, so lazy screens open offline", async () => {
+    const sw = loadWorker(["/assets/index-a.js", "/assets/StatsScreen-b.js", "/assets/index-c.css"])
+    let done: Promise<unknown> = Promise.resolve()
+    sw.listeners.install({ waitUntil: (p: Promise<unknown>) => (done = p) })
+    await done
+    expect(sw.cache.add.mock.calls.map(([url]) => url)).toEqual(["/", "/assets/index-a.js", "/assets/StatsScreen-b.js", "/assets/index-c.css"])
   })
 
   it("names the cache per build and deletes the old ones on activate", async () => {

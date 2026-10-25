@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { getSources } from "@/api"
@@ -14,12 +14,14 @@ import { Choices, Ico } from "@/components/ui"
 import { arrangeShelves, isEmptyCase } from "@/lib/arrange"
 import { pickBanner, type BannerEvent } from "@/lib/banner"
 import { readPref, writePref } from "@/lib/cache"
+import { findOpener } from "@/lib/opener"
 import { useShelf } from "@/lib/shelf"
 import type { Banner, BookSummary, Source } from "@/lib/types"
-import { useMediaQuery } from "@/lib/useMediaQuery"
 import { useOnline } from "@/lib/useOnline"
 
 type View = "case" | "list"
+
+const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
 
 function readDismissed() {
   try {
@@ -33,7 +35,6 @@ export function BookcaseScreen() {
   const { t } = useTranslation()
   const shelf = useShelf()
   const online = useOnline()
-  const desktop = useMediaQuery("(min-width: 1200px)")
   const navigate = useNavigate()
   const location = useLocation()
   const [params] = useSearchParams()
@@ -66,26 +67,11 @@ export function BookcaseScreen() {
     else navigate({ search: "" }, { replace: true })
   }, [location.state, navigate])
 
-  useEffect(() => {
-    if (!desktop || !openId) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector('[role="dialog"]')) return
-      if ((e.target as Element).closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return
-      close()
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [desktop, openId, close])
-
-  const lastOpen = useRef(openId)
-  useEffect(() => {
-    const closed = lastOpen.current
-    lastOpen.current = openId
-    if (desktop && closed && !openId) document.querySelector<HTMLElement>(`[data-book="${closed}"]`)?.focus()
-  }, [desktop, openId])
+  const [bookId, setBookId] = useState(openId)
+  if (openId && openId !== bookId) setBookId(openId)
 
   const shelves = useMemo(() => (shelf.shelves ? arrangeShelves(shelf.shelves) : null), [shelf.shelves])
-  const summary = shelves?.flatMap((s) => s.books).find((b) => b.id === openId)
+  const summary = shelves?.flatMap((s) => s.books).find((b) => b.id === bookId)
 
   const banner = pickBanner([offline ? { kind: "offline" } : null, serverBanner], dismissed)
 
@@ -100,10 +86,6 @@ export function BookcaseScreen() {
     setView(next)
     writePref("view", next)
   }
-
-  const book = openId && (
-    <BookView key={openId} bookId={openId} summary={summary} disabled={offline} focusTitle={desktop} onChanged={shelf.reload} />
-  )
 
   let body
   if (!shelves && shelf.error) {
@@ -134,7 +116,7 @@ export function BookcaseScreen() {
   const hasBooks = shelves && !isEmptyCase(shelves)
 
   return (
-    <div className={`bs-shelfscreen${desktop && openId ? " is-split" : ""}`}>
+    <div className="bs-shelfscreen">
       <div className="bs-shelfscreen__case">
         <h1 className="bs-sr">{t("tabs.shelf")}</h1>
         <SearchField disabled={offline} onMatches={setMatches} onWrite={setEntry} onAdded={shelf.reload} />
@@ -159,19 +141,21 @@ export function BookcaseScreen() {
         )}
         {body}
       </div>
-      {desktop && openId && (
-        <aside className="bs-shelfscreen__book" aria-label={summary?.title ?? t("book.label")}>
-          <button type="button" className="bs-iconbtn bs-shelfscreen__close" aria-label={t("common.close")} onClick={close}>
-            <Ico name="close" />
-          </button>
-          {book}
-        </aside>
-      )}
-      {!desktop && (
-        <Overlay open={!!openId} label={summary?.title ?? t("book.label")} onClose={close}>
-          {book}
-        </Overlay>
-      )}
+      <Overlay
+        open={!!openId}
+        label={summary?.title ?? t("book.label")}
+        className="bs-dialog--book"
+        onClose={close}
+        onEscapeKeyDown={(e) => {
+          if ((e.target as Element).closest?.(FIELD)) e.preventDefault()
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+          if (bookId) findOpener(bookId)?.focus()
+        }}
+      >
+        {bookId && <BookView key={bookId} bookId={bookId} summary={summary} disabled={offline} onChanged={shelf.reload} />}
+      </Overlay>
       <Overlay open={!!entry} label={t("entry.title")} onClose={() => setEntry(null)}>
         {entry && (
           <EntryForm

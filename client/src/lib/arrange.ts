@@ -8,10 +8,11 @@ export function arrangeShelves(shelves: Shelf[]): Shelf[] {
   const owned = byKey.get("owned")
   const want = byKey.get("want")
   const now = byKey.get("now") ?? { key: "now", count: 0, books: [] }
+  const wantBooks = want?.books ?? []
   const mergedWant: Shelf = {
     key: "want",
     count: (want?.count ?? 0) + (owned?.count ?? 0),
-    books: [...(want?.books ?? []), ...(owned?.books ?? [])],
+    books: wantBooks.length === (want?.count ?? 0) ? [...wantBooks, ...(owned?.books ?? [])] : wantBooks,
   }
   const rest = shelves.filter((s) => !["now", "want", "owned"].includes(s.key))
   return [now, mergedWant, ...rest]

@@ -11,7 +11,8 @@ const snapshot = (locator: Locator, name: string) =>
 
 async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready)
-  await expect(page.locator(".bs-spread")).toBeVisible()
+  await expect(page.getByRole("dialog").locator(".bs-spread")).toBeVisible()
+  await expect(page.locator(".bs-flap")).toHaveCount(0)
 }
 
 test("register, add the first book, find it on the right shelf and open it", async ({ page, browser }) => {

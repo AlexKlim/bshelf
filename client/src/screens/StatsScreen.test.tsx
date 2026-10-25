@@ -43,7 +43,18 @@ describe("StatsScreen", () => {
   beforeEach(() => i18n.changeLanguage("en"))
   afterEach(() => vi.unstubAllGlobals())
 
-  it("offers only years that exist and never one past the current year", async () => {
+  it("offers every year the server returns, next year included", async () => {
+    mockFetch((url) => {
+      const year = Number(new URL(url, "http://x").searchParams.get("year") ?? thisYear)
+      return [200, stats(year, { years: [thisYear + 1, thisYear - 1] })]
+    })
+    renderStats()
+
+    expect(await screen.findByRole("button", { name: `Next year ${thisYear + 1}` })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: `Previous year ${thisYear - 1}` })).toBeInTheDocument()
+  })
+
+  it("offers only years that exist plus the current one", async () => {
     mockFetch((url) => {
       const year = Number(new URL(url, "http://x").searchParams.get("year") ?? thisYear)
       return [200, stats(year)]

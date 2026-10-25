@@ -7,6 +7,7 @@ import { defineConfig } from "vitest/config"
 
 function versionServiceWorker(): Plugin {
   let version = ""
+  let assets: string[] = []
   let outDir = ""
   return {
     name: "version-service-worker",
@@ -14,10 +15,11 @@ function versionServiceWorker(): Plugin {
     generateBundle(options, bundle) {
       outDir = options.dir!
       version = createHash("sha256").update(Object.keys(bundle).sort().join()).digest("hex").slice(0, 12)
+      assets = Object.keys(bundle).filter((f) => /\.(js|css)$/.test(f)).map((f) => `/${f}`)
     },
     closeBundle() {
       const file = path.join(outDir, "sw.js")
-      writeFileSync(file, readFileSync(file, "utf8").replace("__BUILD__", version))
+      writeFileSync(file, readFileSync(file, "utf8").replace("__BUILD__", version).replace("/* __ASSETS__ */ []", JSON.stringify(assets)))
     },
   }
 }

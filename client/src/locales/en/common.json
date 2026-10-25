@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "Book Shelf"
+    "name": "Book Shelf",
+    "screenError": "Could not load this screen."
   },
   "common": {
     "cancel": "Cancel",
@@ -148,6 +149,7 @@
     "litresNote": "Audiobooks appear right after you sign in. The password is not stored."
   },
   "sources": {
+    "notAvailableYet": "Not available yet: this is coming later.",
     "name": {
       "litres": "Litres",
       "kindle_browser": "Kindle",

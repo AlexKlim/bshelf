@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "Book Shelf"
+    "name": "Book Shelf",
+    "screenError": "Не удалось загрузить экран."
   },
   "common": {
     "cancel": "Отмена",
@@ -158,6 +159,7 @@
     "litresNote": "Аудиокниги появятся сразу после входа. Пароль не хранится."
   },
   "sources": {
+    "notAvailableYet": "Пока недоступно: эта функция появится позже.",
     "name": {
       "litres": "Литрес",
       "kindle_browser": "Kindle",

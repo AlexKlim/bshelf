@@ -38,7 +38,7 @@ export function StatsScreen() {
   const lng = i18n.language
   const thisYear = new Date().getFullYear()
   const current = stats?.year ?? year ?? thisYear
-  const years = stats ? [...new Set([...stats.years, current, thisYear])].filter((y) => y <= thisYear).sort((a, b) => a - b) : []
+  const years = stats ? [...new Set([...stats.years, current, thisYear])].sort((a, b) => a - b) : []
   const idx = years.indexOf(current)
   const prev = idx > 0 ? years[idx - 1] : undefined
   const next = idx >= 0 && idx < years.length - 1 ? years[idx + 1] : undefined

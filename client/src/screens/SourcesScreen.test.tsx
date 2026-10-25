@@ -35,7 +35,7 @@ describe("sources that the server does not offer yet", () => {
     await userEvent.type(screen.getByLabelText("Password"), "secret-pass")
     await userEvent.click(screen.getByRole("button", { name: "Sign in to Litres" }))
 
-    expect(await screen.findByText("Sync through the browser is not available yet")).toBeInTheDocument()
+    expect(await screen.findByText("Not available yet: this is coming later.")).toBeInTheDocument()
     expect(screen.getByLabelText("Password")).toHaveValue("secret-pass")
     expect(screen.getByLabelText("Password")).not.toHaveAttribute("aria-invalid")
   })
@@ -48,7 +48,7 @@ describe("sources that the server does not offer yet", () => {
       </MemoryRouter>,
     )
     await userEvent.click(screen.getByRole("button", { name: "I have requested it" }))
-    expect(await screen.findByText("Sync through the browser is not available yet")).toBeInTheDocument()
+    expect(await screen.findByText("Not available yet: this is coming later.")).toBeInTheDocument()
     expect(screen.queryByText("Not found.")).toBeNull()
   })
 
@@ -63,7 +63,7 @@ describe("sources that the server does not offer yet", () => {
     const { container } = renderSources()
     await screen.findByText("Upload archive")
     await userEvent.upload(container.querySelector<HTMLInputElement>("input[type=file]")!, new File(["x"], "export.zip"))
-    expect(await screen.findByText("Sync through the browser is not available yet")).toBeInTheDocument()
+    expect(await screen.findByText("Not available yet: this is coming later.")).toBeInTheDocument()
   })
 })
 

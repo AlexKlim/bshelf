@@ -7,11 +7,12 @@ const first = Array.from({ length: 40 }, (_, i) => book({ id: `a${i}` }))
 const second = Array.from({ length: 5 }, (_, i) => book({ id: `b${i}` }))
 
 function Probe() {
-  const { shelves, loadMore } = useShelf()
+  const { shelves, loadMore, reload } = useShelf()
   return (
     <>
       <p>{shelves ? shelves.map((s) => `${s.key}:${s.books.length}/${s.count}`).join(" ") : "loading"}</p>
       <button onClick={() => loadMore("2024")}>more</button>
+      <button onClick={() => reload()}>reload</button>
     </>
   )
 }
@@ -40,6 +41,46 @@ describe("ShelfProvider", () => {
     expect(await screen.findByText("2024:45/45")).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledTimes(2)
     expect(readCache<{ books: unknown[] }[]>("shelf")?.[0].books).toHaveLength(40)
+  })
+
+  it("takes the server count from a page that brings no new books, so paging stops instead of stalling", async () => {
+    const fetch = mockFetch((url) => {
+      if (url === "/api/v1/shelf?limit=40") return [200, { shelves: [{ key: "2024", count: 45, books: first }] }]
+      if (url === "/api/v1/shelf/2024?offset=40&limit=40") return [200, { key: "2024", count: 40, books: first.slice(0, 2) }]
+      return [404, {}]
+    })
+    render(
+      <ShelfProvider>
+        <Probe />
+      </ShelfProvider>,
+    )
+    await screen.findByText("2024:40/45")
+    await act(async () => screen.getByText("more").click())
+
+    expect(await screen.findByText("2024:40/40")).toBeInTheDocument()
+    await act(async () => screen.getByText("more").click())
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it("keeps a paged shelf's length on reload instead of falling back to the first 40", async () => {
+    const fetch = mockFetch((url) => {
+      if (url === "/api/v1/shelf?limit=40") return [200, { shelves: [{ key: "2024", count: 45, books: first }] }]
+      if (url === "/api/v1/shelf/2024?offset=40&limit=40") return [200, { key: "2024", count: 45, books: second }]
+      return [404, {}]
+    })
+    render(
+      <ShelfProvider>
+        <Probe />
+      </ShelfProvider>,
+    )
+    await screen.findByText("2024:40/45")
+    await act(async () => screen.getByText("more").click())
+    await screen.findByText("2024:45/45")
+
+    await act(async () => screen.getByText("reload").click())
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4))
+    expect(screen.getByText("2024:45/45")).toBeInTheDocument()
   })
 
   it("does not ask again once a shelf is complete", async () => {
