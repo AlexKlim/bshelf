@@ -4,6 +4,11 @@ class YearStats
 
   attr_reader :user, :year
 
+  # Listened means an audio edition was finished; read means any other format was. A book can be both.
+  def self.counts(books)
+    { listened: books.count { it[:formats].include?("audio") }, read: books.count { (it[:formats] - [ "audio" ]).any? } }
+  end
+
   def initialize(user, year)
     @user = user
     @year = year
@@ -15,6 +20,7 @@ class YearStats
       year:,
       years: finished_by_book.values.flatten.filter_map { it[:finished_at]&.year }.uniq.sort.reverse,
       total: books.size,
+      **self.class.counts(books),
       by_format: books.flat_map { it[:formats] }.tally,
       total_minutes: books.filter_map { it[:minutes] }.sum.nonzero?,
       months: (1..12).map { |month| { month:, books: books.select { it[:finished_at].month == month } } },
@@ -33,7 +39,7 @@ class YearStats
 
       first = rows.first
       {
-        id: first[:uuid], title: first[:title], author: first[:author],
+        id: first[:uuid], title: first[:title], author: first[:author], cloth: first[:cloth] || Cloth.for_uuid(first[:uuid]),
         formats: rows.map { it[:format] }.uniq.sort,
         finished_at: rows.map { it[:finished_at] }.max,
         minutes: rows.filter_map { it[:minutes] }.sum.nonzero?
@@ -43,9 +49,11 @@ class YearStats
 
   def finished_by_book
     @finished_by_book ||= user.readings.where(status: "done").joins(edition: :book)
-      .pluck("books.id", "books.uuid", "books.title", "books.author", "editions.format",
+      .pluck("books.id", "books.uuid", "books.title", "books.author", "books.cloth", "editions.format",
         "readings.finished_at", "readings.total_minutes")
-      .map { |id, uuid, title, author, format, finished_at, minutes| { id:, uuid:, title:, author:, format:, finished_at:, minutes: } }
+      .map do |id, uuid, title, author, cloth, format, finished_at, minutes|
+        { id:, uuid:, title:, author:, cloth:, format:, finished_at:, minutes: }
+      end
       .group_by { it[:id] }
   end
 end

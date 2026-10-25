@@ -185,15 +185,17 @@ Only finished editions with a `finished_at` count, by the latest finish in the y
   "year": 2025,
   "years": [ 2025, 2024 ],
   "total": 18,
+  "listened": 11,
+  "read": 9,
   "by_format": { "audio": 11, "ebook": 7 },
   "total_minutes": null,
-  "months": [ { "month": 1, "books": [ { "id": "uuid", "title": "...", "author": "...", "formats": [ "audio" ], "finished_at": "...", "minutes": null } ] } ],
+  "months": [ { "month": 1, "books": [ { "id": "uuid", "title": "...", "author": "...", "cloth": "navy", "formats": [ "audio" ], "finished_at": "...", "minutes": null } ] } ],
   "no_date_count": 3,
   "top_authors": [ { "author": "Lem", "count": 3 } ]
 }
 ```
 
-`months` always has 12 entries. `years` lists every year with a finished book, for the year picker. `no_date_count` covers all years. `total_minutes` and `minutes` are null when no duration is known.
+`listened` counts books with a finished audio edition, `read` books with any other finished format (the MCP `reading_stats` tool counts the same way), so a book can count in both. `cloth` follows the BookSummary rule. `months` always has 12 entries. `years` lists every year with a finished book, for the year picker. `no_date_count` covers all years. `total_minutes` and `minutes` are null when no duration is known.
 
 ### Catalog enrichment
 

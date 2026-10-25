@@ -32,6 +32,20 @@ RSpec.describe "Stats and sources" do
       expect(json["top_authors"]).to eq([ { "author" => "Herbert", "count" => 1 }, { "author" => "Lem", "count" => 1 } ])
     end
 
+    it "counts listened and read books like the assistant does and gives each row its cloth" do
+      both = done("Dune", "Herbert", "audio", "2025-03-10")
+      create(:reading, edition: create(:edition, book: both, format: "unknown"), status: "done",
+        status_source: "manual", finished_at: Time.zone.parse("2025-05-02"))
+      covered = done("Solaris", "Lem", "personal_doc", "2025-05-20")
+      covered.update_columns(cloth: "navy")
+
+      get "/api/v1/stats", params: { year: 2025 }
+
+      expect(json).to include("total" => 2, "listened" => 1, "read" => 2)
+      rows = json["months"].flat_map { it["books"] }.to_h { [ it["title"], it["cloth"] ] }
+      expect(rows).to eq("Dune" => Cloth.for_uuid(both.uuid), "Solaris" => "navy")
+    end
+
     it "handles a year without finished books" do
       get "/api/v1/stats", params: { year: 2001 }
 
