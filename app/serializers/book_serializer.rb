@@ -12,7 +12,9 @@ module BookSerializer
       page_count: book.page_count,
       audio_minutes: book.audio_minutes,
       cover_url: book.cover_url,
+      cloth: book.cloth || Cloth.for_uuid(book.uuid),
       shelf: shelf_key,
+      bought_twice: book.editions.filter_map(&:store).uniq.size > 1,
       editions: book.editions.sort_by(&:id).map { edition(it) }
     }
   end
@@ -24,7 +26,8 @@ module BookSerializer
       match_source: book.match_source,
       notes: book.notes.order(:created_at, :id).map { note(it) },
       highlights: highlights.map { highlight(it) },
-      highlights_count: book.highlights.count
+      highlights_count: book.highlights.count,
+      merges: book.merge_events.active.order(:id).map { merge(it) }
     )
   end
 
@@ -43,6 +46,10 @@ module BookSerializer
       finished_at: reading&.finished_at,
       total_minutes: reading&.total_minutes
     }
+  end
+
+  def self.merge(event)
+    { id: event.uuid, title: event.merged_book["title"], author: event.merged_book["author"], created_at: event.created_at }
   end
 
   def self.note(note) = { id: note.uuid, body: note.body, created_at: note.created_at, updated_at: note.updated_at }

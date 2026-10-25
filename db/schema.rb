@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_25_100001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -54,11 +54,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_100001) do
     t.float "match_confidence"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "cloth"
+    t.datetime "enriched_at"
     t.index ["author"], name: "index_books_on_author", opclass: :gin_trgm_ops, using: :gin
     t.index ["original_title"], name: "index_books_on_original_title", opclass: :gin_trgm_ops, using: :gin
     t.index ["title"], name: "index_books_on_title", opclass: :gin_trgm_ops, using: :gin
     t.index ["user_id"], name: "index_books_on_user_id"
     t.index ["uuid"], name: "index_books_on_uuid", unique: true
+  end
+
+  create_table "catalog_entries", force: :cascade do |t|
+    t.string "key", null: false
+    t.jsonb "data", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_catalog_entries_on_key", unique: true
+  end
+
+  create_table "duplicate_candidates", force: :cascade do |t|
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.bigint "other_book_id", null: false
+    t.string "reason", null: false
+    t.datetime "dismissed_at"
+    t.datetime "created_at", null: false
+    t.index ["book_id", "other_book_id"], name: "index_duplicate_candidates_on_book_id_and_other_book_id", unique: true
+    t.index ["other_book_id"], name: "index_duplicate_candidates_on_other_book_id"
+    t.index ["user_id"], name: "index_duplicate_candidates_on_user_id"
+    t.index ["uuid"], name: "index_duplicate_candidates_on_uuid", unique: true
+    t.check_constraint "book_id < other_book_id", name: "duplicate_candidates_ordered_pair"
   end
 
   create_table "editions", force: :cascade do |t|
@@ -76,7 +101,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_100001) do
     t.index ["user_id", "store", "external_id"], name: "index_editions_on_user_id_and_store_and_external_id", unique: true, where: "(external_id IS NOT NULL)"
     t.index ["user_id"], name: "index_editions_on_user_id"
     t.index ["uuid"], name: "index_editions_on_uuid", unique: true
-    t.check_constraint "format::text = ANY (ARRAY['audio'::character varying, 'ebook'::character varying, 'personal_doc'::character varying, 'unknown'::character varying]::text[])", name: "editions_format"
+    t.check_constraint "format::text = ANY (ARRAY['audio'::character varying::text, 'ebook'::character varying::text, 'personal_doc'::character varying::text, 'unknown'::character varying::text])", name: "editions_format"
   end
 
   create_table "highlights", force: :cascade do |t|
@@ -103,6 +128,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_100001) do
     t.datetime "unmerged_at"
     t.datetime "created_at", null: false
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.jsonb "filled", default: {}, null: false
     t.index ["book_id"], name: "index_merge_events_on_book_id"
     t.index ["user_id"], name: "index_merge_events_on_user_id"
     t.index ["uuid"], name: "index_merge_events_on_uuid", unique: true
@@ -184,8 +210,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_100001) do
     t.index ["edition_id"], name: "index_readings_on_edition_id", unique: true
     t.index ["user_id", "status"], name: "index_readings_on_user_id_and_status"
     t.index ["user_id"], name: "index_readings_on_user_id"
-    t.check_constraint "status::text = ANY (ARRAY['want'::character varying, 'owned'::character varying, 'in_progress'::character varying, 'done'::character varying]::text[])", name: "readings_status"
-    t.check_constraint "status_source::text = ANY (ARRAY['manual'::character varying, 'litres'::character varying, 'kindle_browser'::character varying, 'kindle_export'::character varying, 'purchase'::character varying]::text[])", name: "readings_status_source"
+    t.check_constraint "status::text = ANY (ARRAY['want'::character varying::text, 'owned'::character varying::text, 'in_progress'::character varying::text, 'done'::character varying::text])", name: "readings_status"
+    t.check_constraint "status_source::text = ANY (ARRAY['manual'::character varying::text, 'litres'::character varying::text, 'kindle_browser'::character varying::text, 'kindle_export'::character varying::text, 'purchase'::character varying::text])", name: "readings_status_source"
   end
 
   create_table "solid_queue_batch_executions", force: :cascade do |t|
@@ -381,6 +407,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_100001) do
   add_foreign_key "api_tokens", "users", on_delete: :cascade
   add_foreign_key "audit_events", "users", on_delete: :nullify
   add_foreign_key "books", "users", on_delete: :cascade
+  add_foreign_key "duplicate_candidates", "books", column: "other_book_id", on_delete: :cascade
+  add_foreign_key "duplicate_candidates", "books", on_delete: :cascade
+  add_foreign_key "duplicate_candidates", "users", on_delete: :cascade
   add_foreign_key "editions", "books", on_delete: :cascade
   add_foreign_key "editions", "users", on_delete: :cascade
   add_foreign_key "highlights", "books", on_delete: :cascade

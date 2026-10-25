@@ -27,11 +27,18 @@ module Api
         head :no_content
       end
 
-      # Merging needs BookMatcher from the catalog lane (ET7); lookups stay so foreign ids still 404.
       def merge
-        book
-        current_user.books.find_by!(uuid: params.require(:other_id))
-        render_error(:not_implemented, status: :not_implemented)
+        other = current_user.books.find_by!(uuid: params.require(:other_id))
+        return render_error(:invalid, field: :other_id, status: :unprocessable_content) if other.id == book.id
+
+        render_book(book, merge_id: MergeEvent.merge!(book, other).uuid)
+      end
+
+      def add_edition
+        AddBook.add_edition(book, **edition_params)
+        render_book(book, status: :created)
+      rescue ActiveRecord::RecordInvalid => e
+        render_model_errors(e.record)
       end
 
       private
@@ -40,12 +47,13 @@ module Api
 
       # Nested because a top-level "format" key would be read as the request format.
       def edition_params
-        attrs = params.fetch(:edition, {}).permit(:format, :status, :started_at, :finished_at).to_h.symbolize_keys
+        attrs = params.fetch(:edition, {}).permit(:format, :store, :status, :started_at, :finished_at).to_h.symbolize_keys
         { format: "unknown", status: "want" }.merge(attrs.compact_blank)
       end
 
-      def render_book(record, status: :ok)
-        render json: { book: BookSerializer.detail(record.reload, Shelf.new(current_user).key_for(record)) }, status:
+      def render_book(record, status: :ok, **extra)
+        book = BookSerializer.detail(record.reload, Shelf.new(current_user).key_for(record))
+        render json: { book:, **extra }, status:
       end
     end
   end

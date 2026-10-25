@@ -26,11 +26,13 @@ Rails.application.routes.draw do
       resource :search, only: :show
       resources :books, only: %i[show create update destroy] do
         post :merge, on: :member
+        post :editions, on: :member, action: :add_edition
         resources :notes, only: %i[index create update destroy], shallow: true
         resources :highlights, only: :index
       end
       resources :editions, only: :update
       resources :merges, only: :destroy
+      resources :duplicates, only: %i[index destroy]
       resource :stats, only: :show
       resources :sources, only: :index
     end
