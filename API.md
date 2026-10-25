@@ -10,7 +10,7 @@ REST JSON under `/api/v1`. The React client, the share targets and scripts build
   { "errors": [ { "code": "taken", "field": "email" } ] }
   ```
   `field` is present when the error belongs to an input. Some errors carry extra keys (see `duplicate`).
-- **Dates.** ISO 8601 in UTC. Inputs are strings, `YYYY-MM-DD` or a full ISO 8601 timestamp from 1900 to the end of next year; an empty string or `null` clears a date. Anything else, a number, boolean or array included, answers `422 { code: "invalid", field }` (`started_at`, `finished_at`).
+- **Dates.** ISO 8601 in UTC. Inputs are strings, `YYYY-MM-DD` or a full ISO 8601 timestamp from 1900 to tomorrow (server date plus one day, for readers ahead of UTC), since a reading cannot start or finish in the future; an empty string or `null` clears a date. Anything else, a number, boolean or array included, answers `422 { code: "invalid", field }` (`started_at`, `finished_at`).
 - **Status vocabulary** (per edition): `want`, `owned`, `in_progress`, `done`. **Formats:** `audio`, `ebook`, `personal_doc`, `unknown`. The client picks "Reading"/"Listening" and "Read"/"Listened" by format (design README).
 - **Shelf keys:** `now`, `want`, `owned`, a year such as `2025`, `no_date`. Order: now, want, owned, years descending, no_date. A book sits on exactly one shelf: `now` if any edition is `in_progress`, else the year of its latest finished edition (`no_date` when finished without a date), else `owned`, else `want`. The design has no shelf for owned books; the client may show `owned` or fold it into another shelf.
 
