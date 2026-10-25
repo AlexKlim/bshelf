@@ -5,6 +5,8 @@ class EnrichBookJob < ApplicationJob
   limits_concurrency to: 1, key: ->(*) { "catalog" }, duration: 5.minutes
 
   retry_on CatalogClient::Error, wait: :polynomially_longer, attempts: 3
+  # The book was merged away by a request while the lookup ran.
+  discard_on ActiveRecord::RecordNotFound
 
   rescue_from CatalogClient::RateLimited do |error|
     raise error if executions >= RATE_LIMIT_ATTEMPTS
