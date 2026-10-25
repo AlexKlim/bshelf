@@ -47,7 +47,8 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
 { "id": "uuid", "email": "reader@example.com", "created_at": "2026-10-25T10:00:00.000Z" }
 // ApiToken
 { "id": "uuid", "name": "iPhone shortcut", "created_at": "...", "last_used_at": null }
-// Assistant: name is the client's host; last_active_at moves at most hourly, on token refresh
+// Assistant: name is the client's host; connected_at is the first grant or token ever issued to it,
+// last_active_at the latest token (it moves at most hourly, on token refresh)
 { "id": "uuid", "name": "claude.ai", "client_id": "https://claude.ai/...", "scopes": [ "books:read", "books:write" ],
   "connected_at": "...", "last_active_at": "..." }
 ```

@@ -24,6 +24,25 @@ RSpec.describe "Assistants" do
     expect(Doorkeeper::AccessToken.where(revoked_at: nil).count).to eq(1)
   end
 
+  it "dates the connection from the first grant and the activity from the latest token" do
+    connected = travel_to(10.days.ago) do
+      Doorkeeper::AccessGrant.create!(application: claude_app, resource_owner_id: user.id, expires_in: 60,
+        redirect_uri: OauthHelpers::CLAUDE_CALLBACK, scopes: "books:read", revoked_at: Time.current)
+      mcp_token(user)
+      Time.current
+    end
+    Doorkeeper::AccessToken.update_all(revoked_at: 9.days.ago)
+    latest = travel_to(1.hour.ago) do
+      mcp_token(user)
+      Time.current
+    end
+    sign_in_as(user)
+
+    get "/api/v1/assistants"
+
+    expect(json["assistants"].sole).to include("connected_at" => connected.as_json, "last_active_at" => latest.as_json)
+  end
+
   it "answers 404 for an assistant the user never connected" do
     mcp_token(create(:user))
     sign_in_as(user)
