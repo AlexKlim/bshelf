@@ -98,10 +98,9 @@ export function LandingScreen() {
           </nav>
           <div className="lp-actions">
             <LangSwitch />
-            <Link className="bs-btn bs-btn--quiet" to="/login">
+            <Link className="bs-btn bs-btn--secondary" to="/login">
               {t("auth.signIn")}
             </Link>
-            {create}
           </div>
         </div>
       </header>
