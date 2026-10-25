@@ -3,6 +3,12 @@ class User < ApplicationRecord
 
   has_many :api_tokens
   has_many :audit_events
+  has_many :books
+  has_many :editions
+  has_many :readings
+  has_many :notes
+  has_many :highlights
+  has_many :source_connections
 
   def send_devise_notification(notification, *args)
     devise_mailer.send(notification, self, *args).deliver_later

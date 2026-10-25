@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_25_000004) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_25_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
 
   create_table "api_tokens", force: :cascade do |t|
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
@@ -35,6 +36,103 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_000004) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.index ["user_id"], name: "index_audit_events_on_user_id"
+  end
+
+  create_table "books", force: :cascade do |t|
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "user_id", null: false
+    t.string "title", null: false
+    t.string "author"
+    t.string "original_title"
+    t.string "language"
+    t.string "isbn"
+    t.integer "year"
+    t.integer "page_count"
+    t.integer "audio_minutes"
+    t.string "cover_url"
+    t.string "match_source", default: "manual", null: false
+    t.float "match_confidence"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author"], name: "index_books_on_author", opclass: :gin_trgm_ops, using: :gin
+    t.index ["original_title"], name: "index_books_on_original_title", opclass: :gin_trgm_ops, using: :gin
+    t.index ["title"], name: "index_books_on_title", opclass: :gin_trgm_ops, using: :gin
+    t.index ["user_id"], name: "index_books_on_user_id"
+    t.index ["uuid"], name: "index_books_on_uuid", unique: true
+  end
+
+  create_table "editions", force: :cascade do |t|
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.string "format", default: "unknown", null: false
+    t.string "store"
+    t.string "source", null: false
+    t.string "external_id"
+    t.datetime "purchased_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_editions_on_book_id"
+    t.index ["user_id", "store", "external_id"], name: "index_editions_on_user_id_and_store_and_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["user_id"], name: "index_editions_on_user_id"
+    t.index ["uuid"], name: "index_editions_on_uuid", unique: true
+    t.check_constraint "format::text = ANY (ARRAY['audio'::character varying, 'ebook'::character varying, 'personal_doc'::character varying, 'unknown'::character varying]::text[])", name: "editions_format"
+  end
+
+  create_table "highlights", force: :cascade do |t|
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.string "source", null: false
+    t.text "text", null: false
+    t.text "note"
+    t.string "location"
+    t.datetime "highlighted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_highlights_on_book_id"
+    t.index ["user_id"], name: "index_highlights_on_user_id"
+    t.index ["uuid"], name: "index_highlights_on_uuid", unique: true
+  end
+
+  create_table "merge_events", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.jsonb "merged_book", default: {}, null: false
+    t.jsonb "moved", default: {}, null: false
+    t.datetime "unmerged_at"
+    t.datetime "created_at", null: false
+    t.index ["book_id"], name: "index_merge_events_on_book_id"
+    t.index ["user_id"], name: "index_merge_events_on_user_id"
+  end
+
+  create_table "notes", force: :cascade do |t|
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_notes_on_book_id"
+    t.index ["user_id"], name: "index_notes_on_user_id"
+    t.index ["uuid"], name: "index_notes_on_uuid", unique: true
+  end
+
+  create_table "readings", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "edition_id", null: false
+    t.string "status", null: false
+    t.string "status_source", null: false
+    t.datetime "started_at"
+    t.datetime "finished_at"
+    t.integer "total_minutes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["edition_id"], name: "index_readings_on_edition_id", unique: true
+    t.index ["user_id", "status"], name: "index_readings_on_user_id_and_status"
+    t.index ["user_id"], name: "index_readings_on_user_id"
+    t.check_constraint "status::text = ANY (ARRAY['want'::character varying, 'owned'::character varying, 'in_progress'::character varying, 'done'::character varying]::text[])", name: "readings_status"
+    t.check_constraint "status_source::text = ANY (ARRAY['manual'::character varying, 'litres'::character varying, 'kindle_browser'::character varying, 'kindle_export'::character varying, 'purchase'::character varying]::text[])", name: "readings_status_source"
   end
 
   create_table "solid_queue_batch_executions", force: :cascade do |t|
@@ -187,6 +285,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_000004) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "source_connections", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "kind", null: false
+    t.string "status", default: "never", null: false
+    t.string "error"
+    t.datetime "last_sync_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "kind"], name: "index_source_connections_on_user_id_and_kind", unique: true
+    t.index ["user_id"], name: "index_source_connections_on_user_id"
+  end
+
+  create_table "status_changes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "reading_id", null: false
+    t.string "from_status"
+    t.string "to_status", null: false
+    t.string "source", null: false
+    t.datetime "created_at", null: false
+    t.index ["reading_id"], name: "index_status_changes_on_reading_id"
+    t.index ["user_id"], name: "index_status_changes_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
     t.string "email", null: false
@@ -206,6 +327,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_000004) do
 
   add_foreign_key "api_tokens", "users", on_delete: :cascade
   add_foreign_key "audit_events", "users", on_delete: :nullify
+  add_foreign_key "books", "users", on_delete: :cascade
+  add_foreign_key "editions", "books", on_delete: :cascade
+  add_foreign_key "editions", "users", on_delete: :cascade
+  add_foreign_key "highlights", "books", on_delete: :cascade
+  add_foreign_key "highlights", "users", on_delete: :cascade
+  add_foreign_key "merge_events", "books", on_delete: :cascade
+  add_foreign_key "merge_events", "users", on_delete: :cascade
+  add_foreign_key "notes", "books", on_delete: :cascade
+  add_foreign_key "notes", "users", on_delete: :cascade
+  add_foreign_key "readings", "editions", on_delete: :cascade
+  add_foreign_key "readings", "users", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -214,4 +346,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_000004) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "source_connections", "users", on_delete: :cascade
+  add_foreign_key "status_changes", "readings", on_delete: :cascade
+  add_foreign_key "status_changes", "users", on_delete: :cascade
 end
