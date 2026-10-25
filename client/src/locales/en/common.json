@@ -347,5 +347,9 @@
     "unavailable": "Not available right now. Try later.",
     "not_live": "The sign in has already ended.",
     "invalid_token": "The link has expired. Try again."
+  },
+  "footer": {
+    "tagline": "Book Shelf · one shelf for Litres and Kindle",
+    "source": "Source code"
   }
 }

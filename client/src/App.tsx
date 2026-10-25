@@ -87,6 +87,12 @@ function Shell() {
           </Suspense>
         </RouteBoundary>
       </main>
+      <div className="app__foot">
+        <footer className="bs-footer">
+          <span>{t("footer.tagline")}</span>
+          <a href="https://github.com/AlexKlim/bshelf" target="_blank" rel="noreferrer">{t("footer.source")}</a>
+        </footer>
+      </div>
       {!desktop && (
         <div className="app__tabs">
           <TabBar />
