@@ -53,10 +53,13 @@ module Api
           return render_error(:invalid_token, status: :forbidden) unless valid
         end
 
-        return render_error(:not_found, status: :not_found) unless viewer_path?(session, params[:path].to_s)
+        path = params[:path].to_s
+        return render_error(:not_found, status: :not_found) unless viewer_path?(session, path)
 
-        status, content_type, body = RemoteBrowser.steel.view(session.steel_session_id, params[:path].to_s,
-          request.query_parameters.except("token").to_query)
+        # The client's query never reaches Steel; only the viewer page gets the query Steel itself issued.
+        viewer, query = session.viewer_path.to_s.split("?", 2)
+        status, content_type, body = RemoteBrowser.steel.view(session.steel_session_id, path,
+          path == viewer ? query.to_s : "")
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
