@@ -69,7 +69,7 @@ Every sign up, confirmation, sign in (and failed attempt for a known email), sig
 | POST | `/books/:id/merge` | `other_id` | `501 not_implemented` (catalog lane, ET7) |
 | DELETE | `/merges/:id` | | `501 not_implemented` (catalog lane, ET7) |
 | GET | `/stats` | `year` (default: current) | `200 Stats` |
-| GET | `/sources` | | `200 { sources: [Source] }` |
+| GET | `/sources` | | `200 { sources: [Source], banner: Banner \| null }` (see Sources) |
 
 Any `:id` that is not the caller's: `404 not_found`. Edition fields go in a nested `edition` object because a top-level `format` key is the request format in Rails.
 
@@ -131,7 +131,11 @@ If several books match and exactly one has the query as its whole title, only th
 // Highlight
 { "id": "uuid", "text": "quote", "note": null, "location": "1234", "source": "kindle_browser", "highlighted_at": null }
 // Source (one row per kind: litres, kindle_export, kindle_browser)
-{ "kind": "litres", "status": "never | ok | error | needs_login", "last_sync_at": null, "error": null }
+{
+  "kind": "kindle_browser", "status": "never | ok | error | needs_login", "last_sync_at": null, "error": null,
+  "books_count": 148,
+  "session": { "id": "uuid", "status": "collecting", "result": null, "interruption": null }
+}
 ```
 
 `store`: `litres`, `amazon` or null. `source`: `manual`, `share`, `mcp`, `litres`, `kindle_export`, `kindle_browser`. `status_source`: `manual`, `litres`, `kindle_browser`, `kindle_export`, `purchase`. `Source.error` is a code.
@@ -239,7 +243,7 @@ Cookie session only (`403 session_required` for API tokens). Screen flow: `desig
 }
 ```
 
-Flow: show the disclosure, `POST` with `disclosure_accepted: true`, then poll `GET` every 1-2 s. `queued` -> "Browser busy, you are next" with `queue_position`. `connecting` -> skeleton. `live` -> `POST .../viewer` and load `url` in a full-screen iframe, timer from `seconds_left`. `collecting` -> `steps`; the person may leave, the result shows up as the `export_ready` banner on `/sources`. `done` -> "+N books, M highlights". `interrupted` texts: `aborted` (nothing), `timeout` "Time is up", `provider_refused` "Amazon did not let you in", `deploy_interrupted` and `browser_failed` "Session interrupted, sign in again".
+Flow: show the disclosure, `POST` with `disclosure_accepted: true`, then poll `GET` every 1-2 s. `queued` -> "Browser busy, you are next" with `queue_position`. `connecting` -> skeleton. `live` -> `POST .../viewer` and load `url` in a full-screen iframe, timer from `seconds_left`. `collecting` -> `steps`; the person may leave; the Kindle row of `/sources` carries the session (and later its result) when they come back. `done` -> "+N books, M highlights". `interrupted` texts: `aborted` (nothing), `timeout` "Time is up", `provider_refused` "Amazon did not let you in", `deploy_interrupted` and `browser_failed` "Session interrupted, sign in again".
 
 Reconnect: when the page becomes visible again, `GET` the session; if it is still `live`, `POST .../viewer` again and reload the iframe. The timer keeps running, the browser is the same.
 
@@ -250,6 +254,36 @@ Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the re
 ## Error codes
 
 `unauthorized`, `session_required`, `invalid_csrf`, `not_found`, `rate_limited`, `blank`, `invalid_credentials`, `unconfirmed`, `taken`, `invalid`, `too_short`, `too_long`, `inclusion`, `already_confirmed`, `confirmation_period_expired`, `expired`, `duplicate`, `not_implemented`, `accepted`, `unavailable`, `not_live`, `invalid_token`.
+
+## Sources
+
+`Source.session` is the latest remote browser session for that source (`kindle` -> `kindle_browser`, `litres` -> `litres`) while it runs and for a day after it ends, else null. It lets the row show "+12 books, 40 highlights" and reconnect after the app was closed. `books_count` counts editions imported from that source. Error codes so far: `needs_login`, `provider_refused`, `page_changed`, `schema_changed`, `timeout` (adapters add theirs).
+
+`banner` fills the single slot above the shelf, highest priority first:
+
+| kind | when | extra keys |
+| --- | --- | --- |
+| `source_error` | any source in `error` or `needs_login` | `source`, `error` (code, or `needs_login`) |
+| `export_ready` | added by the import lane (ET5) | |
+| `litres_reminder` | the last Litres sync is older than 30 days | |
+| `possible_duplicates` | added by the catalog lane (ET7) | `count` |
+
+Every banner has `dismissible` (false for `source_error`) and `key`, which changes with each new event: the client stores dismissed keys, so a dismissed banner returns only for the next event.
+
+## Operations
+
+Adapters report through `SourceConnection.record_sync!(user, kind, error:, status:)`: it updates the Sources row and writes a `metric_events` row (`sync.<kind>`, outcome `ok` or the error code). Share writes `share` with its answer kind and duration, the remote browser `remote_browser` with its outcome. Each of these is also one JSON log line (`event`, `outcome`, `user_id`, `duration_ms`).
+
+`HealthCheckJob` runs hourly (`config/recurring.yml`), logs a `metrics.summary` line and one `{"event":"alert"}` error line per alert, and deletes metric rows older than 30 days. Alerts, over the last 24 h unless noted:
+
+| alert | condition |
+| --- | --- |
+| `sync_failure_rate` | more than 50% of at least 4 syncs of one source failed |
+| `sync_error` | any `schema_changed`, `page_changed` or `provider_refused` |
+| `share_slow` | share p95 over 2 s |
+| `job_failures` | failed Solid Queue jobs in the last hour |
+
+Point the platform's log alerting at `"event":"alert"`. Ad hoc dashboard: `bin/rails runner 'pp HealthCheck.call'`. The status journal is `status_changes` (phase 1).
 
 ## Health
 
