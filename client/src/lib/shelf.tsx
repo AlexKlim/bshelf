@@ -2,7 +2,24 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { getShelfPage, getShelves } from "@/api"
 import type { ApiError } from "./api"
 import { readCache, writeCache } from "./cache"
-import type { Shelf, ShelfKey } from "./types"
+import type { BookSummary, Shelf, ShelfKey } from "./types"
+
+function addPage(shelf: Shelf, page: { count: number; books: BookSummary[] }): Shelf {
+  const known = new Set(shelf.books.map((b) => b.id))
+  return { ...shelf, count: page.count, books: [...shelf.books, ...page.books.filter((b) => !known.has(b.id))] }
+}
+
+async function refill(shelf: Shelf, length: number) {
+  let current = shelf
+  while (current.books.length < Math.min(length, current.count)) {
+    const page = await getShelfPage(current.key, current.books.length).catch(() => null)
+    if (!page) break
+    const next = addPage(current, page)
+    if (next.books.length === current.books.length) return next
+    current = next
+  }
+  return current
+}
 
 type State = { shelves: Shelf[] | null; fromCache: boolean; error: string | null }
 type ShelfData = State & { reload: () => Promise<void>; loadMore: (key: ShelfKey) => void }
@@ -18,12 +35,18 @@ const ShelfContext = createContext<ShelfData>({
 export function ShelfProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>({ shelves: null, fromCache: false, error: null })
   const loading = useRef(new Set<ShelfKey>())
+  const shown = useRef<Shelf[] | null>(null)
+  useEffect(() => {
+    shown.current = state.shelves
+  }, [state.shelves])
 
   const reload = useCallback(async () => {
     try {
       const { shelves } = await getShelves()
       writeCache("shelf", shelves)
-      setState({ shelves, fromCache: false, error: null })
+      const lengths = new Map(shown.current?.map((s) => [s.key, s.books.length]))
+      const full = await Promise.all(shelves.map((s) => refill(s, lengths.get(s.key) ?? 0)))
+      setState({ shelves: full, fromCache: false, error: null })
     } catch (e) {
       const cached = readCache<Shelf[]>("shelf")
       setState({ shelves: cached, fromCache: !!cached, error: (e as ApiError).code })
@@ -43,10 +66,7 @@ export function ShelfProvider({ children }: { children: ReactNode }) {
         setState((prev) => {
           const current = prev.shelves?.find((s) => s.key === shelf.key)
           if (!current) return prev
-          const known = new Set(current.books.map((b) => b.id))
-          const fresh = page.books.filter((b) => !known.has(b.id))
-          if (!fresh.length) return prev
-          const next = { ...current, count: page.count, books: [...current.books, ...fresh] }
+          const next = addPage(current, page)
           return { ...prev, shelves: prev.shelves!.map((s) => (s === current ? next : s)) }
         })
       } catch {
@@ -59,7 +79,6 @@ export function ShelfProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     reload()
     window.addEventListener("online", reload)
     return () => window.removeEventListener("online", reload)
