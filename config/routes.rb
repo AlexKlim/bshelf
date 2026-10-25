@@ -3,6 +3,11 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
+  use_doorkeeper do
+    controllers authorizations: "oauth/authorizations"
+    skip_controllers :applications, :authorized_applications, :token_info
+  end
+
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
       resource :session, only: %i[create destroy]

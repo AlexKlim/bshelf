@@ -3,6 +3,7 @@ class AuditEvent < ApplicationRecord
     sign_up email_confirmed sign_in sign_in_failed sign_out
     password_reset_requested password_reset
     api_token_created api_token_revoked account_deleted
+    assistant_connected assistant_revoked
   ].freeze
 
   belongs_to :user, optional: true

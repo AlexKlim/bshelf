@@ -1,0 +1,12 @@
+en:
+  oauth:
+    title: "Book Shelf: assistant access"
+    prompt: "%{client} asks for access to your shelf"
+    redirect: "You will return to %{host} after answering"
+    scopes:
+      books:read: "Search books on your shelf and see stats"
+      books:write: "Add books to your shelf"
+    allow: "Allow"
+    deny: "Deny"
+    revoke_hint: "You can revoke access in your profile, under Assistants."
+    error: "Could not connect the assistant"
