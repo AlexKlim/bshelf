@@ -29,7 +29,7 @@ class StatusResolver
 
   # Manual writes set exactly the date fields passed (nil clears). Automatic writes only fill
   # what they know and never touch a manual row, a stronger source, or a later status,
-  # except a purchase moving "want" to "owned".
+  # except a purchase moving "want" to "owned": buying a wanted book is news no other source carries.
   def apply(status:, source:, **dates)
     raise ArgumentError, "unknown status #{status}" unless STATUS_RANK.key?(status)
 
@@ -67,7 +67,7 @@ class StatusResolver
       (readings.status_source <> 'manual'
         AND #{rank_case("readings.status_source", SOURCE_RANK)} <= :source_rank
         AND #{rank_case("readings.status", STATUS_RANK)} <= :status_rank)
-      OR (readings.status = 'want' AND :status = 'owned')
+      OR (readings.status = 'want' AND :status = 'owned' AND :source = 'purchase')
     SQL
   end
 

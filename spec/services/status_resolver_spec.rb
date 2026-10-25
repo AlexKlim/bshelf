@@ -39,6 +39,13 @@ RSpec.describe StatusResolver do
       expect(reading).to have_attributes(status: "owned", status_source: "purchase")
     end
 
+    it "moves a manual want to owned only on purchase" do
+      reading.update!(status: "want", status_source: "manual")
+
+      expect(described_class.automatic!(reading, status: "owned", source: "kindle_export")).to be(false)
+      expect(reading).to have_attributes(status: "want", status_source: "manual")
+    end
+
     it "does not let a manual want jump past owned" do
       reading.update!(status: "want", status_source: "manual")
 
@@ -109,7 +116,7 @@ RSpec.describe StatusResolver do
         end
         locked.pop
         job = Thread.new { described_class.automatic!(Reading.find(reading.id), status: "in_progress", source: "litres") }
-        sleep 0.2
+        wait_for_lock_waiter
         expect(job).to be_alive
         release << true
 
@@ -130,7 +137,8 @@ RSpec.describe StatusResolver do
         end
         locked.pop
         manual = Thread.new { described_class.manual!(Reading.find(reading.id), status: "in_progress") }
-        sleep 0.2
+        wait_for_lock_waiter
+        expect(manual).to be_alive
         release << true
 
         expect(manual.value).to be(true)
