@@ -27,8 +27,7 @@ module Api
           end
       end
 
-      # One slot, highest priority wins (SourceBanner README). export_ready (import lane, ET5) and
-      # possible_duplicates (catalog lane, ET7) slot in after source_error and after litres_reminder.
+      # export_ready (ET5) slots in between source_error and litres_reminder once the import exists.
       def banner(rows)
         failed = SourceConnection::KINDS.filter_map { rows[it] }.find { it.status.in?(%w[error needs_login]) }
         if failed
@@ -36,6 +35,9 @@ module Api
             key: "source_error:#{failed.kind}:#{failed.updated_at.to_i}" }
         elsif (litres = rows["litres"]&.last_sync_at) && litres < LITRES_REMINDER_AFTER.ago
           { kind: "litres_reminder", dismissible: true, key: "litres_reminder:#{litres.to_i}" }
+        elsif (latest = current_user.duplicate_candidates.open.maximum(:id))
+          { kind: "possible_duplicates", count: current_user.duplicate_candidates.open.count, dismissible: true,
+            key: "possible_duplicates:#{latest}" }
         end
       end
     end

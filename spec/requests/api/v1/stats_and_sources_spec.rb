@@ -96,6 +96,18 @@ RSpec.describe "Stats and sources" do
           "key" => "litres_reminder:#{synced.last_sync_at.to_i}")
       end
 
+      it "shows open possible duplicates last, keyed by the newest so a dismissed banner returns on a new pair" do
+        books = Array.new(3) { |i| user.books.create!(title: "Солярис #{i}") }
+        DuplicateCandidate.record!(books[0], books[1], reason: "title")
+        DuplicateCandidate.record!(books[0], books[2], reason: "title", dismissed_at: Time.current)
+        newest = DuplicateCandidate.record!(books[1], books[2], reason: "title")
+
+        get "/api/v1/sources"
+
+        expect(json["banner"]).to eq("kind" => "possible_duplicates", "count" => 2, "dismissible" => true,
+          "key" => "possible_duplicates:#{newest.id}")
+      end
+
       it "shows needs_login as a source error" do
         user.source_connections.create!(kind: "litres", status: "needs_login")
 

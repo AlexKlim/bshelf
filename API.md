@@ -332,9 +332,9 @@ Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the re
 | kind | when | extra keys |
 | --- | --- | --- |
 | `source_error` | any source in `error` or `needs_login` | `source`, `error` (code, or `needs_login`) |
-| `export_ready` | added by the import lane (ET5) | |
+| `export_ready` | not emitted yet: needs the Amazon export import (ET5) | |
 | `litres_reminder` | the last Litres sync is older than 30 days | |
-| `possible_duplicates` | added by the catalog lane (ET7) | `count` |
+| `possible_duplicates` | undismissed `GET /duplicates` rows exist; `key` follows the newest pair | `count` |
 
 Every banner has `dismissible` (false for `source_error`) and `key`, which changes with each new event: the client stores dismissed keys, so a dismissed banner returns only for the next event.
 
