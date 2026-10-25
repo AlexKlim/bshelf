@@ -247,6 +247,10 @@
 .bs-header > .bs-wordmark:only-of-type { margin-right: auto; }
 .bs-footer { box-sizing: border-box; inline-size: 100%; max-inline-size: var(--content-w); margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); padding: var(--space-6) 0 var(--space-8); border-top: 1px solid var(--hairline); font: 400 12px/16px var(--font-ui); color: var(--ink-muted); }
 .bs-footer a { color: var(--accent-text); text-underline-offset: 3px; }
+.bs-lang { display: inline-flex; gap: 2px; }
+.bs-lang button { min-block-size: var(--touch-min); min-inline-size: var(--touch-min); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink-muted); font: 500 13px/18px var(--font-ui); letter-spacing: .04em; cursor: pointer; }
+.bs-lang button[aria-pressed="true"] { color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.bs-lang button:focus-visible { outline: none; box-shadow: var(--ring); }
 .bs-avatar { display: grid; place-items: center; flex: none; inline-size: var(--touch-min); block-size: var(--touch-min); margin-left: auto; border-radius: var(--radius-pill); background: var(--accent); color: var(--on-accent); font: 600 15px/1 var(--font-ui); text-decoration: none; box-shadow: inset 0 0 0 6px var(--surface); }
 .bs-avatar:focus-visible { outline: none; box-shadow: inset 0 0 0 6px var(--surface), var(--ring); }
 

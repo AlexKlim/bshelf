@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, type ComponentType } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import { RouteBoundary } from "@/components/RouteBoundary"
+import { LangSwitch } from "@/components/ui"
 import { TabBar } from "@/components/TabBar"
 import { oauthReturnTo, rememberReturnTo, takeReturnTo } from "@/lib/returnTo"
 import { ShelfProvider } from "@/lib/shelf"
@@ -91,7 +92,7 @@ function Shell() {
       <div className="app__foot">
         <footer className="bs-footer">
           <span>{t("footer.tagline")}</span>
-          <a href="https://github.com/AlexKlim/bshelf" target="_blank" rel="noreferrer">{t("footer.source")}</a>
+          <LangSwitch />
         </footer>
       </div>
       {!desktop && (

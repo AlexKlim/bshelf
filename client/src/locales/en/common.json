@@ -349,8 +349,7 @@
     "invalid_token": "The link has expired. Try again."
   },
   "footer": {
-    "tagline": "Book Shelf · one shelf for Litres and Kindle",
-    "source": "Source code"
+    "tagline": "Book Shelf · one shelf for Litres and Kindle"
   },
   "landing": {
     "title": "Book Shelf: everything you have read and listened to, on one shelf",
@@ -360,7 +359,6 @@
     "create": "Create a shelf",
     "h1": "Everything you have read and listened to, on one shelf",
     "lead": "Audiobooks from Litres and books from Kindle go onto the shelves by themselves. And before you buy, \"Share\" tells you whether you have read the book already.",
-    "note": "Free and open source. The Litres password is not stored.",
     "steps": [
       {
         "title": "Sign in to Litres",
@@ -368,7 +366,7 @@
       },
       {
         "title": "Request your Kindle history",
-        "text": "Amazon takes up to 30 days to prepare the data export. Upload the archive, and what you have read goes onto the shelves by year."
+        "text": "Upload your Amazon data export, and what you have read lands on the shelves by year."
       },
       {
         "title": "Add the rest",
@@ -398,10 +396,6 @@
       {
         "title": "Delete with one button",
         "text": "In the profile you can erase everything at once: books, notes, assistant connections."
-      },
-      {
-        "title": "Open source",
-        "text": "The code is on GitHub. You can check it or run Book Shelf yourself."
       }
     ],
     "questions": [
@@ -424,5 +418,8 @@
     ],
     "ctaTitle": "Build your shelf",
     "ctaLead": "Start with Litres: the books go onto the shelves in a minute."
+  },
+  "lang": {
+    "label": "Language"
   }
 }

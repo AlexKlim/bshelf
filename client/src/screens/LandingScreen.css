@@ -15,7 +15,6 @@
 .lp-h2--small { font-size: 28px; line-height: 34px; }
 .lp-h3 { margin: 0; font: 600 20px/26px var(--font-page); }
 .lp-lead { margin: 0; max-inline-size: 34em; font: 400 18px/28px var(--font-ui); color: var(--ink-muted); }
-.lp-note { margin: 0; font: 400 13px/18px var(--font-ui); color: var(--ink-muted); }
 .lp-muted { margin: 0; font: 400 15px/24px var(--font-ui); color: var(--ink-muted); }
 
 .lp-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }

@@ -1,13 +1,11 @@
 import { useEffect, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
-import { FormatIcons, Ico } from "@/components/ui"
+import { FormatIcons, Ico, LangSwitch } from "@/components/ui"
 import "./LandingScreen.css"
 
 type Format = "audio" | "ebook"
 type SampleSpine = [cloth: string, lang: string, width: number, height: number, title: string, author: string, formats: Format[]]
-
-const SOURCE_URL = "https://github.com/AlexKlim/bshelf"
 
 const NOW: SampleSpine[] = [
   ["slate", "ru", 34, 160, "Дюна", "Фрэнк Герберт", ["audio"]],
@@ -97,9 +95,9 @@ export function LandingScreen() {
           <nav aria-label={t("landing.nav")} className="lp-header__nav">
             <a href="#how">{t("landing.how")}</a>
             <a href="#faq">{t("landing.faq")}</a>
-            <a href={SOURCE_URL} target="_blank" rel="noreferrer">{t("footer.source")}</a>
           </nav>
           <div className="lp-actions">
+            <LangSwitch />
             <Link className="bs-btn bs-btn--quiet" to="/login">
               {t("auth.signIn")}
             </Link>
@@ -120,7 +118,6 @@ export function LandingScreen() {
                   {t("landing.how")}
                 </a>
               </div>
-              <p className="lp-note">{t("landing.note")}</p>
             </div>
             <div className="lp-visual" aria-hidden="true">
               <div className="bs-case">
@@ -296,7 +293,7 @@ export function LandingScreen() {
       <div className="lp-wrap">
         <footer className="bs-footer lp-footer">
           <span>{t("footer.tagline")}</span>
-          <a href={SOURCE_URL} target="_blank" rel="noreferrer">{t("footer.source")}</a>
+          <LangSwitch />
         </footer>
       </div>
     </div>

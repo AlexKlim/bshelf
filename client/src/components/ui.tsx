@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type InputHTMLAttributes, type ReactNode } from "react"
+import { useTranslation } from "react-i18next"
 import type { ShelfKey } from "@/lib/types"
 
 export function ShelfEnd({
@@ -120,5 +121,19 @@ export function Choices<T extends string>({
         </label>
       ))}
     </fieldset>
+  )
+}
+
+export function LangSwitch() {
+  const { t, i18n } = useTranslation()
+  const current = i18n.resolvedLanguage ?? i18n.language
+  return (
+    <div className="bs-lang" role="group" aria-label={t("lang.label")}>
+      {(["ru", "en"] as const).map((lng) => (
+        <button key={lng} type="button" lang={lng} aria-pressed={current === lng} onClick={() => i18n.changeLanguage(lng)}>
+          {lng.toUpperCase()}
+        </button>
+      ))}
+    </div>
   )
 }
