@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, type ComponentType } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
+import { RouteBoundary } from "@/components/RouteBoundary"
 import { TabBar } from "@/components/TabBar"
 import { oauthReturnTo, rememberReturnTo, takeReturnTo } from "@/lib/returnTo"
 import { ShelfProvider } from "@/lib/shelf"
@@ -69,6 +70,7 @@ function Shell() {
   const { t } = useTranslation()
   const { user } = useSession()
   const desktop = useMediaQuery("(min-width: 1200px)")
+  const { pathname } = useLocation()
   return (
     <div className="app">
       <header className="bs-header">
@@ -79,9 +81,11 @@ function Shell() {
         </Link>
       </header>
       <main className="app__main">
-        <Suspense fallback={null}>
-          <Outlet />
-        </Suspense>
+        <RouteBoundary key={pathname}>
+          <Suspense fallback={null}>
+            <Outlet />
+          </Suspense>
+        </RouteBoundary>
       </main>
       {!desktop && (
         <div className="app__tabs">
@@ -95,33 +99,35 @@ function Shell() {
 export default function App({ initialUser }: { initialUser?: User | null }) {
   return (
     <SessionProvider initialUser={initialUser}>
-      <Suspense fallback={null}>
-        <Routes>
-          <Route element={<GuestOnly />}>
-            <Route path="/login" element={<LoginScreen />} />
-            <Route path="/register" element={<RegisterScreen />} />
-            <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
-          </Route>
-          <Route path="/check-email" element={<CheckEmailScreen />} />
-          <Route path="/confirm" element={<ConfirmScreen />} />
-          <Route path="/reset-password" element={<ResetPasswordScreen />} />
-          <Route path="/deleted" element={<DeletedScreen />} />
-          <Route element={<RequireUser />}>
-            <Route path="/sources/kindle" element={<RemoteBrowserScreen purpose="kindle" />} />
-            <Route path="/sources/litres/captcha" element={<RemoteBrowserScreen purpose="litres" />} />
-            <Route element={<Shell />}>
-              <Route path="/" element={<BookcaseScreen />} />
-              <Route path="/stats" element={<StatsScreen />} />
-              <Route path="/sources" element={<SourcesScreen />} />
-              <Route path="/sources/litres" element={<LitresScreen />} />
-              <Route path="/sources/kindle-export" element={<KindleExportScreen />} />
-              <Route path="/profile" element={<ProfileScreen />} />
-              <Route path="/share" element={<ShareScreen />} />
+      <RouteBoundary>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route element={<GuestOnly />}>
+              <Route path="/login" element={<LoginScreen />} />
+              <Route path="/register" element={<RegisterScreen />} />
+              <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
             </Route>
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+            <Route path="/check-email" element={<CheckEmailScreen />} />
+            <Route path="/confirm" element={<ConfirmScreen />} />
+            <Route path="/reset-password" element={<ResetPasswordScreen />} />
+            <Route path="/deleted" element={<DeletedScreen />} />
+            <Route element={<RequireUser />}>
+              <Route path="/sources/kindle" element={<RemoteBrowserScreen purpose="kindle" />} />
+              <Route path="/sources/litres/captcha" element={<RemoteBrowserScreen purpose="litres" />} />
+              <Route element={<Shell />}>
+                <Route path="/" element={<BookcaseScreen />} />
+                <Route path="/stats" element={<StatsScreen />} />
+                <Route path="/sources" element={<SourcesScreen />} />
+                <Route path="/sources/litres" element={<LitresScreen />} />
+                <Route path="/sources/kindle-export" element={<KindleExportScreen />} />
+                <Route path="/profile" element={<ProfileScreen />} />
+                <Route path="/share" element={<ShareScreen />} />
+              </Route>
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </RouteBoundary>
     </SessionProvider>
   )
 }

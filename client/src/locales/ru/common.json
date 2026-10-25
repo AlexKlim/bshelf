@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "Book Shelf"
+    "name": "Book Shelf",
+    "screenError": "Не удалось загрузить экран."
   },
   "common": {
     "cancel": "Отмена",

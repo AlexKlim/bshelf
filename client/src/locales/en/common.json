@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "Book Shelf"
+    "name": "Book Shelf",
+    "screenError": "Could not load this screen."
   },
   "common": {
     "cancel": "Cancel",
