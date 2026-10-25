@@ -22,6 +22,19 @@ RSpec.describe EnrichBook do
     expect(book.enriched_at).to be_present
   end
 
+  it "saves the catalog data with a hashed cloth when libvips is missing" do
+    stub_open_library("open_library_solaris.json", title: "Solaris")
+    stub_google("google_429.json", status: 429)
+    stub_cover
+    allow(Cloth).to receive(:require).with("vips").and_raise(LoadError, "libvips not found")
+    book = create(:book, title: "Solaris", author: "Stanisław Lem")
+
+    described_class.call(book)
+
+    expect(book.reload).to have_attributes(cover_url: cover, year: 1961, cloth: nil, match_source: "catalog")
+    expect(book.enriched_at).to be_present
+  end
+
   it "falls back to Google Books for a Russian book Open Library does not know" do
     stub_open_library("open_library_solyaris.json")
     stub_google("google_solyaris.json")
