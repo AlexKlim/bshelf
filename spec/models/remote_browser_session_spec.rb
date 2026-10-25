@@ -77,6 +77,17 @@ RSpec.describe RemoteBrowserSession do
     expect(seen).to eq([ depth, depth ])
   end
 
+  it "refuses states the code does not know at the database" do
+    session = live_session(users.first)
+
+    row = users.first.source_connections.create!(kind: "litres")
+    [ [ session, :status, "paused" ], [ session, :purpose, "audible" ], [ session, :interruption, "crashed" ],
+      [ row, :status, "broken" ], [ row, :kind, "goodreads" ] ].each do |record, column, value|
+      expect { described_class.transaction(requires_new: true) { record.update_columns(column => value) } }
+        .to raise_error(ActiveRecord::CheckViolation), "#{record.class}.#{column}"
+    end
+  end
+
   it "uses each viewer token once and only before it expires" do
     session = live_session(users.first)
     token = session.issue_viewer_token!

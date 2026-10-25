@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_100003) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -58,6 +58,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100003) do
     t.datetime "enriched_at"
     t.string "isbn_source"
     t.index ["author"], name: "index_books_on_author", opclass: :gin_trgm_ops, using: :gin
+    t.index ["id"], name: "index_books_not_enriched", where: "(enriched_at IS NULL)"
     t.index ["original_title"], name: "index_books_on_original_title", opclass: :gin_trgm_ops, using: :gin
     t.index ["title"], name: "index_books_on_title", opclass: :gin_trgm_ops, using: :gin
     t.index ["user_id"], name: "index_books_on_user_id"
@@ -85,6 +86,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100003) do
     t.index ["user_id"], name: "index_duplicate_candidates_on_user_id"
     t.index ["uuid"], name: "index_duplicate_candidates_on_uuid", unique: true
     t.check_constraint "book_id < other_book_id", name: "duplicate_candidates_ordered_pair"
+    t.check_constraint "reason::text = ANY (ARRAY['title_author'::character varying, 'title'::character varying]::text[])", name: "duplicate_candidates_reason"
   end
 
   create_table "editions", force: :cascade do |t|
@@ -220,7 +222,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100003) do
     t.datetime "updated_at", null: false
     t.index ["edition_id"], name: "index_readings_on_edition_id", unique: true
     t.index ["user_id", "status"], name: "index_readings_on_user_id_and_status"
-    t.index ["user_id"], name: "index_readings_on_user_id"
     t.check_constraint "status::text = ANY (ARRAY['want'::character varying::text, 'owned'::character varying::text, 'in_progress'::character varying::text, 'done'::character varying::text])", name: "readings_status"
     t.check_constraint "status_source::text = ANY (ARRAY['manual'::character varying::text, 'litres'::character varying::text, 'kindle_browser'::character varying::text, 'kindle_export'::character varying::text, 'purchase'::character varying::text])", name: "readings_status_source"
   end
@@ -246,6 +247,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100003) do
     t.index ["user_id"], name: "index_remote_browser_sessions_on_user_id"
     t.index ["user_id"], name: "index_remote_browser_sessions_one_active_per_user", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'connecting'::character varying, 'live'::character varying, 'collecting'::character varying])::text[]))"
     t.index ["uuid"], name: "index_remote_browser_sessions_on_uuid", unique: true
+    t.check_constraint "interruption::text = ANY (ARRAY['aborted'::character varying, 'timeout'::character varying, 'provider_refused'::character varying, 'deploy_interrupted'::character varying, 'browser_failed'::character varying]::text[])", name: "remote_browser_sessions_interruption"
+    t.check_constraint "purpose::text = ANY (ARRAY['kindle'::character varying, 'litres'::character varying]::text[])", name: "remote_browser_sessions_purpose"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'connecting'::character varying, 'live'::character varying, 'collecting'::character varying, 'done'::character varying, 'interrupted'::character varying]::text[])", name: "remote_browser_sessions_status"
   end
 
   create_table "solid_queue_batch_executions", force: :cascade do |t|
@@ -407,7 +411,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100003) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id", "kind"], name: "index_source_connections_on_user_id_and_kind", unique: true
-    t.index ["user_id"], name: "index_source_connections_on_user_id"
+    t.check_constraint "kind::text = ANY (ARRAY['litres'::character varying, 'kindle_export'::character varying, 'kindle_browser'::character varying]::text[])", name: "source_connections_kind"
+    t.check_constraint "status::text = ANY (ARRAY['never'::character varying, 'ok'::character varying, 'error'::character varying, 'needs_login'::character varying]::text[])", name: "source_connections_status"
   end
 
   create_table "status_changes", force: :cascade do |t|
