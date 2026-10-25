@@ -111,6 +111,33 @@ describe("Bookcase keyboard", () => {
   })
 })
 
+describe("search", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    Reflect.deleteProperty(HTMLElement.prototype, "scrollBy")
+  })
+
+  it("scrolls each shelf sideways to its first match", () => {
+    setPointer(false)
+    const scrolled: [string, number][] = []
+    HTMLElement.prototype.scrollBy = function (this: HTMLElement, options?: ScrollToOptions | number) {
+      scrolled.push([this.closest("section")!.id || this.closest("section")!.getAttribute("aria-labelledby")!, (options as ScrollToOptions).left!])
+    } as typeof HTMLElement.prototype.scrollBy
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const far = this.classList.contains("bs-spine") && this.getAttribute("aria-label")!.startsWith("Year Three")
+      const left = this.classList.contains("bs-shelf__row") ? 0 : far ? 900 : 10
+      const width = this.classList.contains("bs-shelf__row") ? 390 : 32
+      return { left, right: left + width, top: 0, bottom: 0, width, height: 0, x: left, y: 0, toJSON: () => ({}) }
+    })
+    const { rerender } = render(<Bookcase shelves={shelves} onOpen={() => {}} />)
+    rerender(<Bookcase shelves={shelves} matches={new Set(["y3", "n1"])} onOpen={() => {}} />)
+
+    expect(scrolled).toHaveLength(1)
+    expect(scrolled[0][0]).toBe("shelf-2024")
+    expect(scrolled[0][1]).toBeGreaterThan(500)
+  })
+})
+
 describe("paging", () => {
   afterEach(() => vi.unstubAllGlobals())
 
