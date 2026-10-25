@@ -1,0 +1,17 @@
+/.git/
+/.gitignore
+/.bundle
+/.env*
+/config/*.key
+/log/*
+/tmp/*
+/.github
+/.gstack
+/docs
+/TODOS.md
+/book-shelf-design.md
+/client/node_modules
+/public/assets
+/public/index.html
+/.dockerignore
+/Dockerfile*

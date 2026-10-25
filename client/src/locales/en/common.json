@@ -1,0 +1,20 @@
+{
+  "app": { "name": "Book Shelf" },
+  "tabs": { "label": "Sections", "shelf": "Bookcase", "stats": "Stats", "sources": "Sources" },
+  "profile": { "title": "Profile" },
+  "shelf": { "now": "Now", "want": "Want", "owned": "Owned", "noDate": "No date" },
+  "status": {
+    "want": "Want",
+    "owned": "Owned",
+    "in_progress": { "audio": "Listening", "ebook": "Reading" },
+    "done": { "audio": "Listened", "ebook": "Read" }
+  },
+  "format": { "audio": "Audio", "ebook": "E-book", "personal_doc": "Document", "unknown": "Book" },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "network": "No connection.",
+    "not_found": "Not found.",
+    "unauthorized": "Sign in to continue.",
+    "rate_limited": "Too many attempts. Try again in a few minutes."
+  }
+}

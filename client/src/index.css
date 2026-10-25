@@ -1,0 +1,9 @@
+html, body, #root { min-block-size: 100%; }
+body { margin: 0; background: var(--wall); color: var(--ink); font-family: var(--font-ui); }
+.app { display: flex; flex-direction: column; min-block-size: 100dvh; }
+.app__main { flex: 1; padding: 16px; }
+.app__tabs { position: sticky; bottom: 0; }
+@media (min-width: 1200px) {
+  .app__tabs { order: -1; top: 0; bottom: auto; }
+}
+.app__title { margin: 0; font: 600 22px/28px var(--font-page); }

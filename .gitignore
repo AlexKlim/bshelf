@@ -58,3 +58,17 @@ build-iPhoneSimulator/
 docs/
 TODOS.md
 book-shelf-design.md
+
+# Ignore key files for decrypting credentials and more.
+/config/*.key
+
+
+/log/*
+/tmp/*
+/.env*
+/client/node_modules
+/public/index.html
+/public/assets/
+/public/sw.js
+/public/manifest.webmanifest
+/public/icon.svg

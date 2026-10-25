@@ -1,0 +1,12 @@
+{
+  "name": "Book Shelf",
+  "short_name": "Book Shelf",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e6e6e5",
+  "theme_color": "#606b5b",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
