@@ -4,7 +4,7 @@ body { margin: 0; background: var(--wall); color: var(--ink); font-family: var(-
 .app__main { flex: 1; min-inline-size: 0; padding: var(--space-4); }
 .app__tabs { position: sticky; bottom: 0; z-index: 10; }
 
-.bs-shelfscreen { max-inline-size: 960px; margin: 0 auto; }
+.bs-shelfscreen { max-inline-size: 720px; margin: 0 auto; }
 .bs-shelfscreen__case { display: grid; gap: var(--space-3); min-inline-size: 0; }
 .bs-shelfscreen__case > .bs-case, .bs-shelfscreen__case > .bs-empty { margin-top: var(--space-6); }
 .bs-shelfscreen__tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
