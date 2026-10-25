@@ -32,13 +32,16 @@ class CatalogClient
     uri = URI(url)
     return unless uri.is_a?(URI::HTTPS) && uri.host.match?(COVER_HOSTS)
 
-    response = get(uri, accept: "image/*")
-    case response
-    when Net::HTTPRedirection
-      cover(URI.join(uri, response["Location"]).to_s, redirects: redirects - 1) if redirects.positive?
-    when Net::HTTPSuccess
-      response.body if response.body.bytesize <= MAX_COVER_BYTES
+    location = nil
+    body = get(uri, accept: "image/*") do |response|
+      case response
+      when Net::HTTPRedirection then location = response["Location"]
+      when Net::HTTPSuccess then read_cover(uri, response)
+      end
     end
+    return body unless location
+
+    cover(URI.join(uri, location).to_s, redirects: redirects - 1) if redirects.positive?
   end
 
   private
@@ -79,15 +82,31 @@ class CatalogClient
     JSON.parse(response.body) if response.is_a?(Net::HTTPSuccess)
   end
 
+  # Raising inside the block closes the connection, so an oversized cover is never read to the end.
+  def read_cover(uri, response)
+    too_large = Error.new("#{uri.host}: cover too large")
+    raise too_large if response.content_length.to_i > MAX_COVER_BYTES
+
+    body = +""
+    response.read_body do |chunk|
+      body << chunk
+      raise too_large if body.bytesize > MAX_COVER_BYTES
+    end
+    body
+  end
+
+  # Without a block the whole body is read; with one, the block decides how much of it to read.
   def get(uri, accept:)
     headers = { "Accept" => accept, "User-Agent" => "BookShelf/1 (#{Rails.configuration.x.app_url})" }
-    response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) do |http|
-      http.request(Net::HTTP::Get.new(uri, headers))
-    end
-    case response
-    when Net::HTTPSuccess, Net::HTTPRedirection, Net::HTTPNotFound then response
-    when Net::HTTPTooManyRequests then raise RateLimited.new(uri.host, Integer(response["Retry-After"], exception: false))
-    else raise Error, "#{uri.host} answered #{response.code}"
+    Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) do |http|
+      http.request(Net::HTTP::Get.new(uri, headers)) do |response|
+        case response
+        when Net::HTTPSuccess, Net::HTTPRedirection, Net::HTTPNotFound
+          return block_given? ? yield(response) : response.tap(&:body)
+        when Net::HTTPTooManyRequests then raise RateLimited.new(uri.host, Integer(response["Retry-After"], exception: false))
+        else raise Error, "#{uri.host} answered #{response.code}"
+        end
+      end
     end
   rescue Timeout::Error, SocketError, SystemCallError, OpenSSL::SSL::SSLError => e
     raise Error, "#{uri.host}: #{e.class}"

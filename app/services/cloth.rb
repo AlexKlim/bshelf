@@ -30,9 +30,18 @@ module Cloth
 
   def self.for_uuid(uuid) = NAMES[Zlib.crc32(uuid.to_s) % NAMES.size]
 
+  # Covers come from catalog hosts, so only the formats they serve reach libvips' decoders.
+  def self.image?(bytes)
+    bytes.start_with?("\xFF\xD8\xFF".b, "\x89PNG\r\n\x1A\n".b, "GIF87a", "GIF89a") ||
+      (bytes.start_with?("RIFF") && bytes.byteslice(8, 4) == "WEBP")
+  end
+
   # Every pixel of a thumbnail votes for its nearest cloth, so a large flat background wins over a small
   # bright detail, which a plain average would smear into a muddy colour.
   def self.from_image(bytes)
+    bytes = bytes.to_s.b
+    return unless image?(bytes)
+
     require "vips"
     image = Vips::Image.thumbnail_buffer(bytes, SAMPLE).colourspace(:srgb)
     image = image.extract_band(0, n: 3) if image.bands > 3
