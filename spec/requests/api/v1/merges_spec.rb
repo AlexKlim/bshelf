@@ -84,6 +84,26 @@ RSpec.describe "Merges, duplicates and editions" do
       expect(json["duplicates"]).to eq([])
     end
 
+    %w[title title_author].each do |reason|
+      it "confirms or dismisses a #{reason} candidate" do
+        candidate.update!(reason:)
+        third = create(:book, user:, title: "Солярис", author: "Станислав Лем")
+        other = DuplicateCandidate.record!(audio, third, reason:)
+
+        get "/api/v1/duplicates"
+        expect(json["duplicates"].map { it["reason"] }).to eq([ reason, reason ])
+
+        post "/api/v1/books/#{audio.uuid}/merge", params: { other_id: ebook.uuid }, as: :json
+        expect(response).to have_http_status(:ok)
+        delete "/api/v1/duplicates/#{other.uuid}"
+        expect(response).to have_http_status(:no_content)
+
+        get "/api/v1/duplicates"
+        expect(json["duplicates"]).to eq([])
+        expect(user.books.count).to eq(2)
+      end
+    end
+
     it "hides another user's candidates" do
       foreign = DuplicateCandidate.record!(stranger, create(:book, user: stranger.user), reason: "title")
 
