@@ -8,7 +8,7 @@
 | --- | --- |
 | `design/README.md` | Правила: принципы, тексты и словарь статусов RU/EN, цвет, корешки, шкаф, движение, раскладки, типографика, иконки, доступность, состояния. Читать первым. |
 | `design/tokens.json` | Токены: цвета (одна светлая тема), шрифты и стили текста, отступы, радиусы, размеры, тени. |
-| `design/tokens.css` | CSS-переменные из `tokens.json`. Генерируется, руками не править. |
+| `design/tokens.css` | CSS-переменные из `tokens.json`. Собирается командой `npm run tokens` в `client/` (`client/scripts/tokens.mjs`), руками не править. Тест `client/src/tokens.test.ts` падает, если файл отстал от `tokens.json`. |
 | `design/components/bundle.css` | Стили компонентов, классы `bs-*`, иконки-маски, длительности движения `--dur-*`. |
 | `design/components/<Имя>/README.md` | Что передаёт потребитель, состояния, что делать и чего нет. |
 | `design/components/<Имя>/preview.html` | Эталонная разметка компонента. |
@@ -30,7 +30,7 @@
 
 ## Как использовать в клиенте
 
-React-клиент подключает `tokens.css` и `bundle.css` и оборачивает классы `bs-*` в компоненты. Radix: Tabs, Dialog (разворот поверх шкафа), RadioGroup или ToggleGroup (чипы). Новые цвета и размеры добавляются сначала в `design/tokens.json`, потом в `tokens.css`.
+React-клиент подключает `tokens.css` и `bundle.css` и оборачивает классы `bs-*` в компоненты. Radix: Tabs, Dialog (разворот поверх шкафа), RadioGroup или ToggleGroup (чипы). Новые цвета и размеры добавляются в `design/tokens.json`, затем `npm run tokens` в `client/` пересобирает `tokens.css`; оба файла коммитятся вместе.
 
 ## Собрано в клиенте из существующих компонентов
 
