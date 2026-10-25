@@ -29,6 +29,12 @@ Rails.application.routes.draw do
       resource :share, only: :create do
         post :add
       end
+      resources :remote_browser_sessions, only: %i[create show destroy] do
+        member do
+          post :viewer
+          get "view(/*path)", action: :view, as: :view, format: false
+        end
+      end
     end
   end
 

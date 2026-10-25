@@ -212,9 +212,44 @@ Installed from "Profile" -> "Install shortcut" (an iCloud link; the client creat
 
 The PWA manifest declares `share_target` -> `GET /share?title=&text=&url=`. That client route posts the three fields to `/share` with the cookie session and renders the same answer and quick add.
 
+## Remote browser (Sync Kindle, Litres captcha)
+
+Cookie session only (`403 session_required` for API tokens). Screen flow: `design/components/RemoteBrowser/README.md`.
+
+| Method | Path | Body | Success | Errors |
+| --- | --- | --- | --- | --- |
+| POST | `/remote_browser_sessions` | `purpose` (`kindle`, `litres`), `disclosure_accepted: true` | `201 { session }`; `200 { session }` with the person's running session if there is one | `422 inclusion` (purpose), `422 accepted` (disclosure_accepted), `503 unavailable` (instance flag off or no collector for the purpose), `429` (10/hour/IP) |
+| GET | `/remote_browser_sessions/:id` | | `200 { session }` | `404` |
+| DELETE | `/remote_browser_sessions/:id` | | `200 { session }`, interrupted with `aborted` (no-op once ended) | `404` |
+| POST | `/remote_browser_sessions/:id/viewer` | | `200 { url, expires_at }` | `409 not_live`, `404` |
+| GET | `/remote_browser_sessions/:id/view/*path` | `token` on the first request | the live view, proxied from Steel | `403 invalid_token`, `404` |
+
+```json
+// RemoteBrowserSession
+{
+  "id": "uuid", "purpose": "kindle",
+  "status": "queued | connecting | live | collecting | done | interrupted",
+  "queue_position": 1,            // only while queued
+  "expires_at": "...",            // end of the 5:00 sign-in, set when live
+  "seconds_left": 287,            // only while live
+  "steps": [ { "key": "library", "state": "done" }, { "key": "highlights", "state": "pending" } ],
+  "result": { "books": 12, "highlights": 40 },  // when done
+  "interruption": null,           // aborted | timeout | provider_refused | deploy_interrupted | browser_failed
+  "created_at": "...", "finished_at": null
+}
+```
+
+Flow: show the disclosure, `POST` with `disclosure_accepted: true`, then poll `GET` every 1-2 s. `queued` -> "Browser busy, you are next" with `queue_position`. `connecting` -> skeleton. `live` -> `POST .../viewer` and load `url` in a full-screen iframe, timer from `seconds_left`. `collecting` -> `steps`; the person may leave, the result shows up as the `export_ready` banner on `/sources`. `done` -> "+N books, M highlights". `interrupted` texts: `aborted` (nothing), `timeout` "Time is up", `provider_refused` "Amazon did not let you in", `deploy_interrupted` and `browser_failed` "Session interrupted, sign in again".
+
+Reconnect: when the page becomes visible again, `GET` the session; if it is still `live`, `POST .../viewer` again and reload the iframe. The timer keeps running, the browser is the same.
+
+Live view security (OV-1): Steel sits on the private network only (`STEEL_URL`, must be `*.internal`, `localhost` or a private IP, checked at boot). `viewer` returns a token that works once, for 1 minute, only for its session and only for the session's owner. The first request trades it for an httponly, `SameSite=Strict` cookie scoped to `/api/v1/remote_browser_sessions/:id/view`, which covers the page's subresources until the sign-in time ends or the session leaves `live`. Responses carry `Cache-Control: no-store` and `frame-ancestors 'self'`.
+
+Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1, OV-1), the rest wait in a FIFO queue. One running session per person. `REMOTE_BROWSER_DISABLED=1` is the instance kill switch. A deploy interrupts sessions that are `collecting` (`deploy_interrupted`); `live` sessions carry on in the new process. Every start and finish goes to the audit log; `done` and store refusals update the `kindle_browser` (or `litres`) source.
+
 ## Error codes
 
-`unauthorized`, `session_required`, `invalid_csrf`, `not_found`, `rate_limited`, `blank`, `invalid_credentials`, `unconfirmed`, `taken`, `invalid`, `too_short`, `too_long`, `inclusion`, `already_confirmed`, `confirmation_period_expired`, `expired`, `duplicate`, `not_implemented`.
+`unauthorized`, `session_required`, `invalid_csrf`, `not_found`, `rate_limited`, `blank`, `invalid_credentials`, `unconfirmed`, `taken`, `invalid`, `too_short`, `too_long`, `inclusion`, `already_confirmed`, `confirmation_period_expired`, `expired`, `duplicate`, `not_implemented`, `accepted`, `unavailable`, `not_live`, `invalid_token`.
 
 ## Health
 

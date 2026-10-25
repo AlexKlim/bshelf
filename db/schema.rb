@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_030001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_030002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -145,6 +145,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_030001) do
     t.index ["user_id"], name: "index_readings_on_user_id"
     t.check_constraint "status::text = ANY (ARRAY['want'::character varying, 'owned'::character varying, 'in_progress'::character varying, 'done'::character varying]::text[])", name: "readings_status"
     t.check_constraint "status_source::text = ANY (ARRAY['manual'::character varying, 'litres'::character varying, 'kindle_browser'::character varying, 'kindle_export'::character varying, 'purchase'::character varying]::text[])", name: "readings_status_source"
+  end
+
+  create_table "remote_browser_sessions", force: :cascade do |t|
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "user_id", null: false
+    t.string "purpose", null: false
+    t.string "status", default: "queued", null: false
+    t.string "interruption"
+    t.string "steel_session_id"
+    t.string "websocket_url"
+    t.string "viewer_path"
+    t.string "viewer_token_digest"
+    t.datetime "viewer_token_expires_at"
+    t.jsonb "steps", default: [], null: false
+    t.jsonb "result"
+    t.datetime "expires_at"
+    t.datetime "finished_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status"], name: "index_remote_browser_sessions_on_status"
+    t.index ["user_id"], name: "index_remote_browser_sessions_on_user_id"
+    t.index ["user_id"], name: "index_remote_browser_sessions_one_active_per_user", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'connecting'::character varying, 'live'::character varying, 'collecting'::character varying])::text[]))"
+    t.index ["uuid"], name: "index_remote_browser_sessions_on_uuid", unique: true
   end
 
   create_table "solid_queue_batch_executions", force: :cascade do |t|
@@ -351,6 +374,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_030001) do
   add_foreign_key "notes", "users", on_delete: :cascade
   add_foreign_key "readings", "editions", on_delete: :cascade
   add_foreign_key "readings", "users", on_delete: :cascade
+  add_foreign_key "remote_browser_sessions", "users", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
