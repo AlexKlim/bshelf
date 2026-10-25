@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom"
 import i18n from "@/i18n"
 import type { Duplicate } from "@/lib/types"
 import { book, mockFetch } from "@/test/fixtures"
-import { SourcesScreen } from "./SourcesScreen"
+import { KindleExportScreen, LitresScreen, SourcesScreen } from "./SourcesScreen"
 
 const duplicate: Duplicate = {
   id: "d1",
@@ -19,6 +19,53 @@ const renderSources = () =>
       <SourcesScreen />
     </MemoryRouter>,
   )
+
+describe("sources that the server does not offer yet", () => {
+  beforeEach(() => i18n.changeLanguage("en"))
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("says Litres sign in is not available yet and keeps the typed password", async () => {
+    mockFetch(() => [501, { errors: [{ code: "not_implemented" }] }])
+    render(
+      <MemoryRouter>
+        <LitresScreen />
+      </MemoryRouter>,
+    )
+    await userEvent.type(screen.getByLabelText("Litres email or phone"), "reader@example.com")
+    await userEvent.type(screen.getByLabelText("Password"), "secret-pass")
+    await userEvent.click(screen.getByRole("button", { name: "Sign in to Litres" }))
+
+    expect(await screen.findByText("Sync through the browser is not available yet")).toBeInTheDocument()
+    expect(screen.getByLabelText("Password")).toHaveValue("secret-pass")
+    expect(screen.getByLabelText("Password")).not.toHaveAttribute("aria-invalid")
+  })
+
+  it("says the Amazon export request is not available yet on 404", async () => {
+    mockFetch(() => [404, { errors: [{ code: "not_found" }] }])
+    render(
+      <MemoryRouter>
+        <KindleExportScreen />
+      </MemoryRouter>,
+    )
+    await userEvent.click(screen.getByRole("button", { name: "I have requested it" }))
+    expect(await screen.findByText("Sync through the browser is not available yet")).toBeInTheDocument()
+    expect(screen.queryByText("Not found.")).toBeNull()
+  })
+
+  it("says the archive upload is not available yet", async () => {
+    mockFetch((url) => {
+      if (url === "/api/v1/sources") {
+        return [200, { sources: [{ kind: "kindle_export", status: "ready", last_sync_at: null, error: null, books_count: 0, session: null }], banner: null }]
+      }
+      if (url === "/api/v1/duplicates") return [200, { duplicates: [] }]
+      return [501, { errors: [{ code: "not_implemented" }] }]
+    })
+    const { container } = renderSources()
+    await screen.findByText("Upload archive")
+    await userEvent.upload(container.querySelector<HTMLInputElement>("input[type=file]")!, new File(["x"], "export.zip"))
+    expect(await screen.findByText("Sync through the browser is not available yet")).toBeInTheDocument()
+  })
+})
 
 describe("Possible duplicates", () => {
   beforeEach(() => i18n.changeLanguage("en"))

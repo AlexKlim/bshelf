@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate } from "react-router-dom"
 import { dismissDuplicate, getDuplicates, getSources, mergeBooks, unmerge } from "@/api"
-import { requestKindleExport, syncLitres, uploadKindleExport, type SyncResult } from "@/api/pending"
+import { notOfferedYet, requestKindleExport, syncLitres, uploadKindleExport, type SyncResult } from "@/api/pending"
 import { Field, Ico } from "@/components/ui"
 import type { ApiError } from "@/lib/api"
 import { useShelf } from "@/lib/shelf"
@@ -77,7 +77,7 @@ function SourceRow({ source, onChange }: { source: Source; onChange: (s: Source)
       onChange({ ...source, status: "ok", last_sync_at: new Date().toISOString() })
       reload()
     } catch (err) {
-      setError(errorMessage(t, err))
+      setError(notOfferedYet(err) ? t("remote.unavailable") : errorMessage(t, err))
     } finally {
       setBusy(false)
     }
@@ -235,22 +235,26 @@ export function LitresScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<SyncResult | null>(null)
+  const [unavailable, setUnavailable] = useState(false)
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!login || !password) return setErrors({ ...(!login && { login: t("errors.blank") }), ...(!password && { password: t("errors.blank") }) })
     setBusy(true)
     setErrors({})
+    setUnavailable(false)
     try {
       setResult(await syncLitres(login, password))
+      setPassword("")
       reload()
     } catch (err) {
+      if (notOfferedYet(err)) return setUnavailable(true)
+      setPassword("")
       const error = err as ApiError
       if (error.code === "captcha_required") return navigate("/sources/litres/captcha")
       const field = error.errors[0]?.field === "login" ? "login" : "password"
       setErrors({ [field]: t(`sourceErrors.${error.code}`, { defaultValue: errorMessage(t, err) }) })
     } finally {
-      setPassword("")
       setBusy(false)
     }
   }
@@ -274,6 +278,7 @@ export function LitresScreen() {
   return (
     <div className="bs-screen bs-screen--sheet">
       <h1 className="bs-screen__title">{t("sources.litresSignIn")}</h1>
+      {unavailable && <Unavailable />}
       <form className="bs-auth__form bs-screen__form" onSubmit={submit} noValidate>
         <Field label={t("sources.litresLogin")} autoComplete="username" value={login} error={errors.login} onChange={(e) => setLogin(e.target.value)} />
         <Field
@@ -306,6 +311,7 @@ export function KindleExportScreen() {
   const online = useOnline()
   const [requestedAt, setRequestedAt] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [unavailable, setUnavailable] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const confirm = async () => {
@@ -314,7 +320,8 @@ export function KindleExportScreen() {
       await requestKindleExport()
       setRequestedAt(new Date().toISOString())
     } catch (e) {
-      setError(errorMessage(t, e))
+      if (notOfferedYet(e)) setUnavailable(true)
+      else setError(errorMessage(t, e))
     } finally {
       setBusy(false)
     }
@@ -352,7 +359,19 @@ export function KindleExportScreen() {
           </Link>
         </div>
       )}
+      {unavailable && <Unavailable />}
       {error && <p className="bs-field__error">{error}</p>}
+    </div>
+  )
+}
+
+function Unavailable() {
+  const { t } = useTranslation()
+  return (
+    <div className="bs-banner bs-banner--notice" role="status">
+      <p className="bs-banner__text">
+        <b>{t("remote.unavailable")}</b>. {t("remote.unavailableLead")}
+      </p>
     </div>
   )
 }

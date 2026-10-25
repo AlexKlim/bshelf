@@ -1,4 +1,6 @@
-import { api } from "@/lib/api"
+import { api, ApiError } from "@/lib/api"
+
+export const notOfferedYet = (e: unknown) => e instanceof ApiError && (e.status === 501 || e.status === 404)
 
 export type SyncResult = { books: number; highlights: number }
 
