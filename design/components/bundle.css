@@ -146,7 +146,7 @@
 
 /* ---------- Source banner: one slot above the bookcase ---------- */
 .bs-banner { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4); border-radius: var(--radius-sm); font: 400 15px/22px var(--font-ui); }
-.bs-banner__text { flex: 1; min-inline-size: 0; padding-block: var(--space-2); }
+.bs-banner__text { flex: 1; min-inline-size: 0; margin: 0; padding-block: var(--space-2); }
 .bs-banner__text b { font-weight: 600; }
 .bs-banner--error { background: var(--danger-soft); color: var(--danger); }
 .bs-banner--notice { background: var(--notice-soft); color: var(--ink); }
@@ -310,7 +310,7 @@
 
 /* Remote browser full screen */
 .bs-session--full { min-block-size: 100dvh; }
-.bs-session__body--page { inline-size: 100%; max-inline-size: 480px; margin: 0 auto; }
+.bs-session__body--page { box-sizing: border-box; inline-size: 100%; max-inline-size: 480px; margin: 0 auto; }
 @media (min-width: 768px) { .bs-session__body--page .bs-session__actions { margin-top: var(--space-4); } }
 .bs-session__frame { inline-size: min(100%, 390px); block-size: 100%; min-block-size: 600px; border: 0; background: var(--surface); }
 .bs-skeleton { display: grid; gap: var(--space-3); inline-size: 220px; }

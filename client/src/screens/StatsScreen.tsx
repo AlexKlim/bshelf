@@ -18,6 +18,7 @@ export function StatsScreen() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [error, setError] = useState(false)
   const [month, setMonth] = useState<number | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let live = true
@@ -32,7 +33,7 @@ export function StatsScreen() {
     return () => {
       live = false
     }
-  }, [year])
+  }, [year, attempt])
 
   const lng = i18n.language
   const current = stats?.year ?? year ?? new Date().getFullYear()
@@ -65,7 +66,7 @@ export function StatsScreen() {
       {error && (
         <div className="bs-banner bs-banner--error" role="alert">
           <p className="bs-banner__text">{t("stats.loadError")}</p>
-          <button type="button" className="bs-btn bs-btn--quiet" onClick={() => setYear(year ?? current)}>
+          <button type="button" className="bs-btn bs-btn--quiet" onClick={() => setAttempt((n) => n + 1)}>
             {t("book.retry")}
           </button>
         </div>
