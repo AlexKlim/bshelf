@@ -83,6 +83,14 @@ RSpec.describe "Share" do
     expect(json["message"]).to eq("Listening")
   end
 
+  it "splits a Litres page title on a long dash" do
+    book = create(:book, user:, title: "Солярис", status: "owned")
+
+    share(text: "Солярис — Станислав Лем, слушать онлайн аудиокнигу")
+
+    expect(json["answer"]).to eq("kind" => "owned", "book_id" => book.uuid)
+  end
+
   it "does not answer for another book by the same author" do
     create(:book, user:, title: "Eden", author: "Stanislaw Lem", status: "done")
 
