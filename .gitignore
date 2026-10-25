@@ -72,3 +72,5 @@ book-shelf-design.md
 /public/sw.js
 /public/manifest.webmanifest
 /public/icon.svg
+
+.claude/worktrees/
