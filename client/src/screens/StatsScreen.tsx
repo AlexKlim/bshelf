@@ -17,6 +17,7 @@ export function StatsScreen() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [error, setError] = useState(false)
   const [month, setMonth] = useState<number | null>(null)
+  const [captionX, setCaptionX] = useState(0)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export function StatsScreen() {
         </div>
         <div className="bs-year__case">
           {selected && selected.books.length > 0 && (
-            <div className="bs-caption bs-year__caption" style={{ "--x": `${((selected.month - 1) / 12) * 100}%` } as CSSProperties}>
+            <div className="bs-caption bs-year__caption" style={{ "--x": `${captionX}px` } as CSSProperties}>
               <span className="bs-caption__title">{capitalize(monthName(lng, selected.month, "long"))}</span>
               <ul className="bs-year__books">
                 {selected.books.map((b) => (
@@ -116,43 +117,49 @@ export function StatsScreen() {
               </ul>
             </div>
           )}
-          <div className="bs-year__months">
-            {(loading ? Array.from({ length: 12 }, (_, i) => ({ month: i + 1, books: [] })) : stats.months).map((m) => {
-              const count = m.books.length
-              if (loading) {
-                return (
-                  <span className="bs-stack" key={m.month} aria-hidden="true">
-                    {Array.from({ length: (m.month * 7) % 3 + 1 }, (_, i) => (
-                      <span className="bs-stack__book bs-cloth--blank" key={i} />
-                    ))}
-                  </span>
-                )
-              }
-              if (!count) return <span key={m.month} aria-hidden="true" />
-              return (
-                <button
-                  type="button"
-                  className="bs-stack"
-                  key={m.month}
-                  aria-expanded={month === m.month}
-                  aria-label={t("stats.month", { month: capitalize(monthName(lng, m.month, "long")), count })}
-                  onClick={() => setMonth(month === m.month ? null : m.month)}
-                >
-                  {m.books.map((b) => (
-                    <span className={`bs-stack__book bs-cloth--${b.cloth ?? "blank"}`} key={b.id}>
-                      <Ico name={b.formats.includes("audio") ? "audio" : "ebook"} />
+          <div className={`bs-year__scroll${!loading && stats.total === 0 ? " is-empty" : ""}`}>
+            <div className="bs-year__months">
+              {(loading ? Array.from({ length: 12 }, (_, i) => ({ month: i + 1, books: [] })) : stats.months).map((m) => {
+                const count = m.books.length
+                if (loading) {
+                  return (
+                    <span className="bs-stack" key={m.month} aria-hidden="true">
+                      {Array.from({ length: (m.month * 7) % 3 + 1 }, (_, i) => (
+                        <span className="bs-stack__book bs-cloth--blank" key={i} />
+                      ))}
                     </span>
-                  ))}
-                </button>
-              )
-            })}
+                  )
+                }
+                if (!count) return <span key={m.month} aria-hidden="true" />
+                return (
+                  <button
+                    type="button"
+                    className="bs-stack"
+                    key={m.month}
+                    aria-expanded={month === m.month}
+                    aria-label={t("stats.month", { month: capitalize(monthName(lng, m.month, "long")), count })}
+                    onClick={(e) => {
+                      const box = e.currentTarget.closest(".bs-year__case")!.getBoundingClientRect()
+                      setCaptionX(e.currentTarget.getBoundingClientRect().left - box.left)
+                      setMonth(month === m.month ? null : m.month)
+                    }}
+                  >
+                    {m.books.map((b) => (
+                      <span className={`bs-stack__book bs-cloth--${b.cloth ?? "blank"}`} key={b.id}>
+                        <Ico name={b.formats.includes("audio") ? "audio" : "ebook"} />
+                      </span>
+                    ))}
+                  </button>
+                )
+              })}
+              {!loading && stats.total === 0 && <p className="bs-year__empty">{t("stats.empty", { year: stats.year })}</p>}
+            </div>
+            <div className="bs-year__labels" aria-hidden="true">
+              {Array.from({ length: 12 }, (_, i) => (
+                <span key={i}>{monthName(lng, i + 1, "long").slice(0, 3)}</span>
+              ))}
+            </div>
           </div>
-          {!loading && stats.total === 0 && <p className="bs-year__empty">{t("stats.empty", { year: stats.year })}</p>}
-        </div>
-        <div className="bs-year__labels" aria-hidden="true">
-          {Array.from({ length: 12 }, (_, i) => (
-            <span key={i}>{monthName(lng, i + 1, "long").slice(0, 3)}</span>
-          ))}
         </div>
         {stats && !loading && (
           <dl className="bs-year__foot">
