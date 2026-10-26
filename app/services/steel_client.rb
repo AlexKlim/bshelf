@@ -3,6 +3,7 @@ require "net/http"
 class SteelClient
   Session = Data.define(:id, :websocket_url, :viewer_path)
   TIMEOUT = 5
+  WAKE = 60
 
   def self.private_host?(host)
     host = host.to_s.downcase
@@ -19,7 +20,7 @@ class SteelClient
   end
 
   def create_session
-    body = JSON.parse(request(Net::HTTP::Post.new("/v1/sessions"), { timeout: 10.minutes.in_milliseconds }).body)
+    body = JSON.parse(awake { request(Net::HTTP::Post.new("/v1/sessions"), { timeout: 10.minutes.in_milliseconds }) }.body)
     Session.new(body.fetch("id"), body["websocketUrl"], URI(body.fetch("debugUrl")).request_uri.delete_prefix("/"))
   end
 
@@ -40,6 +41,18 @@ class SteelClient
   end
 
   private
+
+  def awake(deadline = WAKE.seconds.from_now)
+    res = yield
+    raise RemoteBrowser::BrowserFailed, "HTTP #{res.code}" unless res.is_a?(Net::HTTPSuccess)
+
+    res
+  rescue RemoteBrowser::BrowserFailed
+    raise if Time.current > deadline
+
+    sleep 2
+    retry
+  end
 
   def request(req, json = nil)
     req.body = json.to_json if json
