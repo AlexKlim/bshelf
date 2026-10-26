@@ -17,6 +17,15 @@ RSpec.describe "Profile" do
     expect(json["user"]).to include("id" => user.uuid, "email" => user.email)
   end
 
+  it "remembers the interface language for mail, but only from the browser session" do
+    sign_in_as(user)
+    get "/api/v1/me", headers: { "Accept-Language" => "ru" }
+    expect(user.reload.locale).to eq("ru")
+
+    get "/api/v1/me", headers: { "Accept-Language" => "en", **bearer(ApiToken.issue!(user:, name: "Shortcut").last) }
+    expect(user.reload.locale).to eq("ru")
+  end
+
   describe "DELETE /api/v1/me" do
     it "wipes the account and everything it owns, keeping an anonymous audit row" do
       ApiToken.issue!(user:, name: "Shortcut")

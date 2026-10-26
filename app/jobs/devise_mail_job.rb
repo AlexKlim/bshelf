@@ -7,6 +7,8 @@ class DeviseMailJob < ApplicationJob
 
   def perform(user, notification, sealed, *args)
     token = self.class.encryptor.decrypt_and_verify(sealed)
-    Devise.mailer.public_send(notification, user, token, *args).deliver_now if token
+    return unless token
+
+    I18n.with_locale(user.locale) { Devise.mailer.public_send(notification, user, token, *args).deliver_now }
   end
 end

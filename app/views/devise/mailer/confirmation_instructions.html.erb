@@ -1,0 +1,2 @@
+<%= render "devise/mailer/action", url: "#{Rails.configuration.x.app_url}/confirm?token=#{@token}",
+  title: t("mailer.confirm.title"), lead: t("mailer.confirm.lead"), button: t("mailer.confirm.button") %>

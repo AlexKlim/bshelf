@@ -18,6 +18,19 @@ RSpec.describe "Registration, confirmation and password reset" do
       expect(mail.body.encoded).to match(%r{http://localhost:5173/confirm\?token=\S+})
     end
 
+    it "mails in the language of the interface the person signed up in" do
+      perform_enqueued_jobs do
+        post "/api/v1/registration", params: { email: "ru@example.com", password: "password123" },
+          headers: { "Accept-Language" => "ru" }, as: :json
+      end
+
+      expect(User.find_by!(email: "ru@example.com").locale).to eq("ru")
+      mail = ActionMailer::Base.deliveries.last
+      expect(mail.subject).to eq("Подтвердите аккаунт Book Shelf")
+      expect(mail.html_part.decoded).to include("Подтвердить почту")
+      expect(mail.text_part.decoded).to include("Подтвердите почту")
+    end
+
     it "returns field error codes" do
       create(:user, email: "taken@example.com")
       post "/api/v1/registration", params: { email: "taken@example.com", password: "short" }, as: :json

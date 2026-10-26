@@ -1,3 +1,5 @@
+import i18n from "../i18n"
+
 export type ApiErrorItem = { code: string; field?: string }
 
 export class ApiError extends Error {
@@ -30,7 +32,7 @@ export const UNAUTHORIZED_EVENT = "bs:unauthorized"
 export async function api<T>(path: string, options: { method?: Method; body?: unknown } = {}): Promise<T> {
   const method = options.method ?? "GET"
   const form = options.body instanceof FormData
-  const headers: Record<string, string> = { Accept: "application/json" }
+  const headers: Record<string, string> = { Accept: "application/json", "Accept-Language": i18n.language }
   if (options.body !== undefined && !form) headers["Content-Type"] = "application/json"
   const token = csrfToken()
   if (method !== "GET" && token) headers["X-CSRF-Token"] = token

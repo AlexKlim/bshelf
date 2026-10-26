@@ -1,8 +1,6 @@
 module Api
   module V1
     class SharesController < BaseController
-      include RequestLocale
-
       limit_rate to: 30, within: 1.minute, only: %i[create add]
 
       def create

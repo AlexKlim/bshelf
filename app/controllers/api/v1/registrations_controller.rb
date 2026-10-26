@@ -5,7 +5,7 @@ module Api
       limit_rate to: 5, within: 1.hour, only: :create
 
       def create
-        user = User.new(email: params.require(:email), password: params.require(:password))
+        user = User.new(email: params.require(:email), password: params.require(:password), locale: I18n.locale)
         return render_model_errors(user) unless user.save
 
         AuditEvent.record!("sign_up", request:, user:)

@@ -3,6 +3,7 @@ module Api
     class BaseController < ActionController::API
       include ActionController::Cookies
       include ActionController::RequestForgeryProtection
+      include RequestLocale
 
       # ponytail: per-process counters; move to a shared cache store once Puma runs more than one worker.
       RATE_LIMIT_STORE = ActiveSupport::Cache::MemoryStore.new
@@ -47,6 +48,11 @@ module Api
         return render_error(:unauthorized, status: :unauthorized) unless current_user
 
         require_session! unless request.get? || request.head? || bearer_writes?
+        remember_locale unless bearer_request?
+      end
+
+      def remember_locale
+        current_user.update_column(:locale, I18n.locale.to_s) if current_user.locale != I18n.locale.to_s
       end
 
       def bearer_writes? = false

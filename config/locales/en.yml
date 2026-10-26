@@ -16,3 +16,21 @@ en:
     added: "Added · %{status}"
     months: [~, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
     months_since: [~, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
+  devise:
+    mailer:
+      confirmation_instructions:
+        subject: "Confirm your Book Shelf account"
+      reset_password_instructions:
+        subject: "Set a new Book Shelf password"
+  mailer:
+    footer: "Book Shelf · one shelf for Litres and Kindle"
+    fallback: "If the button does not open, copy this link into your browser:"
+    confirm:
+      title: "Confirm your email"
+      lead: "One click and your shelf is ready. The link works for 3 days."
+      button: "Confirm email"
+    reset:
+      title: "New password"
+      lead: "Someone asked to reset the password for this email. Set a new one with the button below."
+      button: "Set a new password"
+      ignore: "If it was not you, ignore this email. Your password stays the same."
