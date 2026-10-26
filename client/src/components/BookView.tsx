@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 import {
   addEdition,
@@ -68,18 +68,28 @@ export function BookView({ bookId, summary, disabled, onChanged, closing, onClos
     setFrom({ "--from-x": `${Math.round(dx)}px`, "--from-y": `${Math.round(dy)}px` } as CSSProperties)
   }, [bookId, ready, opened, from])
 
+  const shut = useRef(false)
+  const finish = useCallback(() => {
+    if (shut.current) return
+    shut.current = true
+    onClosed?.()
+  }, [onClosed])
   useLayoutEffect(() => {
     const book = frame.current?.parentElement
-    if (!closing) return
-    if (reduced || !book) return onClosed?.()
+    if (!closing) {
+      shut.current = false
+      return
+    }
+    if (shut.current) return
+    if (reduced || !book) return finish()
     const spine = findOpener(bookId)?.getBoundingClientRect()
     const r = book.getBoundingClientRect()
     const dx = spine ? spine.left + spine.width / 2 - (r.left + r.width / 2) : 0
     const dy = spine ? spine.top + spine.height / 2 - (r.top + r.height / 2) : 0
     setFrom({ "--from-x": `${Math.round(dx)}px`, "--from-y": `${Math.round(dy)}px` } as CSSProperties)
     const animation = getComputedStyle(book).animationName
-    if (!animation || animation === "none") onClosed?.()
-  }, [closing, reduced, bookId, onClosed])
+    if (!animation || animation === "none") finish()
+  }, [closing, reduced, bookId, finish])
 
   if (!ready) return <p className="bs-sr">{t("book.loading")}</p>
 
@@ -89,7 +99,7 @@ export function BookView({ bookId, summary, disabled, onChanged, closing, onClos
     <div
       className={className}
       style={from ?? undefined}
-      onAnimationEnd={(e) => closing && e.target === e.currentTarget && onClosed?.()}
+      onAnimationEnd={(e) => closing && e.target === e.currentTarget && finish()}
     >
       <div className="bs-book__frame" ref={frame}>
         <BookSpread

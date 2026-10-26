@@ -65,7 +65,11 @@ export function BookcaseScreen() {
     [navigate],
   )
   const [closingId, setClosingId] = useState<string | null>(null)
-  const closing = !!openId && closingId === openId
+  const [shownId, setShownId] = useState(openId)
+  if (openId !== shownId) {
+    setShownId(openId)
+    if (openId) setClosingId(null)
+  }
   const close = useCallback(() => {
     if ((location.state as { opened?: boolean } | null)?.opened) navigate(-1)
     else navigate({ search: "" }, { replace: true })
@@ -100,6 +104,7 @@ export function BookcaseScreen() {
 
   const [bookId, setBookId] = useState(openId)
   if (openId && openId !== bookId) setBookId(openId)
+  const closing = !!bookId && closingId === bookId
 
   const summary = shelves?.flatMap((s) => s.books).find((b) => b.id === bookId)
 
@@ -191,10 +196,7 @@ export function BookcaseScreen() {
             disabled={offline}
             onChanged={shelf.reload}
             closing={closing}
-            onClosed={() => {
-              setClosingId(null)
-              close()
-            }}
+            onClosed={close}
           />
         )}
       </Overlay>
