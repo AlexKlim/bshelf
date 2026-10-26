@@ -62,7 +62,7 @@ class KindleCollector
 
   def steps = %w[library highlights]
 
-  def start(session) = browse(session) { it.go_to(LIBRARY) }
+  def start(session) = RemoteBrowser.open(session, LIBRARY, timeout: TIMEOUT)
 
   def logged_in?(session) = browse(session) { it.current_url.start_with?(LIBRARY) }
 
@@ -107,14 +107,5 @@ class KindleCollector
     items
   end
 
-  def browse(session)
-    RemoteBrowser.steel.cdp(session.websocket_url) do |ws_url|
-      browser = Ferrum::Browser.new(ws_url:, timeout: TIMEOUT)
-      yield browser.page
-    ensure
-      browser&.quit
-    end
-  rescue Ferrum::Error => e
-    raise RemoteBrowser::BrowserFailed, e.class.name
-  end
+  def browse(session, &) = RemoteBrowser.browse(session, timeout: TIMEOUT, &)
 end

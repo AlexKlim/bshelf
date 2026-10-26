@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_100008) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100009) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -248,6 +248,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100008) do
     t.datetime "finished_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "target_id"
     t.index ["status"], name: "index_remote_browser_sessions_on_status"
     t.index ["user_id"], name: "index_remote_browser_sessions_on_user_id"
     t.index ["user_id"], name: "index_remote_browser_sessions_one_active_per_user", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'connecting'::character varying, 'live'::character varying, 'collecting'::character varying])::text[]))"
