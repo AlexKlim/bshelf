@@ -118,6 +118,7 @@ export function BookSpread({ book, error, disabled, onBook, onReload }: SpreadPr
   const cloth = book.cloth
   const detail = "notes" in book ? book : null
   const title = useRef<HTMLHeadingElement>(null)
+  const [editor, setEditor] = useState<string | null>(null)
 
   useEffect(() => {
     title.current?.focus({ preventScroll: true })
@@ -166,10 +167,25 @@ export function BookSpread({ book, error, disabled, onBook, onReload }: SpreadPr
         <span className="bs-ornament" aria-hidden="true" />
         <ul className="bs-colophon">
           {book.editions.map((edition) => (
-            <EditionLine key={edition.id} edition={edition} disabled={disabled} onSaved={onReload} />
+            <EditionLine
+              key={edition.id}
+              edition={edition}
+              disabled={disabled}
+              editing={editor === edition.id}
+              onEdit={(open) => setEditor(open ? edition.id : null)}
+              onSaved={onReload}
+            />
           ))}
         </ul>
-        {detail && <AddFormat book={detail} disabled={disabled} onBook={onBook} />}
+        {detail && (
+          <AddFormat
+            book={detail}
+            disabled={disabled}
+            open={editor === "add"}
+            onOpen={(open) => setEditor(open ? "add" : null)}
+            onBook={onBook}
+          />
+        )}
         {book.bought_twice && <p className="bs-book__twice">{t("book.boughtTwice")}</p>}
         <p className="bs-page__folio" aria-hidden="true">
           2
@@ -186,9 +202,16 @@ export function BookSpread({ book, error, disabled, onBook, onReload }: SpreadPr
   )
 }
 
-function EditionLine({ edition, disabled, onSaved }: { edition: Edition; disabled?: boolean; onSaved: () => void }) {
+type EditionLineProps = {
+  edition: Edition
+  disabled?: boolean
+  editing: boolean
+  onEdit: (open: boolean) => void
+  onSaved: () => void
+}
+
+function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLineProps) {
   const { t, i18n } = useTranslation()
-  const [editing, setEditing] = useState(false)
   const [status, setStatus] = useState<Status | null>(edition.status)
   const [error, setError] = useState(false)
   const shown = { ...edition, status }
@@ -200,7 +223,7 @@ function EditionLine({ edition, disabled, onSaved }: { edition: Edition; disable
     setError(false)
     try {
       await updateEdition(edition.id, { status: next })
-      setEditing(false)
+      onEdit(false)
       onSaved()
     } catch {
       setStatus(previous)
@@ -215,7 +238,7 @@ function EditionLine({ edition, disabled, onSaved }: { edition: Edition; disable
         className="bs-colophon__line"
         aria-expanded={editing}
         disabled={disabled}
-        onClick={() => setEditing(!editing)}
+        onClick={() => onEdit(!editing)}
       >
         <Ico name={verbForm(edition.format)} />
         <span>
@@ -485,18 +508,26 @@ function MergeControl({
   )
 }
 
-function AddFormat({ book, disabled, onBook }: { book: BookDetail; disabled?: boolean; onBook: (b: BookDetail) => void }) {
+type AddFormatProps = {
+  book: BookDetail
+  disabled?: boolean
+  open: boolean
+  onOpen: (open: boolean) => void
+  onBook: (b: BookDetail) => void
+}
+
+function AddFormat({ book, disabled, open, onOpen, onBook }: AddFormatProps) {
   const { t } = useTranslation()
   const has = new Set(book.editions.map((e) => verbForm(e.format)))
-  const [open, setOpen] = useState(false)
-  const [format, setFormat] = useState<"audio" | "ebook">(has.has("audio") ? "ebook" : "audio")
+  const format = (["audio", "ebook"] as const).find((f) => !has.has(f))
   const [status, setStatus] = useState<Status>("done")
   const [error, setError] = useState<string | null>(null)
 
+  if (!format) return null
   if (!open) {
     return (
-      <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" disabled={disabled} onClick={() => setOpen(true)}>
-        {t("book.addFormat")}
+      <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" disabled={disabled} onClick={() => onOpen(true)}>
+        {t(`book.addFormat.${format}`)}
       </button>
     )
   }
@@ -504,7 +535,7 @@ function AddFormat({ book, disabled, onBook }: { book: BookDetail; disabled?: bo
   const save = async () => {
     try {
       const { book: next } = await addEdition(book.id, { format, status })
-      setOpen(false)
+      onOpen(false)
       onBook(next)
     } catch (e) {
       setError(errorMessage(t, e))
@@ -514,23 +545,14 @@ function AddFormat({ book, disabled, onBook }: { book: BookDetail; disabled?: bo
   return (
     <div className="bs-merge">
       <Choices
-        legend={t("entry.format")}
-        value={format}
-        onChange={setFormat}
-        options={[
-          { value: "audio", label: t("format.audio"), icon: "audio" },
-          { value: "ebook", label: t("format.ebook"), icon: "ebook" },
-        ]}
-      />
-      <Choices
-        legend={t("entry.status")}
+        legend={t(`book.addFormat.${format}`)}
         value={status}
         onChange={setStatus}
         options={(["want", "owned", "in_progress", "done"] as Status[]).map((s) => ({ value: s, label: statusWord(t, s, format) }))}
       />
       {error && <span className="bs-field__error">{error}</span>}
       <div className="bs-note-edit__actions">
-        <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" onClick={() => setOpen(false)}>
+        <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" onClick={() => onOpen(false)}>
           {t("common.cancel")}
         </button>
         <button type="button" className="bs-btn bs-btn--secondary bs-btn--sm" onClick={save}>
