@@ -1,6 +1,6 @@
 import { book, edition as fixture } from "@/test/fixtures"
-import { arrangeShelves, shelfStatus } from "./arrange"
-import type { Edition } from "./types"
+import { arrangeShelves, placeBook, shelfStatus } from "./arrange"
+import type { Edition, Shelf } from "./types"
 
 const books = (prefix: string, n: number) => Array.from({ length: n }, (_, i) => book({ id: `${prefix}${i}` }))
 const ids = (prefix: string, n: number) => books(prefix, n).map((b) => b.id)
@@ -35,5 +35,23 @@ describe("shelfStatus", () => {
     expect(shelfStatus(edition(), "2026", today)).toEqual({ status: "done", finished_at: "2026-10-26" })
     expect(shelfStatus(edition(), "2019", today)).toEqual({ status: "done", finished_at: "2019-12-31" })
     expect(shelfStatus(edition({ status: "done", finished_at: "2019-03-02T10:00:00Z" }), "2019", today)).toEqual({ status: "done" })
+  })
+})
+
+describe("placeBook", () => {
+  it("takes the book off its shelf and puts it first on the new one", () => {
+    const moved = book({ id: "m", shelf: "2026" })
+    const shelves: Shelf[] = [
+      { key: "now", count: 2, books: [book({ id: "a" }), { ...moved, shelf: "now" }] },
+      { key: "2026", count: 1, books: [book({ id: "b" })] },
+    ]
+
+    const placed = placeBook(shelves, moved)
+
+    expect(placed.map((s) => [s.key, s.count, s.books.map((b) => b.id)])).toEqual([
+      ["now", 1, ["a"]],
+      ["2026", 2, ["m", "b"]],
+    ])
+    expect(placeBook(shelves, { ...moved, shelf: "no_date" }).at(-1)).toEqual({ key: "no_date", count: 1, books: [{ ...moved, shelf: "no_date" }] })
   })
 })

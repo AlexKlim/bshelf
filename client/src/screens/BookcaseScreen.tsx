@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { getSources, updateEdition } from "@/api"
@@ -11,7 +11,7 @@ import { SearchField } from "@/components/SearchField"
 import { ShelfList } from "@/components/ShelfList"
 import { SourceBanner } from "@/components/SourceBanner"
 import { Choices, Ico } from "@/components/ui"
-import { arrangeShelves, isEmptyCase, shelfStatus } from "@/lib/arrange"
+import { arrangeShelves, isEmptyCase, movedBook, shelfStatus } from "@/lib/arrange"
 import { pickBanner, type BannerEvent } from "@/lib/banner"
 import { readPref, writePref } from "@/lib/cache"
 import { findOpener } from "@/lib/opener"
@@ -63,18 +63,14 @@ export function BookcaseScreen() {
     else navigate({ search: "" }, { replace: true })
   }, [location.state, navigate])
 
-  const { reload } = shelf
-  const moving = useRef(false)
+  const { reload, place } = shelf
   const move = useCallback(
     (book: BookSummary, to: ShelfKey) => {
-      if (moving.current) return
-      moving.current = true
-      Promise.allSettled(book.editions.map((e) => updateEdition(e.id, shelfStatus(e, to)))).then(() => {
-        moving.current = false
-        reload()
-      })
+      const changes = book.editions.map((e) => shelfStatus(e, to))
+      place(movedBook(book, to, changes))
+      Promise.all(book.editions.map((e, i) => updateEdition(e.id, changes[i]))).catch(reload)
     },
-    [reload],
+    [reload, place],
   )
 
   const [bookId, setBookId] = useState(openId)
