@@ -1,0 +1,78 @@
+{
+ "status": 200,
+ "payload": {
+  "data": [
+   {
+    "type": "audiobook",
+    "instance": {
+     "id": 70417345,
+     "title": "Читайте людей как книгу – рабочая тетрадь",
+     "persons": [
+      {
+       "full_name": "Патрик Кинг",
+       "role": "author"
+      },
+      {
+       "full_name": "Ольга Поборцева",
+       "role": "translator"
+      },
+      {
+       "full_name": "Дмитрий Шабров",
+       "role": "reader"
+      }
+     ],
+     "cover_url": "/pub/c/cover/70417345.jpg",
+     "date_written_at": "2023-01-01",
+     "language_code": "ru",
+     "art_type": 1
+    }
+   },
+   {
+    "type": "text_book",
+    "instance": {
+     "id": 70405417,
+     "title": "Читайте людей как книгу – рабочая тетрадь",
+     "persons": [
+      {
+       "full_name": "Патрик Кинг",
+       "role": "author"
+      },
+      {
+       "full_name": "Ольга Поборцева",
+       "role": "translator"
+      }
+     ],
+     "cover_url": "/pub/c/cover/70405417.jpg",
+     "date_written_at": "2023-01-01",
+     "language_code": "ru",
+     "art_type": 0
+    }
+   },
+   {
+    "type": "audiobook",
+    "instance": {
+     "id": 65834170,
+     "title": "Читайте людей как книгу. Как анализировать, понимать и предсказывать эмоции, мысли, намерения и поведение людей",
+     "persons": [
+      {
+       "full_name": "Патрик Кинг",
+       "role": "author"
+      },
+      {
+       "full_name": "Ольга Поборцева",
+       "role": "translator"
+      },
+      {
+       "full_name": "Дмитрий Шабров",
+       "role": "reader"
+      }
+     ],
+     "cover_url": "/pub/c/cover/65834170.jpg",
+     "date_written_at": "2020-01-01",
+     "language_code": "ru",
+     "art_type": 1
+    }
+   }
+  ]
+ }
+}

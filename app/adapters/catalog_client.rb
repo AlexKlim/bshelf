@@ -13,6 +13,7 @@ class CatalogClient
   end
 
   PROVIDERS = %i[open_library google].freeze
+  RUSSIAN_PROVIDERS = %i[litres open_library google].freeze
   COVER_HOSTS = /\A(books\.google\.com|books\.googleusercontent\.com|covers\.openlibrary\.org|
     ([a-z0-9-]+\.)*archive\.org|([a-z0-9-]+\.)*litres\.ru)\z/x
   MAX_COVER_BYTES = 5.megabytes
@@ -58,6 +59,23 @@ class CatalogClient
         cover_url: info.dig("imageLinks", "thumbnail")&.sub(/\Ahttp:/, "https:")&.sub("&edge=curl", "")
       }
     end
+  end
+
+  def litres(title:, author:, isbn:)
+    params = { q: isbn || [ title, author ].compact_blank.join(" "), types: %w[text_book audiobook], limit: 5 }
+    json = get_json("https://api.litres.ru/foundation/api/search?#{URI.encode_www_form(params)}")
+    Array(json&.dig("payload", "data")).filter_map do |hit|
+      art = hit["instance"] or next
+      {
+        title: art["title"], authors: Array(art["persons"]).select { it["role"] == "author" }.pluck("full_name"),
+        isbn: nil, year: art["date_written_at"].to_s[0, 4].to_i.nonzero?, language: art["language_code"],
+        page_count: nil, work_title: nil, cover_url: art["cover_url"].presence && "https://www.litres.ru#{art["cover_url"]}"
+      }
+    end
+  rescue Error => e
+    # The API sits behind DDoS-Guard, so a refusal leaves the lookup to the other catalogs instead of failing it.
+    Rails.logger.info("litres search: #{e.message}")
+    []
   end
 
   def open_library(title:, author:, isbn:)

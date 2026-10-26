@@ -25,7 +25,8 @@ class EnrichBook
 
   def lookup
     rate_limited = nil
-    CatalogClient::PROVIDERS.each do |provider|
+    providers = book.title.match?(/\p{Cyrillic}/) ? CatalogClient::RUSSIAN_PROVIDERS : CatalogClient::PROVIDERS
+    providers.each do |provider|
       break if complete?
 
       match = (book.isbn.present? && pick(client.search(provider, isbn: book.isbn), by_isbn: true)) ||
