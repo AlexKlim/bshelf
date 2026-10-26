@@ -8,9 +8,10 @@ class LitresCollector
   # Session-Id and supersid come from cookies the page cannot read itself, so Ruby passes them in.
   PAGE_JS = <<~JS.freeze
     (async (url, headers) => {
-      const r = await fetch(url, { headers, credentials: "include" })
-      if (!r.ok || !r.headers.get("Powered-By-Litres")) return { status: r.status }
-      const payload = (await r.json()).payload || {}
+      const r = await fetch(url, { headers, credentials: "include" }).catch(() => null)
+      if (!r?.ok) return { status: r?.status || 0 }
+      const payload = await r.json().then((body) => body.payload, () => null)
+      if (!payload) return { status: 0 }
       return { status: 200, arts: payload.data || [], next: payload.pagination?.next_page || null }
     })(URL, HEADERS).then(arguments[0])
   JS
@@ -21,7 +22,8 @@ class LitresCollector
 
   def logged_in?(session)
     browse(session) do |page|
-      next false if URI(page.current_url).path.start_with?("/auth/")
+      url = URI(page.current_url)
+      next false unless litres?(url.host) && !url.path.start_with?("/auth/")
 
       fetch_page(page, library_url(1))["status"] == 200
     end
@@ -29,6 +31,8 @@ class LitresCollector
 
   def collect(session)
     browse(session) do |page|
+      raise RemoteBrowser::PageChanged unless litres?(URI(page.current_url).host)
+
       arts = library(page) { yield nil }
       log_shape(arts)
       yield "library"
@@ -54,6 +58,8 @@ class LitresCollector
     arts
   end
 
+  def litres?(host) = host.to_s.delete_prefix(".").then { it == "litres.ru" || it.end_with?(".litres.ru") }
+
   def library_url(limit) = "#{API}/foundation/api/users/me/arts?limit=#{limit}"
 
   # The cursor carries + and =, so the reported address is used as is, only its /api/ prefix is wrong.
@@ -65,7 +71,7 @@ class LitresCollector
   end
 
   def fetch_page(page, url)
-    cookies = page.cookies.all
+    cookies = page.cookies.select { litres?(it.domain) }.index_by(&:name)
     headers = { "Session-Id" => cookies["SID"]&.value, "supersid" => cookies["supersid"]&.value }.compact
     page.evaluate_async(PAGE_JS.sub("URL") { url.to_json }.sub("HEADERS") { headers.to_json }, TIMEOUT)
   end

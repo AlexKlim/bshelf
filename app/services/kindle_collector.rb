@@ -48,13 +48,13 @@ class KindleCollector
   CONTENT_JS = <<~'JS'.freeze
     (async (contentType, contentCategoryReference, startIndex, batchSize) => {
       const csrfToken = (document.documentElement.innerHTML.match(/csrfToken\s*=\s*["']([^"']+)["']/) || [])[1]
-      if (!csrfToken) return { items: [], total: 0 }
+      if (!csrfToken) return { error: "no csrf token" }
       const activityInput = JSON.stringify({ contentType, contentCategoryReference, itemStatusList: ["Active"],
         showSharedContent: true, surfaceType: "LargeDesktop",
         fetchCriteria: { sortOrder: "DESCENDING", sortIndex: "DATE", startIndex, batchSize, totalContentCount: -1 } })
       const body = new URLSearchParams({ activity: "GetContentOwnershipData", activityInput, csrfToken })
       const r = await fetch("/hz/mycd/digital-console/ajax", { method: "POST", body })
-      if (!r.ok) return { items: [], total: 0 }
+      if (!r.ok) return { error: `HTTP ${r.status}` }
       const data = (await r.json()).GetContentOwnershipData || {}
       return { items: data.items || [], total: data.numberOfItems || 0 }
     })(ARGS).then(arguments[0])
@@ -94,6 +94,12 @@ class KindleCollector
     loop do
       args = [ kind, category, items.size, CONTENT_BATCH ].map(&:to_json).join(", ")
       result = page.evaluate_async(CONTENT_JS.sub("ARGS") { args }, TIMEOUT)
+      if result["error"]
+        # Best effort: the reader library already came in, so a content page that fails costs only its extras.
+        Rails.logger.warn("[kindle] content #{kind} failed: #{result["error"]}")
+        break
+      end
+
       items.concat(result["items"])
       yield
       break if result["items"].size < CONTENT_BATCH || items.size >= result["total"]
