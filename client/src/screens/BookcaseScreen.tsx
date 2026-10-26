@@ -72,7 +72,9 @@ export function BookcaseScreen() {
       const save = (saving.current.get(book.id) ?? Promise.resolve())
         .then(() => Promise.allSettled(book.editions.map((e, i) => updateEdition(e.id, changes[i]))))
         .then((results) => {
-          if (results.some((r) => r.status === "rejected")) reload()
+          const last = saving.current.get(book.id) === save
+          if (last) saving.current.delete(book.id)
+          if (last && results.some((r) => r.status === "rejected")) reload()
         })
       saving.current.set(book.id, save)
     },
