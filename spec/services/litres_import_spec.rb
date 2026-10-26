@@ -29,6 +29,15 @@ RSpec.describe LitresImport do
     expect(edition(1).reading.status).to eq("done")
   end
 
+  it "takes the status from the Litres list the book came from" do
+    described_class.call(user, [ art(1, "Пикник на обочине") ])
+
+    described_class.call(user, [ art(1, "Пикник на обочине").merge("status" => "done"), art(2, "Солярис").merge("status" => "in_progress") ])
+
+    expect(edition(1).reading).to have_attributes(status: "done", status_source: "litres")
+    expect(edition(2).reading.status).to eq("in_progress")
+  end
+
   it "skips entries without an id or a title" do
     expect(described_class.call(user, [ { "id" => 3 }, { "title" => "x" } ])[:books]).to eq(0)
   end

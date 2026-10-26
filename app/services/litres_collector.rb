@@ -4,6 +4,9 @@ class LitresCollector
 
   API = "https://api.litres.ru".freeze
   PAGE_GAP = 0.4
+  # The archive is where people move what they have read. The first list is every book bought.
+  LISTS = { "arts" => "owned", "arts/in-progress" => "in_progress", "arts/finished" => "done", "arts/archive" => "done" }.freeze
+  HEADERS = { "arts/finished" => { "Accept-Version" => "2" } }.freeze
 
   # Session-Id and supersid come from cookies the page cannot read itself, so Ruby passes them in.
   PAGE_JS = <<~JS.freeze
@@ -25,7 +28,7 @@ class LitresCollector
       url = URI(page.current_url)
       next false unless litres?(url.host) && !url.path.start_with?("/auth/")
 
-      fetch_page(page, library_url(1))["status"] == 200
+      fetch_page(page, list_url("arts", 1))["status"] == 200
     end
   end
 
@@ -33,8 +36,12 @@ class LitresCollector
     browse(session) do |page|
       raise RemoteBrowser::PageChanged unless litres?(URI(page.current_url).host)
 
-      arts = library(page) { yield nil }
-      log_shape(arts)
+      lists = LISTS.keys.index_with { |path| list(page, path) { yield nil } }
+      raise RemoteBrowser::ProviderRefused unless lists["arts"]
+
+      log_shape(lists)
+      arts = lists.flat_map { |path, found| Array(found).map { it.merge("status" => LISTS[path]) } }
+        .group_by { it["id"] }.map { |_, same| same.max_by { StatusResolver::STATUS_RANK[it["status"]] } }
       yield "library"
       LitresImport.call(session.user, arts)
     end
@@ -42,13 +49,15 @@ class LitresCollector
 
   private
 
-  def library(page)
+  def list(page, path)
     arts = []
-    url = library_url(24)
+    url = list_url(path, 24)
     while url
-      result = fetch_page(page, url)
-      raise RemoteBrowser::ProviderRefused if result["status"] != 200 && arts.empty?
-      break if result["status"] != 200
+      result = fetch_page(page, url, HEADERS.fetch(path, {}))
+      if result["status"] != 200
+        Rails.logger.warn("[litres] #{path} answered #{result["status"]}")
+        return arts.presence
+      end
 
       arts.concat(result["arts"])
       url = next_url(result["next"])
@@ -60,7 +69,7 @@ class LitresCollector
 
   def litres?(host) = host.to_s.delete_prefix(".").then { it == "litres.ru" || it.end_with?(".litres.ru") }
 
-  def library_url(limit) = "#{API}/foundation/api/users/me/arts?limit=#{limit}"
+  def list_url(path, limit) = "#{API}/foundation/api/users/me/#{path}?limit=#{limit}"
 
   # The cursor carries + and =, so the reported address is used as is, only its /api/ prefix is wrong.
   def next_url(path)
@@ -70,15 +79,15 @@ class LitresCollector
     url.sub(%r{\A#{API}/api/}, "#{API}/foundation/api/")
   end
 
-  def fetch_page(page, url)
+  def fetch_page(page, url, extra = {})
     cookies = page.cookies.select { litres?(it.domain) }.index_by(&:name)
-    headers = { "Session-Id" => cookies["SID"]&.value, "supersid" => cookies["supersid"]&.value }.compact
+    headers = { "Session-Id" => cookies["SID"]&.value, "supersid" => cookies["supersid"]&.value }.compact.merge(extra)
     page.evaluate_async(PAGE_JS.sub("URL") { url.to_json }.sub("HEADERS") { headers.to_json }, TIMEOUT)
   end
 
   # ponytail: field names beyond id/title/art_type are unconfirmed, drop this once a real library has been read.
-  def log_shape(arts)
-    Rails.logger.info("[litres] #{arts.size} arts, keys: #{arts.first&.keys&.sort&.join(",")}")
+  def log_shape(lists)
+    lists.each { |path, arts| Rails.logger.info("[litres] #{path}: #{arts&.size.inspect} arts, keys: #{arts&.first&.keys&.sort&.join(",")}") }
   end
 
   def browse(session, &) = RemoteBrowser.browse(session, timeout: TIMEOUT, &)

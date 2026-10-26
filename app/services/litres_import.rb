@@ -18,12 +18,13 @@ class LitresImport
     id, title = art.values_at("id", "title")
     return false if id.blank? || title.blank?
 
+    status = art["status"] || "owned"
     if (edition = @user.editions.find_by(store: "litres", external_id: id.to_s))
-      StatusResolver.automatic!(edition.reading, status: "owned", source: SOURCE)
+      StatusResolver.automatic!(edition.reading, status:, source: SOURCE)
       return false
     end
 
-    attrs = { format: FORMATS.fetch(art["art_type"], "unknown"), status: "owned", source: SOURCE,
+    attrs = { format: FORMATS.fetch(art["art_type"], "unknown"), status:, source: SOURCE,
       store: "litres", external_id: id.to_s, status_source: SOURCE }
     AddBook.call(user: @user, title:, author: author(art), **attrs)
     true
