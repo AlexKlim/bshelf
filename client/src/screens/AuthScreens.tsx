@@ -88,7 +88,7 @@ export function LoginScreen() {
     <AuthPage title={t("auth.signInTitle")}>
       <form className="bs-auth__form" onSubmit={submit} noValidate>
         <Field label={t("auth.email")} type="email" autoComplete="email" value={email} error={errors.email} onChange={(e) => setEmail(e.target.value)} />
-        {unconfirmed && <ResendLink email={email} />}
+        {unconfirmed && <ResendLink email={email} inline />}
         <Field
           label={t("auth.password")}
           type="password"
@@ -113,12 +113,12 @@ export function LoginScreen() {
   )
 }
 
-function ResendLink({ email }: { email: string }) {
+function ResendLink({ email, inline = false }: { email: string; inline?: boolean }) {
   const { t } = useTranslation()
   const [sent, setSent] = useState(false)
   if (sent) return <p className="bs-field__hint">{t("auth.resent")}</p>
   return (
-    <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm bs-auth__inline" onClick={() => resendConfirmation(email).then(() => setSent(true), () => setSent(true))}>
+    <button type="button" className={inline ? "bs-btn bs-btn--quiet bs-btn--sm bs-auth__inline" : "bs-btn bs-btn--quiet"} onClick={() => resendConfirmation(email).then(() => setSent(true), () => setSent(true))}>
       {t("auth.resend")}
     </button>
   )
