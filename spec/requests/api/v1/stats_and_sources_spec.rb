@@ -85,7 +85,7 @@ RSpec.describe "Stats and sources" do
     end
 
     it "answers 501 for the source actions that do not exist yet" do
-      %w[litres/sync kindle_export/request kindle_export/upload].each do |action|
+      %w[kindle_export/request kindle_export/upload].each do |action|
         post "/api/v1/sources/#{action}", as: :json
 
         expect(response).to have_http_status(:not_implemented), action

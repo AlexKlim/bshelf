@@ -48,7 +48,7 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
   const [deadline, setDeadline] = useState<number | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const viewerFor = useRef<string | null>(null)
-  const ns = (session?.purpose ?? purpose) === "kindle" ? "kindle" : "captcha"
+  const ns = session?.purpose ?? purpose
 
   const apply = useCallback(
     (next: RemoteSession) => {

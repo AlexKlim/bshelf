@@ -1,9 +1,9 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
+import { useEffect, useState, type ChangeEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate } from "react-router-dom"
 import { dismissDuplicate, getDuplicates, getSources, mergeBooks, unmerge } from "@/api"
-import { notOfferedYet, requestKindleExport, syncLitres, uploadKindleExport, type SyncResult } from "@/api/pending"
-import { Field, Ico } from "@/components/ui"
+import { notOfferedYet, requestKindleExport, uploadKindleExport, type SyncResult } from "@/api/pending"
+import { Ico } from "@/components/ui"
 import type { ApiError } from "@/lib/api"
 import { useShelf } from "@/lib/shelf"
 import { errorMessage, isActive, syncResult } from "@/lib/vocab"
@@ -222,87 +222,6 @@ function Duplicates() {
         </div>
       ))}
     </section>
-  )
-}
-
-export function LitresScreen() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const { reload } = useShelf()
-  const online = useOnline()
-  const [login, setLogin] = useState("")
-  const [password, setPassword] = useState("")
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [busy, setBusy] = useState(false)
-  const [result, setResult] = useState<SyncResult | null>(null)
-  const [unavailable, setUnavailable] = useState(false)
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!login || !password) return setErrors({ ...(!login && { login: t("errors.blank") }), ...(!password && { password: t("errors.blank") }) })
-    setBusy(true)
-    setErrors({})
-    setUnavailable(false)
-    try {
-      setResult(await syncLitres(login, password))
-      setPassword("")
-      reload()
-    } catch (err) {
-      if (notOfferedYet(err)) return setUnavailable(true)
-      setPassword("")
-      const error = err as ApiError
-      if (error.code === "captcha_required") return navigate("/sources/litres/captcha")
-      const field = error.errors[0]?.field === "login" ? "login" : "password"
-      setErrors({ [field]: t(`sourceErrors.${error.code}`, { defaultValue: errorMessage(t, err) }) })
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  if (result) {
-    return (
-      <div className="bs-screen bs-screen--sheet">
-        <h1 className="bs-screen__title">{t("sources.name.litres")}</h1>
-        <p className="bs-session__h" role="status">
-          {syncResult(t, result)}
-        </p>
-        <div>
-          <Link className="bs-btn bs-btn--primary" to="/">
-            {t("sources.toBookcase")}
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="bs-screen bs-screen--sheet">
-      <h1 className="bs-screen__title">{t("sources.litresSignIn")}</h1>
-      {unavailable && <Unavailable />}
-      <form className="bs-auth__form bs-screen__form" onSubmit={submit} noValidate>
-        <Field label={t("sources.litresLogin")} autoComplete="username" value={login} error={errors.login} onChange={(e) => setLogin(e.target.value)} />
-        <Field
-          label={t("auth.password")}
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          error={errors.password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <p className="bs-path__note">
-          <Ico name="done" />
-          {t("sources.passwordNotStored")}
-        </p>
-        <div className="bs-auth__actions">
-          <button type="submit" className="bs-btn bs-btn--primary" disabled={busy || !online} aria-busy={busy}>
-            {busy ? t("sources.syncing") : t("sources.litresSignIn")}
-          </button>
-          <Link className="bs-btn bs-btn--quiet" to="/sources">
-            {t("common.cancel")}
-          </Link>
-        </div>
-      </form>
-    </div>
   )
 }
 

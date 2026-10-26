@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom"
 import i18n from "@/i18n"
 import type { Duplicate } from "@/lib/types"
 import { book, mockFetch } from "@/test/fixtures"
-import { KindleExportScreen, LitresScreen, SourcesScreen } from "./SourcesScreen"
+import { KindleExportScreen, SourcesScreen } from "./SourcesScreen"
 
 const duplicate: Duplicate = {
   id: "d1",
@@ -23,22 +23,6 @@ const renderSources = () =>
 describe("sources that the server does not offer yet", () => {
   beforeEach(() => i18n.changeLanguage("en"))
   afterEach(() => vi.unstubAllGlobals())
-
-  it("says Litres sign in is not available yet and keeps the typed password", async () => {
-    mockFetch(() => [501, { errors: [{ code: "not_implemented" }] }])
-    render(
-      <MemoryRouter>
-        <LitresScreen />
-      </MemoryRouter>,
-    )
-    await userEvent.type(screen.getByLabelText("Litres email or phone"), "reader@example.com")
-    await userEvent.type(screen.getByLabelText("Password"), "secret-pass")
-    await userEvent.click(screen.getByRole("button", { name: "Sign in to Litres" }))
-
-    expect(await screen.findByText("Not available yet: this is coming later.")).toBeInTheDocument()
-    expect(screen.getByLabelText("Password")).toHaveValue("secret-pass")
-    expect(screen.getByLabelText("Password")).not.toHaveAttribute("aria-invalid")
-  })
 
   it("says the Amazon export request is not available yet on 404", async () => {
     mockFetch(() => [404, { errors: [{ code: "not_found" }] }])

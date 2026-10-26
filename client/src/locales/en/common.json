@@ -133,7 +133,6 @@
   "sourceErrors": {
     "generic": "the sync did not finish. Try again.",
     "invalid_credentials": "wrong password.",
-    "captcha_required": "Litres asks to prove you are not a robot.",
     "timeout": "the site did not answer in time.",
     "login_failed": "the sign in did not go through.",
     "blocked": "the site blocked the sign in. Try later.",
@@ -169,7 +168,6 @@
     "loadError": "Could not load the sources.",
     "toBookcase": "To the bookcase",
     "litresSignIn": "Sign in to Litres",
-    "litresLogin": "Litres email or phone",
     "passwordNotStored": "The password is not stored. The sync starts right after the sign in.",
     "syncing": "Syncing...",
     "requestKindle": "Request Kindle history",
@@ -215,11 +213,11 @@
       "frame": "Amazon sign in page in the browser on our server",
       "store": "Amazon"
     },
-    "captcha": {
+    "litres": {
       "title": "Litres",
-      "heading": "Litres check",
-      "disclosure": "Litres asks to prove you are not a robot. You pass the check in a browser on our server.",
-      "frame": "Litres check in the browser on our server",
+      "heading": "Sign in to Litres",
+      "disclosure": "You sign in to Litres in a browser on our server. Any way works: email, phone, Yandex, VK or Google.",
+      "frame": "Litres sign-in page in a browser on the server",
       "store": "Litres"
     },
     "factPassword": "The password is not saved",
