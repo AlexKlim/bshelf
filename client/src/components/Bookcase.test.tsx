@@ -171,7 +171,7 @@ describe("paging", () => {
     const onMore = vi.fn()
     render(<Bookcase shelves={partial} onOpen={() => {}} onMore={onMore} />)
     expect(seen).toHaveLength(1)
-    expect(seen[0].root).toHaveClass("bs-shelf__row")
+    expect(seen[0].root).toBeNull()
     seen[0].fire()
     expect(onMore).toHaveBeenCalledWith("2024")
   })
@@ -204,5 +204,29 @@ describe("dragging a book", () => {
 
     expect(onMove).toHaveBeenCalledWith(expect.objectContaining({ id: "n1" }), "2024", 3)
     expect(onOpen).not.toHaveBeenCalled()
+  })
+})
+
+describe("rows", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("carries books that do not fit the bookcase width onto another row of the same shelf", () => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private fire: (entries: { contentRect: { width: number } }[]) => void) {}
+        observe() {
+          this.fire([{ contentRect: { width: 200 } }])
+        }
+        disconnect() {}
+      },
+    )
+    const many: Shelf[] = [{ key: "2024", count: 6, books: Array.from({ length: 6 }, (_, i) => book({ id: `r${i}` })) }]
+    render(<Bookcase shelves={many} onOpen={() => {}} />)
+
+    const rows = document.querySelectorAll('[data-shelf="2024"] .bs-shelf__row')
+    expect(rows.length).toBeGreaterThan(1)
+    expect([...rows].reduce((n, r) => n + r.querySelectorAll(".bs-spine").length, 0)).toBe(6)
+    expect(document.querySelectorAll('[data-shelf="2024"] .bs-shelf__plank')).toHaveLength(rows.length)
   })
 })

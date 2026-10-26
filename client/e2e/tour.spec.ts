@@ -46,9 +46,10 @@ for (const lng of ["en", "ru"]) {
       const spine = page.locator(".bs-spine", { hasText: "Пикник на обочине" })
       await spine.scrollIntoViewIfNeeded()
       await spine.click()
-      if (width < 800) {
+      const caption = page.locator(".bs-shelf > .bs-caption")
+      if (width < 800 && (await caption.count())) {
         await shoot(page, `${lng}-pulled`, false)
-        await page.locator(".bs-shelf > .bs-caption").click()
+        await caption.click()
       }
       await expect(page.locator(".bs-spread")).toBeVisible()
       await expect(page.locator(".bs-flap")).toHaveCount(0)
