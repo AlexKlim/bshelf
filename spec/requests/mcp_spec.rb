@@ -75,6 +75,21 @@ RSpec.describe "MCP endpoint" do
       expect(response.headers["Mcp-Session-Id"]).to be_nil
     end
 
+    it "answers a tool call in claude.ai's stateless 2026-07-28 shape with typed text content" do
+      create(:book, user:, title: "Solaris", status: "done", finished_at: Time.zone.local(2026, 3, 1))
+      meta = { "io.modelcontextprotocol/protocolVersion" => "2026-07-28", "io.modelcontextprotocol/clientInfo" => { name: "claude-ai", version: "1" },
+        "io.modelcontextprotocol/clientCapabilities" => {} }
+      headers = { "Accept" => "application/json, text/event-stream", "Content-Type" => "application/json", "Host" => URI.parse(mcp_resource).host,
+        "Authorization" => "Bearer #{token}", "MCP-Protocol-Version" => "2026-07-28", "Mcp-Method" => "tools/call", "Mcp-Name" => "reading_stats" }
+
+      post "/mcp", params: { jsonrpc: "2.0", id: 7, method: "tools/call",
+        params: { _meta: meta, name: "reading_stats", arguments: { year: 2026 } } }.to_json, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(json.dig("result", "content")).to eq([ { "type" => "text",
+        "text" => "2026: 1 books, listened 0, read 1\nSolaris - Author (ebook, 2026-03-01)" } ])
+    end
+
     it "lists only the tools the token's scopes allow" do
       mcp_call(token, "tools/list")
       expect(json.dig("result", "tools").map { it["name"] })
@@ -175,7 +190,8 @@ RSpec.describe "MCP endpoint" do
       result = tool_result(token, "reading_stats", year: 2025)
       expect(result["structuredContent"]).to include("year" => 2025, "total" => 3, "listened" => 1, "read" => 2)
       expect(result.dig("structuredContent", "top_authors").first).to eq("author" => "Лем", "count" => 2)
-      expect(result.dig("content", 0, "text")).to eq("2025: 3 books, listened 1, read 2")
+      expect(result.dig("content", 0, "text")).to eq("2025: 3 books, listened 1, read 2\n" \
+        "A - Лем (audio, 2025-03-01)\nB - Лем (ebook, 2025-04-01)\nC - Кинг (ebook, 2025-05-01)")
 
       result = tool_result(token, "reading_stats", year: 2025, author: "лем")
       expect(result["structuredContent"]).to include("author" => "лем", "total" => 2, "listened" => 1, "read" => 1)
