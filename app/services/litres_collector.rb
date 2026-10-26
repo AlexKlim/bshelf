@@ -18,7 +18,7 @@ class LitresCollector
 
   def steps = %w[library]
 
-  def start(session) = browse(session) { it.go_to(LOGIN) }
+  def start(session) = RemoteBrowser.open(session, LOGIN, timeout: TIMEOUT)
 
   def logged_in?(session)
     browse(session) do |page|
@@ -81,14 +81,5 @@ class LitresCollector
     Rails.logger.info("[litres] #{arts.size} arts, keys: #{arts.first&.keys&.sort&.join(",")}")
   end
 
-  def browse(session)
-    RemoteBrowser.steel.cdp(session.websocket_url) do |ws_url|
-      browser = Ferrum::Browser.new(ws_url:, timeout: TIMEOUT)
-      yield browser.page
-    ensure
-      browser&.quit
-    end
-  rescue Ferrum::Error => e
-    raise RemoteBrowser::BrowserFailed, e.class.name
-  end
+  def browse(session, &) = RemoteBrowser.browse(session, timeout: TIMEOUT, &)
 end

@@ -316,7 +316,7 @@
 .bs-session--full { min-block-size: 100dvh; }
 .bs-session__body--page { box-sizing: border-box; inline-size: 100%; max-inline-size: 480px; margin: 0 auto; }
 @media (min-width: 768px) { .bs-session__body--page .bs-session__actions { margin-top: var(--space-4); } }
-.bs-session__frame { inline-size: min(100%, 390px); block-size: 100%; min-block-size: 600px; border: 0; background: var(--surface); }
+.bs-session__frame { inline-size: min(100%, 1280px); block-size: 100%; min-block-size: 600px; border: 0; background: var(--surface); }
 .bs-skeleton { display: grid; gap: var(--space-3); inline-size: 220px; }
 .bs-skeleton span { display: block; block-size: 40px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--hairline); }
 .bs-skeleton span:first-child { block-size: 20px; inline-size: 60%; border: 0; background: var(--hairline); }
