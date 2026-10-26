@@ -12,8 +12,8 @@ class KindleCollector
       const r = await fetch(`/kindle-library/search?${query}`).catch(() => null)
       if (!r?.ok) return { error: `library ${r?.status || 0}` }
       const page = await r.json().catch(() => null)
-      if (!page) return { error: "library answered no JSON" }
-      return { items: page.itemsList || [], token: page.paginationToken || "" }
+      if (!Array.isArray(page?.itemsList)) return { error: "library answered no item list" }
+      return { items: page.itemsList, token: page.paginationToken || "" }
     })(TOKEN).then(arguments[0])
   JS
 
@@ -82,9 +82,9 @@ class KindleCollector
     books = []
     seen = Set.new
     token = ""
-    loop do
+    (0..).each do |number|
       result = library_page(page, token)
-      raise RemoteBrowser::ProviderRefused if result["error"] && books.empty?
+      raise RemoteBrowser::ProviderRefused if result["error"] && number.zero?
       break Rails.logger.warn("[kindle] #{result["error"]} after #{books.size} books") if result["error"]
 
       books.concat(result["items"])
