@@ -72,6 +72,15 @@ RSpec.describe EnrichBook do
     expect(BookSerializer.summary(book, "want")[:cloth]).to eq(Cloth.for_uuid(book.uuid))
   end
 
+  it "names the cloth from a colour set without one" do
+    book = create(:book, title: "Solaris", enriched_at: Time.current)
+    book.update_columns(cloth_color: "#23395b", cloth: nil)
+
+    described_class.call(book)
+
+    expect(book.reload.cloth).to eq("navy")
+  end
+
   it "never overwrites known values and plants no ISBN on a title-only match" do
     stub_open_library("open_library_solaris.json")
     stub_google("google_429.json", status: 429)
