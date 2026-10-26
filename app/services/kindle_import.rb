@@ -32,7 +32,8 @@ class KindleImport
     authors = item["authors"].to_s.split(",") if authors.empty?
     { "asin" => item["asin"], "title" => item["title"].to_s.strip, "authors" => authors.map(&:strip),
       "originType" => item["originType"].to_s.casecmp?("sample") ? "SAMPLE" : item["originType"],
-      "percentageRead" => item["readStatus"] == "READ" ? 100 : 0, "format" => FORMATS.fetch(kind, "ebook") }
+      "percentageRead" => item["readStatus"] == "READ" ? 100 : 0, "format" => FORMATS.fetch(kind, "ebook"),
+      "productUrl" => item["productImage"] }
   end
 
   def upsert(item)
@@ -42,15 +43,22 @@ class KindleImport
     status = status_for(item)
     if (edition = @user.editions.find_by(store: "amazon", external_id: asin))
       StatusResolver.automatic!(edition.reading, status:, source: SOURCE)
+      cover(edition.book, item)
       return false
     end
 
     attrs = { format: item["format"] || "ebook", status:, source: SOURCE, store: "amazon", external_id: asin, status_source: SOURCE }
-    AddBook.call(user: @user, title:, author: author(item["authors"]), **attrs)
+    cover(AddBook.call(user: @user, title:, author: author(item["authors"]), **attrs), item)
     true
   rescue AddBook::Duplicate => e
     AddBook.add_edition(e.book, **attrs)
+    cover(e.book, item)
     true
+  end
+
+  def cover(book, item)
+    url = item["productUrl"].presence
+    book.update!(cover_url: url.sub(/\Ahttp:/, "https:")) if url && book.cover_url.nil?
   end
 
   def status_for(item)

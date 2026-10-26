@@ -14,7 +14,7 @@ class CatalogClient
 
   PROVIDERS = %i[open_library google].freeze
   COVER_HOSTS = /\A(books\.google\.com|books\.googleusercontent\.com|covers\.openlibrary\.org|
-    ([a-z0-9-]+\.)*archive\.org|([a-z0-9-]+\.)*litres\.ru)\z/x
+    ([a-z0-9-]+\.)*archive\.org|([a-z0-9-]+\.)*litres\.ru|m\.media-amazon\.com|images-na\.ssl-images-amazon\.com)\z/x
   MAX_COVER_BYTES = 5.megabytes
   OPEN_LIBRARY_LANGUAGES = {
     "rus" => "ru", "eng" => "en", "ger" => "de", "fre" => "fr", "spa" => "es", "ita" => "it", "pol" => "pl",

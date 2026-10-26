@@ -38,6 +38,14 @@ RSpec.describe LitresImport do
     expect(edition(2).reading.status).to eq("in_progress")
   end
 
+  it "takes the store's cover and keeps one already set" do
+    described_class.call(user, [ art(1, "Пикник на обочине").merge("cover_url" => "/pub/c/cover_415/1.jpg") ])
+    expect(edition(1).book.cover_url).to eq("https://www.litres.ru/pub/c/cover_415/1.jpg")
+
+    described_class.call(user, [ art(1, "Пикник на обочине").merge("cover_url" => "https://cv0.litres.ru/2.jpg") ])
+    expect(edition(1).book.reload.cover_url).to eq("https://www.litres.ru/pub/c/cover_415/1.jpg")
+  end
+
   it "skips entries without an id or a title" do
     expect(described_class.call(user, [ { "id" => 3 }, { "title" => "x" } ])[:books]).to eq(0)
   end
