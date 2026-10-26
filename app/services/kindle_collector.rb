@@ -7,18 +7,13 @@ class KindleCollector
   TIMEOUT = 60
 
   LIBRARY_JS = <<~JS.freeze
-    (async () => {
-      const items = []
-      let token = ""
-      do {
-        const r = await fetch(`/kindle-library/search?query=&libraryType=BOOKS&sortType=acquisition_desc&querySize=50&paginationToken=${token}`)
-        if (!r.ok) throw new Error(`library ${r.status}`)
-        const page = await r.json()
-        items.push(...(page.itemsList || []))
-        token = page.paginationToken || ""
-      } while (token)
-      return items
-    })().then(arguments[0])
+    (async (token) => {
+      const query = `query=&libraryType=BOOKS&sortType=acquisition_desc&querySize=50&paginationToken=${encodeURIComponent(token)}`
+      const r = await fetch(`/kindle-library/search?${query}`).catch(() => null)
+      if (!r?.ok) return { error: `library ${r?.status || 0}` }
+      const page = await r.json()
+      return { items: page.itemsList || [], token: page.paginationToken || "" }
+    })(TOKEN).then(arguments[0])
   JS
 
   NOTEBOOK_JS = <<~JS.freeze
@@ -68,7 +63,7 @@ class KindleCollector
 
   def collect(session)
     browse(session) do |page|
-      books = page.evaluate_async(LIBRARY_JS, TIMEOUT)
+      books = library(page) { yield nil }
       yield "library"
       highlights = page.evaluate_async(NOTEBOOK_JS.sub("ASIN", "null"), TIMEOUT).index_with do |asin|
         yield nil
@@ -81,6 +76,24 @@ class KindleCollector
   end
 
   private
+
+  def library(page)
+    books = []
+    seen = Set.new
+    token = ""
+    loop do
+      result = page.evaluate_async(LIBRARY_JS.sub("TOKEN") { token.to_json }, TIMEOUT)
+      raise RemoteBrowser::ProviderRefused if result["error"] && books.empty?
+      break Rails.logger.warn("[kindle] #{result["error"]} after #{books.size} books") if result["error"]
+
+      books.concat(result["items"])
+      yield
+      token = result["token"]
+      break if token.blank? || !seen.add?(token)
+    end
+    Rails.logger.info("[kindle] library #{books.size} books")
+    books
+  end
 
   def content(page)
     page.go_to(CONTENT_PAGE)
