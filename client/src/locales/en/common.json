@@ -113,7 +113,7 @@
     "unmergeOne": "Unmerge {{title}}",
     "addFormat": {
       "audio": "Add the audiobook",
-      "ebook": "Add the book"
+      "ebook": "Add the text edition"
     }
   },
   "banner": {
