@@ -13,7 +13,10 @@ class EnrichBook
   end
 
   def call
-    rate_limited = lookup unless book.enriched_at
+    unless book.enriched_at
+      known = CatalogBook.for(book)
+      known&.cover_url ? known.fill(book) : (rate_limited = lookup)
+    end
     retry_later = rate_limited && book.cover_url.nil?
     if book.cloth_color.nil? && (color = cover_color)
       book.cloth_color = color
@@ -21,10 +24,13 @@ class EnrichBook
     end
     book.enriched_at ||= Time.current unless retry_later
     book.save!
+    CatalogBook.remember(book) if trusted?
     raise rate_limited if retry_later
   end
 
   private
+
+  def trusted? = book.match_source == "catalog" || CatalogBook.store_ids(book).any?
 
   def lookup
     rate_limited = nil
