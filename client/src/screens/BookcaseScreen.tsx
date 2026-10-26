@@ -191,7 +191,10 @@ export function BookcaseScreen() {
             disabled={offline}
             onChanged={shelf.reload}
             closing={closing}
-            onClosed={close}
+            onClosed={() => {
+              setClosingId(null)
+              close()
+            }}
           />
         )}
       </Overlay>
