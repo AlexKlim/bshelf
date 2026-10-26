@@ -19,8 +19,9 @@ class SteelClient
     raise ArgumentError, "STEEL_URL must point to the private network" unless self.class.private_host?(@base.host)
   end
 
-  def create_session
-    body = JSON.parse(awake { request(Net::HTTP::Post.new("/v1/sessions"), { timeout: 10.minutes.in_milliseconds }) }.body)
+  def create_session(dimensions: nil)
+    options = { timeout: 10.minutes.in_milliseconds, dimensions: }.compact
+    body = JSON.parse(awake { request(Net::HTTP::Post.new("/v1/sessions"), options) }.body)
     Session.new(body.fetch("id"), body["websocketUrl"], URI(body.fetch("debugUrl")).request_uri.delete_prefix("/"))
   end
 

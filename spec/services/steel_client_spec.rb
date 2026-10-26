@@ -22,6 +22,12 @@ RSpec.describe SteelClient do
       expect(client.create_session.id).to eq("s1")
     end
 
+    it "asks Steel to draw the page at the viewer's size" do
+      sessions.with(body: hash_including("dimensions" => { "width" => 390, "height" => 700 })).to_return(created)
+
+      expect(client.create_session(dimensions: { width: 390, height: 700 }).id).to eq("s1")
+    end
+
     it "gives up when Steel stays down" do
       stub_const("SteelClient::WAKE", 0)
       sessions.to_return(status: 502)

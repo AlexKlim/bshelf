@@ -94,8 +94,8 @@ export const shareAdd = (
     locale,
   })
 
-export const startRemoteSession = (purpose: RemoteSession["purpose"]) =>
-  post<{ session: RemoteSession }>("/remote_browser_sessions", { purpose, disclosure_accepted: true })
+export const startRemoteSession = (purpose: RemoteSession["purpose"], viewport: { width: number; height: number }) =>
+  post<{ session: RemoteSession }>("/remote_browser_sessions", { purpose, disclosure_accepted: true, viewport })
 export const getRemoteSession = (id: string) => api<{ session: RemoteSession }>(`/remote_browser_sessions/${id}`)
 export const cancelRemoteSession = (id: string) => api<{ session: RemoteSession }>(`/remote_browser_sessions/${id}`, { method: "DELETE" })
 export const remoteViewer = (id: string) => post<{ url: string; expires_at: string }>(`/remote_browser_sessions/${id}/viewer`)

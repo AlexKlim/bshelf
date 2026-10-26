@@ -14,7 +14,7 @@ module Api
           render_error(:unavailable, status: :service_unavailable)
         else
           existing = current_user.remote_browser_sessions.active.exists?
-          session = RemoteBrowserSession.start!(current_user, purpose)
+          session = RemoteBrowserSession.start!(current_user, purpose, viewport: params[:viewport]&.permit(:width, :height))
           AuditEvent.record!(:remote_browser_started, request:, user: current_user, session: session.uuid, purpose:) unless existing
           render json: { session: serialize(session) }, status: existing ? :ok : :created
         end
