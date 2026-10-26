@@ -117,13 +117,9 @@
     "offline": "No network. The bookcase is shown from cache.",
     "error": {
       "litres": "Litres refused the sign in:",
-      "kindle_browser": "Amazon refused the sign in:",
-      "kindle_export": "The Amazon export failed:"
+      "kindle_browser": "Amazon refused the sign in:"
     },
     "signInAgain": "Sign in again",
-    "exportReady_one": "The Amazon export is ready: {{count}} book to import.",
-    "exportReady_other": "The Amazon export is ready: {{count}} books to import.",
-    "import": "Import",
     "litresReminder": "Time to refresh the shelf: sign in to Litres.",
     "signIn": "Sign in",
     "duplicates": "Possible duplicates found: {{count}}.",
@@ -136,7 +132,6 @@
     "timeout": "the site did not answer in time.",
     "login_failed": "the sign in did not go through.",
     "blocked": "the site blocked the sign in. Try later.",
-    "invalid_archive": "this is not a Kindle archive.",
     "needs_login": "sign in again.",
     "provider_refused": "the store did not let you in.",
     "page_changed": "the site changed, the sync is paused until we fix it.",
@@ -145,45 +140,26 @@
   "empty": {
     "title": "The bookcase is empty for now",
     "lead": "Start with a source: books will stand on the shelves by themselves.",
-    "litresNote": "Audiobooks appear right after you sign in. The password is not stored."
+    "litresNote": "Audiobooks appear right after you sign in. The password never reaches us.",
+    "kindleNote": "Books, documents and audiobooks from Amazon."
   },
   "sources": {
-    "notAvailableYet": "Not available yet: this is coming later.",
     "name": {
       "litres": "Litres",
-      "kindle_browser": "Kindle",
-      "kindle_export": "Amazon export"
+      "kindle_browser": "Kindle"
     },
     "never": "Not connected",
     "lastSync": "Last sync {{when}}",
-    "exportRequested": "Requested {{when}}, Amazon is preparing the archive",
-    "exportReady": "The archive is ready to upload",
     "result": "+{{books}}, {{highlights}}",
     "litresAction": "Sign in and refresh",
     "kindleAction": "Sync Kindle",
-    "waitingArchive": "Waiting for archive",
-    "requestExport": "Request history",
-    "uploadArchive": "Upload archive",
-    "importing": "Importing...",
     "loadError": "Could not load the sources.",
     "toBookcase": "To the bookcase",
     "litresSignIn": "Sign in to Litres",
-    "passwordNotStored": "The password is not stored. The sync starts right after the sign in.",
-    "syncing": "Syncing...",
-    "requestKindle": "Request Kindle history",
-    "exportWaiting": "Requested on {{date}}. Amazon is preparing the archive, usually 1-3 days.",
     "backToSources": "Back to sources",
     "collecting": "Reading the library...",
-    "interrupted": "The last sync was interrupted"
-  },
-  "export": {
-    "lead": "Amazon gives your Kindle history as an archive. Request it once, then upload it here when the email arrives.",
-    "step1": "Open",
-    "step1Link": "Amazon Privacy Central: Request your data",
-    "step2": "Choose \"Kindle\" and send the request.",
-    "step3": "Confirm the request in the email from Amazon.",
-    "step4": "When the archive is ready, download it and upload it on the Sources tab.",
-    "done": "I have requested it"
+    "interrupted": "The last sync was interrupted",
+    "kindleSync": "Sync Kindle"
   },
   "duplicates": {
     "title": "Possible duplicates",
@@ -452,11 +428,11 @@
     "steps": [
       {
         "title": "Sign in to Litres",
-        "text": "Audiobooks go onto the shelves right after you sign in. The password is only used to sign in, we do not save it."
+        "text": "Sign in on the Litres site any way you like, and your audiobooks go onto the shelves. The password never reaches us."
       },
       {
-        "title": "Request your Kindle history",
-        "text": "Upload your Amazon data export, and what you have read lands on the shelves by year."
+        "title": "Sync Kindle",
+        "text": "Sign in to Amazon, and books, documents and audiobooks go onto the shelves. What you have read is marked by itself."
       },
       {
         "title": "Add the rest",
@@ -481,7 +457,7 @@
     "own": [
       {
         "title": "The password is not stored",
-        "text": "Litres and Amazon ask for the password only to sign in. We do not save it and do not see it in logs."
+        "text": "You sign in to Litres and Amazon on their own pages, in a browser on our server. The password never reaches us, and the session is deleted after the sync."
       },
       {
         "title": "Delete with one button",
@@ -495,7 +471,7 @@
       },
       {
         "q": "How do books from Kindle get in?",
-        "a": "Through the Amazon data export: request it once, and Amazon sends an archive. New purchases can be added through \"Share\"."
+        "a": "Sign in to Amazon in the Book Shelf window: books, documents and audiobooks go onto the shelves by themselves. New purchases can be added through \"Share\"."
       },
       {
         "q": "How much does it cost?",

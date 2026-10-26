@@ -1,12 +1,10 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import type { Source } from "@/lib/types"
 import { Ico } from "./ui"
 
-export function EmptyCase({ exportSource, disabled, onAdd }: { exportSource?: Source; disabled?: boolean; onAdd: () => void }) {
-  const { t, i18n } = useTranslation()
+export function EmptyCase({ disabled, onAdd }: { disabled?: boolean; onAdd: () => void }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
-  const requested = exportSource?.status === "requested" && exportSource.requested_at
 
   return (
     <div className="bs-empty">
@@ -33,22 +31,10 @@ export function EmptyCase({ exportSource, disabled, onAdd }: { exportSource?: So
             <p className="bs-path__note">{t("empty.litresNote")}</p>
           </li>
           <li className="bs-path">
-            <button
-              type="button"
-              className="bs-btn bs-btn--secondary"
-              disabled={disabled || !!requested}
-              onClick={() => navigate("/sources/kindle-export")}
-            >
-              {t("sources.requestKindle")}
+            <button type="button" className="bs-btn bs-btn--secondary" disabled={disabled} onClick={() => navigate("/sources/kindle")}>
+              {t("sources.kindleSync")}
             </button>
-            {requested && (
-              <p className="bs-path__note">
-                <Ico name="progress" />
-                {t("sources.exportWaiting", {
-                  date: new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "long" }).format(new Date(requested)),
-                })}
-              </p>
-            )}
+            <p className="bs-path__note">{t("empty.kindleNote")}</p>
           </li>
           <li className="bs-path">
             <button type="button" className="bs-btn bs-btn--quiet" disabled={disabled} onClick={onAdd}>

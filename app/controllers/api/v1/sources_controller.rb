@@ -3,20 +3,19 @@ module Api
     class SourcesController < BaseController
       LITRES_REMINDER_AFTER = 30.days
       RECENT_SESSION = 1.day
+      OFFERED = %w[litres kindle_browser].freeze
 
       def index
         rows = current_user.source_connections.index_by(&:kind)
         counts = current_user.editions.where(source: SourceConnection::KINDS).group(:source).count
         sessions = recent_sessions
-        sources = SourceConnection::KINDS.map do |kind|
+        sources = OFFERED.map do |kind|
           row = rows[kind]
           { kind:, status: row&.status || "never", last_sync_at: row&.last_sync_at, error: row&.error,
             books_count: counts.fetch(kind, 0), session: sessions[kind] }
         end
         render json: { sources:, banner: banner(rows) }
       end
-
-      def not_implemented = render_error(:not_implemented, status: :not_implemented)
 
       private
 

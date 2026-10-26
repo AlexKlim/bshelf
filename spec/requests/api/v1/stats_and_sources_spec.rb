@@ -54,7 +54,7 @@ RSpec.describe "Stats and sources" do
   end
 
   describe "GET /api/v1/sources" do
-    it "lists every source kind with its last sync state" do
+    it "lists the sources a person can sync with their last sync state" do
       user.source_connections.create!(kind: "litres", status: "error", error: "needs_login",
         last_sync_at: Time.zone.parse("2026-10-01"))
       create(:user).source_connections.create!(kind: "kindle_export", status: "ok")
@@ -63,8 +63,6 @@ RSpec.describe "Stats and sources" do
 
       expect(json["sources"]).to eq([
         { "kind" => "litres", "status" => "error", "last_sync_at" => "2026-10-01T00:00:00.000Z", "error" => "needs_login",
-          "books_count" => 0, "session" => nil },
-        { "kind" => "kindle_export", "status" => "never", "last_sync_at" => nil, "error" => nil,
           "books_count" => 0, "session" => nil },
         { "kind" => "kindle_browser", "status" => "never", "last_sync_at" => nil, "error" => nil,
           "books_count" => 0, "session" => nil }
@@ -82,15 +80,6 @@ RSpec.describe "Stats and sources" do
       kindle = json["sources"].find { it["kind"] == "kindle_browser" }
       expect(kindle).to include("books_count" => 1)
       expect(kindle["session"]).to eq("id" => running.uuid, "status" => "connecting", "result" => nil, "interruption" => nil)
-    end
-
-    it "answers 501 for the source actions that do not exist yet" do
-      %w[kindle_export/request kindle_export/upload].each do |action|
-        post "/api/v1/sources/#{action}", as: :json
-
-        expect(response).to have_http_status(:not_implemented), action
-        expect(json).to eq("errors" => [ { "code" => "not_implemented" } ])
-      end
     end
 
     describe "banner" do

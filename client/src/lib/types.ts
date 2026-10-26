@@ -116,18 +116,16 @@ export type RemoteSession = {
 }
 
 export type Source = {
-  kind: "litres" | "kindle_export" | "kindle_browser"
-  status: "never" | "ok" | "error" | "needs_login" | "requested" | "ready"
+  kind: "litres" | "kindle_browser"
+  status: "never" | "ok" | "error" | "needs_login"
   last_sync_at: string | null
   error: string | null
   books_count: number
   session: { id: string; status: RemoteStatus; result: RemoteResult | null; interruption: RemoteInterruption | null } | null
-  requested_at?: string | null
 }
 
 export type Banner =
   | { kind: "source_error"; source: Source["kind"]; error: string; dismissible: false; key: string }
-  | { kind: "export_ready"; count?: number; dismissible: boolean; key: string }
   | { kind: "litres_reminder"; dismissible: boolean; key: string }
   | { kind: "possible_duplicates"; count: number; dismissible: boolean; key: string }
 

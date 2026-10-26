@@ -82,7 +82,6 @@ Every sign up, confirmation, sign in (and failed attempt for a known email), sig
 | DELETE | `/duplicates/:id` | | `204`, dismissed for good |
 | GET | `/stats` | `year` (default: current) | `200 Stats` |
 | GET | `/sources` | | `200 { sources: [Source], banner: Banner \| null }` (see Sources) |
-| POST | `/sources/kindle_export/request`, `/sources/kindle_export/upload` | | Not implemented yet: always `501 not_implemented`, so the client can show "not available yet" |
 
 Any `:id` that is not the caller's: `404 not_found`. Edition fields go in a nested `edition` object because a top-level `format` key is the request format in Rails.
 
@@ -165,7 +164,7 @@ If several books match and exactly one has the query as its whole title, only th
 { "id": "uuid", "body": "text", "created_at": "...", "updated_at": "..." }
 // Highlight
 { "id": "uuid", "text": "quote", "note": null, "location": "1234", "source": "kindle_browser", "highlighted_at": null }
-// Source (one row per kind: litres, kindle_export, kindle_browser)
+// Source (one row per kind a person can sync: litres, kindle_browser)
 {
   "kind": "kindle_browser", "status": "never | ok | error | needs_login", "last_sync_at": null, "error": null,
   "books_count": 148,
@@ -330,7 +329,7 @@ Limits: `REMOTE_BROWSER_MAX_SESSIONS` browsers at once (default 1), the rest wai
 
 ## Error codes
 
-`unauthorized`, `session_required`, `invalid_csrf`, `not_found`, `rate_limited`, `blank`, `invalid_credentials`, `unconfirmed`, `taken`, `invalid`, `too_short`, `too_long`, `inclusion`, `already_confirmed`, `confirmation_period_expired`, `expired`, `duplicate`, `already_unmerged`, `not_implemented`, `accepted`, `unavailable`, `not_live`, `invalid_token`.
+`unauthorized`, `session_required`, `invalid_csrf`, `not_found`, `rate_limited`, `blank`, `invalid_credentials`, `unconfirmed`, `taken`, `invalid`, `too_short`, `too_long`, `inclusion`, `already_confirmed`, `confirmation_period_expired`, `expired`, `duplicate`, `already_unmerged`, `accepted`, `unavailable`, `not_live`, `invalid_token`.
 
 ## Sources
 

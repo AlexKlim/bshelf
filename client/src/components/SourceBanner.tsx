@@ -29,7 +29,6 @@ export function SourceBanner({ event, onDismiss }: { event: BannerEvent; onDismi
   }
 
   const notice = {
-    export_ready: { text: t("banner.exportReady", { count: event.kind === "export_ready" ? (event.count ?? 0) : 0 }), action: t("banner.import"), to: "/sources" },
     litres_reminder: { text: t("banner.litresReminder"), action: t("banner.signIn"), to: "/sources/litres" },
     possible_duplicates: {
       text: t("banner.duplicates", { count: event.kind === "possible_duplicates" ? event.count : 0 }),

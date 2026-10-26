@@ -41,11 +41,7 @@ Rails.application.routes.draw do
       resources :merges, only: :destroy
       resources :duplicates, only: %i[index destroy]
       resource :stats, only: :show
-      resources :sources, only: :index do
-        collection do
-          %w[kindle_export/request kindle_export/upload].each { post it, action: :not_implemented }
-        end
-      end
+      resources :sources, only: :index
 
       resource :share, only: :create do
         post :add
