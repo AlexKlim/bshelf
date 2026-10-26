@@ -15,6 +15,8 @@
   <a href="API.md">API</a>
   ·
   <a href="design/README.md">Design system</a>
+  ·
+  <a href="LICENSE.md">License</a>
 </p>
 
 <p align="center">
@@ -76,3 +78,9 @@ Environment: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_URL` (public URL, used in e
 ## Contributing
 
 `main` is protected. Open a pull request: CI and a CodeRabbit review run on it.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE.md). You may read, run, change and share the code for any noncommercial purpose. Personal use, study and hobby projects are fine when there is no anticipated commercial application, and so are noncommercial organizations. Commercial use, such as selling it or running it as a paid service, needs a separate license, so ask first.
+
+Strictly speaking this is source-available rather than OSI open source, because open source licenses cannot forbid commercial use.

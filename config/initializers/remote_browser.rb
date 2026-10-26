@@ -7,7 +7,7 @@ Rails.application.config.to_prepare do
     RemoteBrowser.collectors = { "kindle" => FakeCollector.new, "litres" => FakeCollector.new }
   elsif ENV["STEEL_URL"].present?
     RemoteBrowser.steel = SteelClient.new(ENV["STEEL_URL"])
-    RemoteBrowser.collectors = { "kindle" => KindleCollector.new }
+    RemoteBrowser.collectors = { "kindle" => KindleCollector.new, "litres" => LitresCollector.new }
   end
 end
 

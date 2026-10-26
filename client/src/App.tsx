@@ -28,7 +28,6 @@ const AccountScreen = lazyScreen(account, "AccountScreen")
 const DeletedScreen = lazyScreen(account, "DeletedScreen")
 const sources = () => import("@/screens/SourcesScreen")
 const SourcesScreen = lazyScreen(sources, "SourcesScreen")
-const LitresScreen = lazyScreen(sources, "LitresScreen")
 const KindleExportScreen = lazyScreen(sources, "KindleExportScreen")
 const StatsScreen = lazyScreen(() => import("@/screens/StatsScreen"), "StatsScreen")
 const ShareScreen = lazyScreen(() => import("@/screens/ShareScreen"), "ShareScreen")
@@ -129,12 +128,11 @@ export default function App({ initialUser }: { initialUser?: User | null }) {
             <Route path="/deleted" element={<DeletedScreen />} />
             <Route element={<RequireUser />}>
               <Route path="/sources/kindle" element={<RemoteBrowserScreen purpose="kindle" />} />
-              <Route path="/sources/litres/captcha" element={<RemoteBrowserScreen purpose="litres" />} />
+              <Route path="/sources/litres" element={<RemoteBrowserScreen purpose="litres" />} />
               <Route element={<Shell />}>
                 <Route path="/" element={<BookcaseScreen />} />
                 <Route path="/stats" element={<StatsScreen />} />
                 <Route path="/sources" element={<SourcesScreen />} />
-                <Route path="/sources/litres" element={<LitresScreen />} />
                 <Route path="/sources/kindle-export" element={<KindleExportScreen />} />
                 <Route path="/account/:section?" element={<AccountScreen />} />
                 <Route path="/profile" element={<Navigate to="/account" replace />} />

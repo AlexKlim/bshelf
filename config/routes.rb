@@ -43,7 +43,7 @@ Rails.application.routes.draw do
       resource :stats, only: :show
       resources :sources, only: :index do
         collection do
-          %w[litres/sync kindle_export/request kindle_export/upload].each { post it, action: :not_implemented }
+          %w[kindle_export/request kindle_export/upload].each { post it, action: :not_implemented }
         end
       end
 
