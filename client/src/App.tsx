@@ -8,7 +8,7 @@ import { oauthReturnTo, rememberReturnTo, takeReturnTo } from "@/lib/returnTo"
 import { ShelfProvider } from "@/lib/shelf"
 import { SessionProvider, useSession } from "@/lib/session"
 import type { User } from "@/lib/types"
-import { useMediaQuery } from "@/lib/useMediaQuery"
+import { TABLET_UP, useMediaQuery } from "@/lib/useMediaQuery"
 import { BookcaseScreen } from "@/screens/BookcaseScreen"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,9 +23,9 @@ const ForgotPasswordScreen = lazyScreen(auth, "ForgotPasswordScreen")
 const CheckEmailScreen = lazyScreen(auth, "CheckEmailScreen")
 const ConfirmScreen = lazyScreen(auth, "ConfirmScreen")
 const ResetPasswordScreen = lazyScreen(auth, "ResetPasswordScreen")
-const profile = () => import("@/screens/ProfileScreen")
-const ProfileScreen = lazyScreen(profile, "ProfileScreen")
-const DeletedScreen = lazyScreen(profile, "DeletedScreen")
+const account = () => import("@/screens/AccountScreen")
+const AccountScreen = lazyScreen(account, "AccountScreen")
+const DeletedScreen = lazyScreen(account, "DeletedScreen")
 const sources = () => import("@/screens/SourcesScreen")
 const SourcesScreen = lazyScreen(sources, "SourcesScreen")
 const LitresScreen = lazyScreen(sources, "LitresScreen")
@@ -72,13 +72,21 @@ function Shell() {
   const { t } = useTranslation()
   const { user } = useSession()
   const desktop = useMediaQuery("(min-width: 1200px)")
+  const tablet = useMediaQuery(TABLET_UP)
   const { pathname } = useLocation()
+  const inAccount = pathname.startsWith("/account")
   return (
     <div className="app">
       <header className="bs-header">
-        <span className="bs-wordmark">{t("app.name")}</span>
+        {!tablet && /^\/account\/./.test(pathname) ? (
+          <Link to="/account" className="bs-btn bs-btn--quiet app__back">
+            {t("account.back")}
+          </Link>
+        ) : (
+          <span className="bs-wordmark">{t("app.name")}</span>
+        )}
         {desktop && <TabBar top />}
-        <Link to="/profile" className="bs-avatar" aria-label={t("profile.title")}>
+        <Link to="/account" className="bs-avatar" aria-label={t("account.title")} aria-current={inAccount ? "page" : undefined}>
           {user?.email[0]?.toUpperCase()}
         </Link>
       </header>
@@ -128,7 +136,8 @@ export default function App({ initialUser }: { initialUser?: User | null }) {
                 <Route path="/sources" element={<SourcesScreen />} />
                 <Route path="/sources/litres" element={<LitresScreen />} />
                 <Route path="/sources/kindle-export" element={<KindleExportScreen />} />
-                <Route path="/profile" element={<ProfileScreen />} />
+                <Route path="/account/:section?" element={<AccountScreen />} />
+                <Route path="/profile" element={<Navigate to="/account" replace />} />
                 <Route path="/share" element={<ShareScreen />} />
               </Route>
             </Route>

@@ -56,8 +56,69 @@ RSpec.describe "Assistants" do
     _record, raw = ApiToken.issue!(user:, name: "Shortcut")
 
     get "/api/v1/assistants", headers: bearer(raw)
-
     expect(response).to have_http_status(:forbidden)
     expect(error_codes).to eq([ "session_required" ])
+
+    post "/api/v1/assistants/gemini_client", headers: bearer(raw)
+    expect(response).to have_http_status(:forbidden)
+    expect(error_codes).to eq([ "session_required" ])
+  end
+
+  describe "Gemini client" do
+    it "shows the secret once, stores only its hash and lists the key without it" do
+      sign_in_as(user)
+
+      post "/api/v1/assistants/gemini_client"
+
+      expect(response).to have_http_status(:created)
+      app = Doorkeeper::Application.find_by!(user_id: user.id)
+      expect(json).to eq("client_id" => app.uid, "client_secret" => json["client_secret"])
+      expect(json["client_secret"]).to be_present
+      expect(app.secret).not_to eq(json["client_secret"])
+      expect(app.secret_matches?(json["client_secret"])).to be(true)
+      expect(app).to have_attributes(name: "Gemini", confidential: true,
+        redirect_uri: Api::V1::AssistantsController::GEMINI_REDIRECT_URI)
+      expect(app.scopes.to_a).to match_array(%w[books:read books:write])
+      expect(AuditEvent.last).to have_attributes(action: "gemini_client_created", user:)
+
+      get "/api/v1/assistants"
+      expect(json["gemini_client"]).to eq("client_id" => app.uid, "created_at" => app.created_at.as_json)
+      expect(response.body).not_to include(app.secret)
+    end
+
+    it "replaces the key and its tokens on a second create" do
+      sign_in_as(user)
+      post "/api/v1/assistants/gemini_client"
+      old = Doorkeeper::Application.find_by!(user_id: user.id)
+      token = mcp_token(user, application: old)
+
+      post "/api/v1/assistants/gemini_client"
+
+      expect(Doorkeeper::Application.where(user_id: user.id).sole.uid).not_to eq(old.uid)
+      mcp_call(token, "tools/list")
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "revokes the key and every token issued to it" do
+      sign_in_as(user)
+      post "/api/v1/assistants/gemini_client"
+      app = Doorkeeper::Application.find_by!(user_id: user.id)
+      token = mcp_token(user, application: app)
+
+      get "/api/v1/assistants"
+      expect(json["assistants"].sole).to include("name" => "Gemini")
+
+      delete "/api/v1/assistants/gemini_client"
+
+      expect(response).to have_http_status(:no_content)
+      expect(AuditEvent.last).to have_attributes(action: "gemini_client_revoked", user:)
+      mcp_call(token, "tools/list")
+      expect(response).to have_http_status(:unauthorized)
+      get "/api/v1/assistants"
+      expect(json).to eq("assistants" => [], "gemini_client" => nil)
+
+      delete "/api/v1/assistants/gemini_client"
+      expect(response).to have_http_status(:not_found)
+    end
   end
 end

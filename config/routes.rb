@@ -18,9 +18,16 @@ Rails.application.routes.draw do
         post :resend
       end
       resource :password, only: %i[create update]
-      resource :profile, only: %i[show destroy], path: "me"
+      resource :profile, only: %i[show destroy], path: "me" do
+        patch :password
+      end
       resources :api_tokens, only: %i[index create destroy]
-      resources :assistants, only: %i[index destroy]
+      resources :assistants, only: %i[index destroy] do
+        collection do
+          post :gemini_client, action: :create_gemini_client
+          delete :gemini_client, action: :destroy_gemini_client
+        end
+      end
 
       resources :shelves, only: %i[index show], path: "shelf"
       resource :search, only: :show

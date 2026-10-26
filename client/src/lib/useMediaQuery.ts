@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react"
 
+export const TABLET_UP = "(min-width: 768px)"
+
 export function useMediaQuery(query: string) {
   return useSyncExternalStore(
     (onChange) => {

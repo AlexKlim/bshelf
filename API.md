@@ -19,7 +19,7 @@ REST JSON under `/api/v1`. The React client, the share targets and scripts build
 Two ways in, both scoped to one user. Another user's id always returns `404 not_found`.
 
 1. **Cookie session** (the SPA, same origin). Every API response sets a readable `CSRF-TOKEN` cookie; send its value as `X-CSRF-Token` on every non-GET request. Missing or wrong token: `403 invalid_csrf`. The session lasts 30 days.
-2. **Bearer API token** (iOS Shortcut, Android share target, scripts): `Authorization: Bearer bsh_...`. No CSRF. A token may call `GET` endpoints and `POST /share`, `POST /share/add`; every other write (books, editions, notes, merges, duplicates, remote browser) and `/api_tokens`, `/assistants`, `DELETE /me`, `DELETE /session` answer `403 session_required`. An unknown or revoked token: `401 unauthorized`, no fallback to the cookie.
+2. **Bearer API token** (iOS Shortcut, Android share target, scripts): `Authorization: Bearer bsh_...`. No CSRF. A token may call `GET` endpoints and `POST /share`, `POST /share/add`; every other write (books, editions, notes, merges, duplicates, remote browser) and `/api_tokens`, `/assistants`, `PATCH /me/password`, `DELETE /me`, `DELETE /session` answer `403 session_required`. An unknown or revoked token: `401 unauthorized`, no fallback to the cookie.
 
 No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limited`.
 
@@ -35,12 +35,15 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
 | POST | `/session` | `email`, `password` | `200 { user }` | `401 invalid_credentials`, `403 unconfirmed`, `429` (10 attempts per 3 min per IP; after 10 failed attempts per 3 min for an email, that email answers `429` even with the right password) |
 | DELETE | `/session` | | `204` | |
 | GET | `/me` | | `200 { user }` | |
+| PATCH | `/me/password` | `current_password`, `password` | `204`. This session stays signed in; other sessions, every API token and connected assistant are signed out | `422` `current_password: invalid` or `blank`, `password: too_short`; `403 session_required`; `429` (10/hour/account) |
 | DELETE | `/me` | | `204`. Ends a running remote browser session, then deletes the account and all its data. The client asks the user to type "удалить" first | `403 session_required` |
 | GET | `/api_tokens` | | `200 { api_tokens: [ApiToken] }` (active only) | |
 | POST | `/api_tokens` | `name` | `201 { api_token, token }`. `token` is shown only in this response | `400 blank`, `429` (20/hour/IP) |
 | DELETE | `/api_tokens/:id` | | `204`, the token stops working at once | `404` |
-| GET | `/assistants` | | `200 { assistants: [Assistant] }`: MCP clients (Claude, ChatGPT) with a live grant | `403 session_required` |
+| GET | `/assistants` | | `200 { assistants: [Assistant], gemini_client: { client_id, created_at } or null }`: MCP clients (Claude, ChatGPT, Gemini) with a live grant, and the account's Gemini key without its secret | `403 session_required` |
 | DELETE | `/assistants/:id` | | `204`, revokes every token and grant of that assistant; its next MCP call gets `401` | `404`, `403 session_required` |
+| POST | `/assistants/gemini_client` | | `201 { client_id, client_secret }`. Creates the account's Gemini key, replacing the old one and deleting its tokens. `client_secret` is shown only in this response and stored hashed | `403 session_required`, `429` (10/hour/IP) |
+| DELETE | `/assistants/gemini_client` | | `204`, deletes the key and every token issued to it | `404`, `403 session_required` |
 
 ```json
 // User
@@ -53,7 +56,7 @@ No credentials: `401 unauthorized`. Rate limited endpoints answer `429 rate_limi
   "connected_at": "...", "last_active_at": "..." }
 ```
 
-Every sign up, confirmation, sign in (and failed attempt for a known email), sign out, password reset request and reset, token issue and revoke, assistant connect and revoke, and account deletion is written to the audit log (not exposed over the API). Deleting the account clears the IP addresses of its audit rows; the deletion row keeps only the account uuid.
+Every sign up, confirmation, sign in (and failed attempt for a known email), sign out, password reset request, reset and change, token issue and revoke, assistant connect and revoke, Gemini key issue and revoke, and account deletion is written to the audit log (not exposed over the API). Deleting the account clears the IP addresses of its audit rows; the deletion row keeps only the account uuid.
 
 ## Shelf
 
@@ -203,18 +206,18 @@ Every new book is looked up in Open Library, then Google Books, in a background 
 
 ## MCP (AI assistants)
 
-Outside `/api/v1`. A remote MCP server over Streamable HTTP for Claude and ChatGPT connectors, OAuth 2.1 with PKCE. `MCP_AUTH.md` explains why it is built this way.
+Outside `/api/v1`. A remote MCP server over Streamable HTTP for Claude, ChatGPT and Gemini Enterprise connectors, OAuth 2.1 with PKCE. `MCP_AUTH.md` explains why it is built this way.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | POST | `/mcp` | MCP JSON-RPC, stateless, JSON responses. `Authorization: Bearer <OAuth access token>` only; API tokens (`bsh_...`) are not accepted |
 | GET | `/.well-known/oauth-protected-resource`, `/.well-known/oauth-protected-resource/mcp` | RFC 9728 metadata: `resource` = `APP_URL/mcp`, `authorization_servers` = [`APP_URL`] |
-| GET | `/.well-known/oauth-authorization-server` | RFC 8414 metadata (CIMD, PKCE S256, `none` client auth) |
+| GET | `/.well-known/oauth-authorization-server` | RFC 8414 metadata (CIMD, PKCE S256, `none`, `client_secret_basic` and `client_secret_post` client auth) |
 | GET, POST, DELETE | `/oauth/authorize` | Consent page (server-rendered in en or ru, chosen like share answers: `locale`, then the first supported `Accept-Language` language, else en), allow, deny. `GET` answers `429` after 20 requests per minute per IP |
 | POST | `/oauth/token` | Code and refresh token exchange; refresh tokens rotate; access tokens live 1 hour |
 | POST | `/oauth/revoke` | RFC 7009 |
 
-Without a valid token `/mcp` answers `401` with `WWW-Authenticate: Bearer scope="books:read books:write", resource_metadata=".../.well-known/oauth-protected-resource/mcp"`, plus `error="invalid_token"` for an unknown, expired, revoked or foreign-audience token. Scopes: `books:read` (search_shelf, get_book, reading_stats), `books:write` (add_book). Only clients whose `client_id` is a metadata document URL on `claude.ai` or `chatgpt.com` can connect.
+Without a valid token `/mcp` answers `401` with `WWW-Authenticate: Bearer scope="books:read books:write", resource_metadata=".../.well-known/oauth-protected-resource/mcp"`, plus `error="invalid_token"` for an unknown, expired, revoked or foreign-audience token. Scopes: `books:read` (search_shelf, get_book, reading_stats), `books:write` (add_book). Clients that can connect: a metadata document URL on `claude.ai` or `chatgpt.com` as `client_id` (public, PKCE required, no secret), or the account's own Gemini key from `POST /assistants/gemini_client` (confidential: secret by Basic or in the body, PKCE checked when sent, redirect only `https://vertexaisearch.cloud.google.com/oauth-redirect`, authorized only by its owner, tokens bound to `APP_URL/mcp` even without `resource`).
 
 Tools return `structuredContent` with codes and data (the REST shapes: search answer kinds, BookSummary, BookDetail) and a one-line English text summary. Errors set `isError` with `{ "error": { "code", "field" } }`, codes from the list below; another user's book id is `not_found`.
 
@@ -228,7 +231,7 @@ Tools return `structuredContent` with codes and data (the REST shapes: search an
 ### SPA contract
 
 - **Login with `return_to`.** A signed-out user who opens `/oauth/authorize` is sent to `APP_URL/login?return_to=<path>`. After `POST /session` succeeds, the SPA does a full page load (`window.location.assign`) to `return_to` when it starts with `/oauth/authorize`, and ignores it otherwise. Sign up and email confirmation keep `return_to` through to the login.
-- **Profile > Assistants.** List from `GET /assistants` (name, connected date) with a revoke button calling `DELETE /assistants/:id`. The empty state can explain how to connect: in Claude, Customize > Connectors > Add custom connector, URL `APP_URL/mcp`.
+- **Account > Assistants (MCP)** (`/account/assistants`). Connection URL `APP_URL/mcp` with Copy, steps for Claude, ChatGPT or Gemini; the Gemini steps create the key (`POST /assistants/gemini_client`) and show its secret once with the authorization and token URLs. List from `GET /assistants` (name, connected date) with a revoke button calling `DELETE /assistants/:id`.
 - The consent page is server-rendered; the SPA does not render it.
 
 ## Share (check before buying)
@@ -277,7 +280,7 @@ The date part is left out when the edition has no finish date. For `not_found` a
 
 ### iOS Shortcut
 
-Installed from "Profile" -> "Install shortcut" (an iCloud link; the client creates an API token and copies it to the clipboard). The shortcut, built by hand:
+Installed from "Account" -> "Share shortcut" -> "Install the shortcut" (an iCloud link; the client creates an API token and copies it to the clipboard). The shortcut, built by hand:
 
 1. Receives URLs and text from the share sheet. On first run it asks for the token and saves it to a file in Shortcuts.
 2. `Get contents of URL`: `POST https://<host>/api/v1/share`, headers `Authorization: Bearer bsh_...`, `Content-Type: application/json`, JSON body `{ "url": <Shortcut Input as URL>, "text": <Name of Shortcut Input> }`.

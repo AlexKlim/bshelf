@@ -34,6 +34,8 @@ export const signIn = (email: string, password: string) => post<{ user: User }>(
 export const signOut = () => del("/session")
 export const me = () => api<{ user: User }>("/me")
 export const deleteAccount = () => del("/me")
+export const changePassword = (currentPassword: string, password: string) =>
+  patch<void>("/me/password", { current_password: currentPassword, password })
 
 export const listTokens = () => api<{ api_tokens: ApiToken[] }>("/api_tokens")
 export const createToken = (name: string) => post<{ api_token: ApiToken; token: string }>("/api_tokens", { name })
@@ -69,8 +71,11 @@ export const unmerge = (mergeId: string) => api<{ books: BookSummary[] }>(`/merg
 export const getDuplicates = () => api<{ duplicates: Duplicate[] }>("/duplicates")
 export const dismissDuplicate = (id: string) => del(`/duplicates/${id}`)
 
-export const getAssistants = () => api<{ assistants: Assistant[] }>("/assistants")
+export const getAssistants = () =>
+  api<{ assistants: Assistant[]; gemini_client: { client_id: string; created_at: string } | null }>("/assistants")
 export const revokeAssistant = (id: string) => del(`/assistants/${id}`)
+export const createGeminiClient = () => post<{ client_id: string; client_secret: string }>("/assistants/gemini_client")
+export const revokeGeminiClient = () => del("/assistants/gemini_client")
 
 export const getStats = (year?: number) => api<Stats>(year ? `/stats?year=${year}` : "/stats")
 export const getSources = () => api<{ sources: Source[]; banner: Banner | null }>("/sources")

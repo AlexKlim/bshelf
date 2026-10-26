@@ -260,7 +260,6 @@
     "typeTitle": "Type the title to write it in"
   },
   "profile": {
-    "title": "Profile",
     "language": "Language",
     "signOut": "Sign out",
     "shortcut": "Share shortcut",
@@ -285,8 +284,101 @@
     "deleteMismatch": "Type the word \"{{word}}\" exactly.",
     "deleteAction": "Delete everything",
     "deletedTitle": "Everything is deleted",
-    "deletedLead": "The account and all its books, notes and highlights are gone.",
-    "connectHint": "To connect Claude: Customize > Connectors > Add custom connector, URL {{url}}"
+    "deletedLead": "The account and all its books, notes and highlights are gone."
+  },
+  "account": {
+    "title": "Account",
+    "back": "‹ Account",
+    "sections": "Account sections",
+    "profileTitle": "Profile and password",
+    "profileMeta": "Email, password change, sign out",
+    "shortcutMeta": "Check a book right in the store",
+    "assistantsMeta": "Claude, ChatGPT, Gemini",
+    "connectedCount_one": "{{count}} connected",
+    "connectedCount_other": "{{count}} connected",
+    "passwordTitle": "Change password",
+    "passwordNote": "The shortcut and assistants will be disconnected and need to be connected again. This device stays signed in.",
+    "currentPassword": "Current password",
+    "wrongPassword": "Wrong password.",
+    "copy": "Copy",
+    "iphoneSteps": [
+      "Create a token and copy it.",
+      "Install the shortcut and paste the token when it asks.",
+      "In a store, tap Share and choose Book Shelf."
+    ],
+    "androidText": "Add Book Shelf to the home screen from the browser menu. It shows up in the Share menu, no token needed.",
+    "mcpLead": "Connect Book Shelf to Claude, ChatGPT or Gemini, and the assistant will answer from your shelf: what you have read, what you wanted to read, how much you listened to this year.",
+    "mcpUrl": "Connection URL",
+    "assistant": "Assistant",
+    "howTo": "How to connect {{name}}",
+    "claudeSteps": [
+      {
+        "title": "Open the connector settings",
+        "text": "On claude.ai or in the Claude desktop app: Settings → Connectors."
+      },
+      {
+        "title": "Add a custom connector",
+        "text": "Click \"Add custom connector\", name it Book Shelf and paste the URL above."
+      },
+      {
+        "title": "Sign in and allow access",
+        "text": "Claude opens a Book Shelf page. Sign in if needed and click \"Allow\"."
+      },
+      {
+        "title": "Ask about your books",
+        "text": "The connector also shows up in the Claude mobile app. Turn it on in a chat."
+      }
+    ],
+    "chatgptSteps": [
+      {
+        "title": "Turn on developer mode",
+        "text": "In ChatGPT: Settings → Apps and connectors → Advanced → Developer mode. A paid plan is needed."
+      },
+      {
+        "title": "Create a connector",
+        "text": "Click \"Create\", name it Book Shelf, paste the URL above and choose OAuth sign in."
+      },
+      {
+        "title": "Sign in and allow access",
+        "text": "A Book Shelf page opens. Sign in if needed and click \"Allow\"."
+      },
+      {
+        "title": "Turn it on in a chat",
+        "text": "Choose Book Shelf in the chat's list of tools."
+      }
+    ],
+    "geminiFor": "For Gemini Enterprise and Gemini Business.",
+    "geminiSteps": [
+      {
+        "title": "Create a key",
+        "text": ""
+      },
+      {
+        "title": "Add a custom MCP server",
+        "text": "In Gemini: Connectors → Custom MCP server. Paste the URL above, the authorization and token URLs, the Client ID and the secret."
+      },
+      {
+        "title": "Allow access",
+        "text": "Gemini opens a Book Shelf page, click \"Allow\"."
+      }
+    ],
+    "createKey": "Create a key for Gemini",
+    "newKey": "Create a new key",
+    "revokeKey": "Revoke key",
+    "keyCreated": "Key created {{date}}. A new key turns the old one off.",
+    "secretOnce": "Copy it now: the secret is shown only once.",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret",
+    "authUrl": "Authorization URL",
+    "tokenUrl": "Token URL",
+    "askTitle": "What you can ask",
+    "ask": [
+      "Have I read Solaris?",
+      "Add Klara and the Sun to Want",
+      "How many books did I listen to in 2025?"
+    ],
+    "connectedTitle": "Connected",
+    "revokeNote": "Revoking disconnects the assistant at once. You can connect it again any time."
   },
   "auth": {
     "email": "Email",
@@ -395,7 +487,7 @@
       },
       {
         "title": "Delete with one button",
-        "text": "In the profile you can erase everything at once: books, notes, assistant connections."
+        "text": "In the account you can erase everything at once: books, notes, assistant connections."
       }
     ],
     "questions": [

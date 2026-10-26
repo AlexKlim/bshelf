@@ -1,9 +1,9 @@
 class AuditEvent < ApplicationRecord
   ACTIONS = %w[
     sign_up email_confirmed sign_in sign_in_failed sign_out
-    password_reset_requested password_reset
+    password_reset_requested password_reset password_changed
     api_token_created api_token_revoked account_deleted
-    assistant_connected assistant_revoked
+    assistant_connected assistant_revoked gemini_client_created gemini_client_revoked
     remote_browser_started remote_browser_finished
   ].freeze
 
