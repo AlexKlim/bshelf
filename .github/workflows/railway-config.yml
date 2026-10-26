@@ -1,0 +1,23 @@
+name: Railway config
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ ".railway/**" ]
+
+concurrency: railway-config
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci --prefix .railway
+      - run: npm install -g @railway/cli
+      - run: railway config plan
+      - run: railway config apply --yes
