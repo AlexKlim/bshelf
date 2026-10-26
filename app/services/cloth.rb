@@ -2,6 +2,7 @@ module Cloth
   NAMES = %w[oxblood bottle navy plum slate ochre sage linen].freeze
   LIGHT_TEXT = %w[oxblood bottle navy plum slate].freeze
   SAMPLE = 24
+  MIN_CONTRAST = 4.5
 
   def self.oklab(r, g, b)
     lr, lg, lb = [ r, g, b ].map do |c|
@@ -33,6 +34,15 @@ module Cloth
 
   def self.contrast(a, b) = ([ a, b ].max + 0.05) / ([ a, b ].min + 0.05)
 
+  def self.readable(hex)
+    text = %w[spine-text-light spine-text-dark].map { luminance(*rgb(TOKENS.fetch(it))) }
+    color = rgb(hex)
+    toward = contrast(luminance(*color), text[0]) >= contrast(luminance(*color), text[1]) ? 0 : 255
+    best = text.max_by { contrast(luminance(*color), it) }
+    color = color.map { it + ((toward - it) * 0.1).round } until contrast(luminance(*color), best) >= MIN_CONTRAST
+    "#%02x%02x%02x" % color
+  end
+
   def self.nearest(r, g, b)
     y = luminance(r, g, b)
     light = contrast(y, luminance(*rgb(TOKENS.fetch("spine-text-light")))) >= contrast(y, luminance(*rgb(TOKENS.fetch("spine-text-dark"))))
@@ -59,7 +69,7 @@ module Cloth
     image = image.extract_band(0, n: 3) if image.bands > 3
     pixels = image.to_a.flatten(1)
     common = pixels.group_by { |rgb| rgb.map { it >> 5 } }.values.max_by(&:size)
-    "#%02x%02x%02x" % common.transpose.map { (it.sum / it.size.to_f).round }
+    readable("#%02x%02x%02x" % common.transpose.map { (it.sum / it.size.to_f).round })
   rescue LoadError
     nil
   rescue Vips::Error
