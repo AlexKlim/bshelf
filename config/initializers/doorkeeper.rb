@@ -14,10 +14,12 @@ Doorkeeper.configure do
   end
 
   grant_flows %w[authorization_code]
-  force_pkce
   pkce_code_challenge_methods %w[S256]
-  # CIMD clients (Claude, ChatGPT) are public: PKCE replaces the client secret.
-  client_authentication :none
+  # CIMD clients (Claude, ChatGPT) are public: PKCE replaces the client secret. Gemini keys are
+  # confidential clients owned by one user and authenticate with their secret.
+  client_authentication :none, :client_secret_basic, :client_secret_post
+  hash_application_secrets
+  authorize_resource_owner_for_client ->(app, user) { app.user_id.nil? || app.user_id == user.id }
   validate_client_before_resource_owner_authentication
   handle_auth_errors :redirect
 
@@ -34,3 +36,13 @@ Doorkeeper.configure do
   resource_indicator_validator ->(resources, _client) { resources == [ Rails.configuration.x.mcp_resource ] }
   custom_metadata client_id_metadata_document_supported: true
 end
+
+# force_pkce would also demand PKCE from Gemini, which may not send it; public clients still must.
+Doorkeeper::OAuth::PreAuthorization.prepend(Module.new do
+  def validate_code_challenge
+    return true if client.application.confidential? || code_challenge.present?
+
+    @invalid_request_reason = :invalid_code_challenge
+    false
+  end
+end)

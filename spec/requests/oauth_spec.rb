@@ -30,7 +30,7 @@ RSpec.describe "OAuth for MCP clients" do
   end
 
   describe "metadata" do
-    it "serves RFC 8414 authorization server metadata with CIMD, PKCE S256 and public clients" do
+    it "serves RFC 8414 authorization server metadata with CIMD, PKCE S256, public and secret clients" do
       get "/.well-known/oauth-authorization-server"
 
       expect(json).to include(
@@ -38,7 +38,7 @@ RSpec.describe "OAuth for MCP clients" do
         "authorization_endpoint" => "http://www.example.com/oauth/authorize",
         "token_endpoint" => "http://www.example.com/oauth/token",
         "code_challenge_methods_supported" => [ "S256" ],
-        "token_endpoint_auth_methods_supported" => [ "none" ],
+        "token_endpoint_auth_methods_supported" => %w[none client_secret_basic client_secret_post],
         "grant_types_supported" => match_array(%w[authorization_code refresh_token]),
         "scopes_supported" => match_array(%w[books:read books:write]),
         "client_id_metadata_document_supported" => true,
@@ -236,6 +236,94 @@ RSpec.describe "OAuth for MCP clients" do
       sign_in_as(user)
 
       get "/oauth/authorize", params: authorize_params(redirect_uri: "https://claude.ai/elsewhere")
+
+      expect(response).to have_http_status(:bad_request)
+      expect(response.body).to include("invalid_redirect_uri")
+    end
+  end
+
+  describe "Gemini client" do
+    let(:redirect) { Api::V1::AssistantsController::GEMINI_REDIRECT_URI }
+
+    def gemini_key(owner)
+      sign_in_as(owner)
+      post "/api/v1/assistants/gemini_client"
+      json.symbolize_keys
+    end
+
+    def gemini_params(client_id, **overrides)
+      { client_id:, redirect_uri: redirect, response_type: "code", scope: "books:read books:write", state: "g" }
+        .merge(overrides)
+    end
+
+    def gemini_code(client_id, **overrides)
+      post "/oauth/authorize", params: gemini_params(client_id, **overrides)
+      expect(response.location).to start_with(redirect)
+      Rack::Utils.parse_query(URI.parse(response.location).query)["code"]
+    end
+
+    it "lets the owner authorize without PKCE or resource and trades the code with the secret" do
+      key = gemini_key(user)
+
+      get "/oauth/authorize", params: gemini_params(key[:client_id]), headers: { "Accept-Language" => "en" }
+      expect(response.body).to include("Gemini asks for access to your shelf")
+      code = gemini_code(key[:client_id])
+
+      post "/oauth/token", params: { grant_type: "authorization_code", code:, redirect_uri: redirect },
+        headers: { "Authorization" => ActionController::HttpAuthentication::Basic.encode_credentials(key[:client_id], key[:client_secret]) }
+
+      expect(response).to have_http_status(:ok)
+      expect(Doorkeeper::AccessToken.last.resource).to eq(mcp_resource)
+      tokens = json
+      mcp_call(tokens["access_token"], "tools/list")
+      expect(response).to have_http_status(:ok)
+
+      post "/oauth/token", params: { grant_type: "refresh_token", refresh_token: tokens["refresh_token"], **key }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "checks PKCE when Gemini sends it" do
+      key = gemini_key(user)
+      code = gemini_code(key[:client_id], code_challenge: challenge, code_challenge_method: "S256")
+
+      post "/oauth/token", params: { grant_type: "authorization_code", code:, redirect_uri: redirect, **key }
+      expect(json["error"]).to eq("invalid_request")
+
+      post "/oauth/token", params: { grant_type: "authorization_code", code:, redirect_uri: redirect, code_verifier: verifier, **key }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "refuses the token without the right secret" do
+      key = gemini_key(user)
+
+      post "/oauth/token", params: { grant_type: "authorization_code", code: gemini_code(key[:client_id]),
+        redirect_uri: redirect, client_id: key[:client_id] }
+      expect(response).to have_http_status(:unauthorized)
+      expect(json["error"]).to eq("invalid_client")
+
+      post "/oauth/token", params: { grant_type: "authorization_code", code: gemini_code(key[:client_id]),
+        redirect_uri: redirect, client_id: key[:client_id], client_secret: "wrong" }
+      expect(json["error"]).to eq("invalid_client")
+    end
+
+    it "refuses another user" do
+      key = gemini_key(user)
+      delete "/api/v1/session"
+      sign_in_as(create(:user))
+
+      get "/oauth/authorize", params: gemini_params(key[:client_id])
+
+      expect(response.location).to start_with(redirect)
+      expect(response.location).to include("error=access_denied")
+      post "/oauth/authorize", params: gemini_params(key[:client_id])
+      expect(response.location).to include("error=access_denied")
+      expect(Doorkeeper::AccessGrant.count).to eq(0)
+    end
+
+    it "refuses any other redirect_uri" do
+      key = gemini_key(user)
+
+      get "/oauth/authorize", params: gemini_params(key[:client_id], redirect_uri: "https://evil.example/oauth-redirect")
 
       expect(response).to have_http_status(:bad_request)
       expect(response.body).to include("invalid_redirect_uri")

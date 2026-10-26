@@ -54,4 +54,49 @@ RSpec.describe "Profile" do
       expect(AuditEvent.where(action: %w[sign_in account_deleted]).pluck(:ip)).to eq([ nil, nil ])
     end
   end
+
+  describe "PATCH /api/v1/me/password" do
+    it "changes the password, keeps this session and signs out tokens and assistants" do
+      _record, raw = ApiToken.issue!(user:, name: "Shortcut")
+      mcp_token(user)
+      Doorkeeper::AccessGrant.create!(application: claude_app, resource_owner_id: user.id, expires_in: 60,
+        redirect_uri: OauthHelpers::CLAUDE_CALLBACK, scopes: "books:read")
+      sign_in_as(user)
+
+      patch "/api/v1/me/password", params: { current_password: "password123", password: "new-password" }, as: :json
+
+      expect(response).to have_http_status(:no_content)
+      expect(user.reload.valid_password?("new-password")).to be(true)
+      expect(AuditEvent.where(user:, action: "password_changed")).to exist
+      get "/api/v1/me"
+      expect(response).to have_http_status(:ok)
+      get "/api/v1/me", headers: bearer(raw)
+      expect(response).to have_http_status(:unauthorized)
+      expect(Doorkeeper::AccessToken.where(resource_owner_id: user.id, revoked_at: nil)).to be_empty
+      expect(Doorkeeper::AccessGrant.where(resource_owner_id: user.id, revoked_at: nil)).to be_empty
+    end
+
+    it "rejects a wrong current password and a short new one" do
+      sign_in_as(user)
+
+      patch "/api/v1/me/password", params: { current_password: "nope", password: "new-password" }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]).to eq([ { "code" => "invalid", "field" => "current_password" } ])
+
+      patch "/api/v1/me/password", params: { current_password: "password123", password: "short" }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]).to eq([ { "code" => "too_short", "field" => "password" } ])
+      expect(user.reload.valid_password?("password123")).to be(true)
+    end
+
+    it "needs the cookie session" do
+      _record, raw = ApiToken.issue!(user:, name: "Shortcut")
+
+      patch "/api/v1/me/password", params: { current_password: "password123", password: "new-password" },
+        headers: bearer(raw), as: :json
+
+      expect(response).to have_http_status(:forbidden)
+      expect(error_codes).to eq([ "session_required" ])
+    end
+  end
 end

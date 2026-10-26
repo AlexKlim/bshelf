@@ -74,9 +74,20 @@ C keeps us off our own OAuth code but adds a vendor, a second token format and r
 ## Decision (build only what the clients use)
 
 - **Client registration: CIMD only**, Doorkeeper 6.0.0.rc2 + own allowlisted CIMD lookup (option A). Both target clients prefer CIMD and use it whenever the AS advertises it. Allowed `client_id` hosts: `claude.ai`, `chatgpt.com`.
-- **No DCR** (deprecated, not needed once CIMD is advertised, and the cited CVEs live there). **No pre-registered clients**: no UI for them, the user would have to paste ids.
-- AS metadata: `client_id_metadata_document_supported: true`, `token_endpoint_auth_methods_supported` includes `none`, `code_challenge_methods_supported: ["S256"]`, `issuer` set so `iss` is returned (ChatGPT stable redirect and client id).
+- **No DCR** (deprecated, not needed once CIMD is advertised, and the cited CVEs live there). **Pre-registered clients only for Gemini**, see below.
+- AS metadata: `client_id_metadata_document_supported: true`, `token_endpoint_auth_methods_supported` includes `none` (plus `client_secret_basic` and `client_secret_post` for Gemini keys), `code_challenge_methods_supported: ["S256"]`, `issuer` set so `iss` is returned (ChatGPT stable redirect and client id).
 - Protected resource metadata at `/.well-known/oauth-protected-resource` and `/.well-known/oauth-protected-resource/mcp`; `resource` = `APP_URL/mcp`.
 - `resource` is required and must equal `APP_URL/mcp`; `/mcp` rejects tokens bound to anything else.
 - Refresh tokens rotate on use; access tokens live 1 hour.
 - Not supported yet: Claude Code (loopback `localhost` port matching arrives with Doorkeeper main #1960; add `claude.ai/oauth/claude-code-client-metadata` then). Failure mode "client without a supported mechanism": an unknown `client_id` gets Doorkeeper's `invalid_client` error page, per spec.
+
+## Gemini Enterprise: per-user pre-registered clients (added 2026-10-26)
+
+Gemini Enterprise and Gemini Business add a custom MCP server only with a pre-registered OAuth client: the admin pastes a client id, a client secret, the authorization and token URLs, and Google redirects to `https://vertexaisearch.cloud.google.com/oauth-redirect`. It has no CIMD, so the allowlisted CIMD path cannot serve it. Nothing here covers the consumer Gemini app.
+
+- `POST /api/v1/assistants/gemini_client` (cookie session) creates one confidential Doorkeeper application per user (`oauth_applications.user_id`), replacing the previous one and its tokens. The secret is returned once and stored hashed (`hash_application_secrets`); the CIMD apps have no secret, so the setting does not touch them.
+- The redirect URI is locked to the vertexaisearch URL above (`AssistantsController::GEMINI_REDIRECT_URI`); scopes are `books:read books:write`.
+- `authorize_resource_owner_for_client` lets only the owner approve it; anyone else gets `access_denied`. A leaked id and secret therefore cannot be used on another account.
+- Token endpoint: `client_secret_basic` or `client_secret_post` for these apps; `none` with no secret fails for them because they are confidential. CIMD public clients keep `none` + PKCE.
+- PKCE: `force_pkce` is off because it would apply to every client and Google may not send PKCE. A patch on `PreAuthorization#validate_code_challenge` still requires a challenge from public clients; a confidential client that sends one has it checked at the token endpoint.
+- `resource`: when a Gemini key omits it, the authorization endpoint fills in `APP_URL/mcp`, so the token passes the audience check at `/mcp`.

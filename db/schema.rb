@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_100006) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -209,7 +209,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100006) do
     t.boolean "confidential", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true
+    t.index ["user_id"], name: "index_oauth_applications_on_user_id", unique: true
     t.index ["uuid"], name: "index_oauth_applications_on_uuid", unique: true
   end
 
@@ -465,6 +467,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100006) do
   add_foreign_key "oauth_access_grants", "users", column: "resource_owner_id", on_delete: :cascade
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id", on_delete: :cascade
   add_foreign_key "oauth_access_tokens", "users", column: "resource_owner_id", on_delete: :cascade
+  add_foreign_key "oauth_applications", "users", on_delete: :cascade
   add_foreign_key "readings", "editions", on_delete: :cascade
   add_foreign_key "readings", "users", on_delete: :cascade
   add_foreign_key "remote_browser_sessions", "users", on_delete: :cascade
