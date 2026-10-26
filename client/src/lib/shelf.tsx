@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { getShelfPage, getShelves } from "@/api"
 import type { ApiError } from "./api"
-import { placeBook } from "./arrange"
+import { placeBook, swapBook } from "./arrange"
 import { readCache, writeCache } from "./cache"
 import type { BookSummary, Shelf, ShelfKey } from "./types"
 
@@ -26,7 +26,8 @@ type State = { shelves: Shelf[] | null; fromCache: boolean; error: string | null
 type ShelfData = State & {
   reload: () => Promise<void>
   loadMore: (key: ShelfKey) => void
-  place: (book: BookSummary) => void
+  place: (book: BookSummary, before?: string, after?: string) => void
+  swap: (book: BookSummary) => void
 }
 
 const ShelfContext = createContext<ShelfData>({
@@ -36,6 +37,7 @@ const ShelfContext = createContext<ShelfData>({
   reload: async () => {},
   loadMore: () => {},
   place: () => {},
+  swap: () => {},
 })
 
 export function ShelfProvider({ children }: { children: ReactNode }) {
@@ -84,8 +86,11 @@ export function ShelfProvider({ children }: { children: ReactNode }) {
     [state.shelves],
   )
 
-  const place = useCallback((book: BookSummary) => {
-    setState((prev) => (prev.shelves ? { ...prev, shelves: placeBook(prev.shelves, book) } : prev))
+  const place = useCallback((book: BookSummary, before?: string, after?: string) => {
+    setState((prev) => (prev.shelves ? { ...prev, shelves: placeBook(prev.shelves, book, before, after) } : prev))
+  }, [])
+  const swap = useCallback((book: BookSummary) => {
+    setState((prev) => (prev.shelves ? { ...prev, shelves: swapBook(prev.shelves, book) } : prev))
   }, [])
 
   useEffect(() => {
@@ -94,7 +99,7 @@ export function ShelfProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("online", reload)
   }, [reload])
 
-  return <ShelfContext.Provider value={{ ...state, reload, loadMore, place }}>{children}</ShelfContext.Provider>
+  return <ShelfContext.Provider value={{ ...state, reload, loadMore, place, swap }}>{children}</ShelfContext.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

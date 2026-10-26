@@ -14,7 +14,7 @@ RSpec.describe ShelfMove do
     older = done("Older", Time.zone.local(2026, 3, 1))
     moved = create(:book, user:, title: "Moved", status: "in_progress")
 
-    described_class.call(moved, key: "2026", prev: newer, after: older)
+    described_class.call(moved, key: "2026", before: newer, after: older)
 
     expect(row("2026")).to eq(%w[Newer Moved Older])
     expect(moved.editions.first.reading.reload.finished_at).to eq(Time.zone.local(2026, 6, 1))
@@ -24,19 +24,17 @@ RSpec.describe ShelfMove do
     only = done("Only", Time.zone.local(2019, 1, 1, 6))
     moved = create(:book, user:, title: "Moved", status: "want")
 
-    described_class.call(moved, key: "2019", prev: only)
+    described_class.call(moved, key: "2019", before: only)
 
     expect(row("2019")).to eq(%w[Only Moved])
     expect(moved.editions.first.reading.reload.finished_at).to eq(Time.zone.local(2019, 1, 1))
   end
 
   it "keeps a hand-placed book in its place on a shelf ordered by activity, until it leaves the shelf" do
-    first, second = %w[First Second].map { create(:book, user:, title: it, status: "in_progress") }
-    first.editions.first.reading.touch
-    moved = create(:book, user:, title: "Moved", status: "in_progress")
-    moved.editions.first.reading.touch
+    first, second, moved = %w[First Second Moved].map { create(:book, user:, title: it, status: "in_progress") }
+    { first => 2.hours, second => 3.hours, moved => 1.hour }.each { |b, ago| b.editions.first.reading.update_columns(updated_at: ago.ago) }
 
-    described_class.call(moved, key: "now", prev: first, after: second)
+    described_class.call(moved, key: "now", before: first, after: second)
     expect(row("now")).to eq(%w[First Moved Second])
 
     StatusResolver.manual!(moved.editions.first.reading, status: "done")

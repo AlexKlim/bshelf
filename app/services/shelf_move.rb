@@ -3,7 +3,7 @@ class ShelfMove
 
   def self.key?(key) = KEYS.include?(key) || (key.match?(/\A\d{4}\z/) && key.to_i.between?(1900, Date.current.year))
 
-  def self.call(book, key:, prev: nil, after: nil) = new(book).call(key:, prev:, after:)
+  def self.call(book, key:, before: nil, after: nil) = new(book).call(key:, before:, after:)
 
   attr_reader :book
 
@@ -11,11 +11,10 @@ class ShelfMove
     @book = book
   end
 
-  def call(key:, prev:, after:)
+  def call(key:, before:, after:)
     shelf = Shelf.new(book.user)
-    # prev is the book shown before the moved one and after the one shown after it, and shelves list the newest first.
-    places = shelf.placements([ prev, after ].compact.map(&:id))
-    newer, older = places[prev&.id], places[after&.id]
+    places = shelf.placements([ before, after ].compact.map(&:id))
+    newer, older = places[before&.id], places[after&.id]
     finished = finished_at(key.to_i, newer&.finished_at, older&.finished_at) if key.match?(/\A\d+\z/)
 
     Book.transaction do

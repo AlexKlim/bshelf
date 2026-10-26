@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
-import { getSources, updateEdition } from "@/api"
+import { getSources, moveBook } from "@/api"
 import { Bookcase, BookcaseSkeleton } from "@/components/Bookcase"
 import { BookView } from "@/components/BookView"
 import { EmptyCase } from "@/components/EmptyCase"
@@ -63,28 +63,36 @@ export function BookcaseScreen() {
     else navigate({ search: "" }, { replace: true })
   }, [location.state, navigate])
 
-  const { reload, place } = shelf
+  const { reload, place, swap } = shelf
   const saving = useRef(new Map<string, Promise<void>>())
+  const shelves = useMemo(() => (shelf.shelves ? arrangeShelves(shelf.shelves) : null), [shelf.shelves])
   const move = useCallback(
-    (book: BookSummary, to: ShelfKey) => {
-      const changes = book.editions.map((e) => shelfStatus(e, to))
-      place(movedBook(book, to, changes))
-      const save = (saving.current.get(book.id) ?? Promise.resolve())
-        .then(() => Promise.allSettled(book.editions.map((e, i) => updateEdition(e.id, changes[i]))))
-        .then((results) => {
-          const last = saving.current.get(book.id) === save
-          if (last) saving.current.delete(book.id)
-          if (last && results.some((r) => r.status === "rejected")) reload()
+    (book: BookSummary, to: ShelfKey, index: number) => {
+      const row = (shelves?.find((s) => s.key === to)?.books ?? []).filter((b) => b.id !== book.id)
+      const [before, after] = [row[index - 1], row[index]]
+      const key = to === "want" ? (after?.shelf ?? before?.shelf ?? to) : to
+      place(movedBook(book, key, book.editions.map((e) => shelfStatus(e, to))), before?.id, after?.id)
+      const save: Promise<void> = (saving.current.get(book.id) ?? Promise.resolve())
+        .then(() => moveBook(book.id, { shelf: to, before: before?.id, after: after?.id }))
+        .then(
+          ({ book: saved }) => {
+            if (saving.current.get(book.id) === save) swap(saved)
+          },
+          () => {
+            if (saving.current.get(book.id) === save) reload()
+          },
+        )
+        .finally(() => {
+          if (saving.current.get(book.id) === save) saving.current.delete(book.id)
         })
       saving.current.set(book.id, save)
     },
-    [reload, place],
+    [shelves, reload, place, swap],
   )
 
   const [bookId, setBookId] = useState(openId)
   if (openId && openId !== bookId) setBookId(openId)
 
-  const shelves = useMemo(() => (shelf.shelves ? arrangeShelves(shelf.shelves) : null), [shelf.shelves])
   const summary = shelves?.flatMap((s) => s.books).find((b) => b.id === bookId)
 
   const banner = pickBanner([offline ? { kind: "offline" } : null, serverBanner], dismissed)

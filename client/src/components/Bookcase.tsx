@@ -24,7 +24,7 @@ type Props = {
   matches?: ReadonlySet<string>
   onOpen: (book: BookSummary) => void
   onMore?: (key: ShelfKey) => void
-  onMove?: (book: BookSummary, to: ShelfKey) => void
+  onMove?: (book: BookSummary, to: ShelfKey, index: number) => void
 }
 
 const FADE = 24
@@ -144,16 +144,21 @@ export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
   const onSpinePointer = useCallback(
     (e: ReactPointerEvent, si: number, bi: number) => {
       const shelf = latest.current.shelves[si]
-      onPointerDown(e, shelf.books[bi], shelf.key)
+      onPointerDown(e, shelf.books[bi], shelf.books[bi].id, shelf.key, bi)
     },
     [onPointerDown],
   )
 
   return (
-    <div className={drag ? "bs-case is-dragging" : "bs-case"}>
+    <div
+      className={drag ? "bs-case is-dragging" : "bs-case"}
+      style={drag ? ({ "--drop-gap": `${spineSize(drag.item).width + 2}px` } as CSSProperties) : undefined}
+    >
       {shelves.map((shelf, si) => {
         const label = shelfLabel(t, shelf.key)
         const headingId = `shelf-${shelf.key}`
+        const gapAt = drag?.over === shelf.key ? drag.index : -1
+        const staying = shelf.books.filter((b) => b.id !== drag?.id)
         return (
           <section
             key={shelf.key}
@@ -189,7 +194,8 @@ export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
                     si={si}
                     bi={bi}
                     pulled={pulled === book.id}
-                    lifted={drag?.item.id === book.id}
+                    lifted={drag?.id === book.id}
+                    gap={gapAt >= 0 && staying[gapAt]?.id === book.id}
                     match={matches?.has(book.id) ?? false}
                     expandable={!hover}
                     tabbable={book.id === tabbable}
@@ -202,6 +208,7 @@ export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
                   />
                 </li>
               ))}
+              {gapAt >= 0 && gapAt >= staying.length && <li className="bs-shelf__gap" aria-hidden="true" />}
               {onMore && shelf.books.length < shelf.count && (
                 <ShelfEnd key={shelf.books.length} shelfKey={shelf.key} horizontal onMore={onMore} />
               )}
@@ -236,6 +243,7 @@ type SpineProps = {
   bi: number
   pulled: boolean
   lifted: boolean
+  gap: boolean
   match: boolean
   expandable: boolean
   tabbable: boolean
@@ -253,6 +261,7 @@ const Spine = memo(function Spine({
   bi,
   pulled,
   lifted,
+  gap,
   match,
   expandable,
   tabbable,
@@ -270,6 +279,7 @@ const Spine = memo(function Spine({
     narrow && "bs-spine--narrow",
     pulled && "is-pulled",
     lifted && "is-lifted",
+    gap && "is-gap",
     match && !pulled && "is-match",
   ]
     .filter(Boolean)
