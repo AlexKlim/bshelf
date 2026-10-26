@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<style>:root { color-scheme: light only; supported-color-schemes: light only; }</style>
 <title><%= message.subject %></title>
 </head>
 <body style="margin: 0; padding: 0; background: #e6e6e5;">
@@ -16,7 +18,7 @@
 <span style="vertical-align: middle; padding-left: 8px; font: 600 24px/32px Georgia, 'Times New Roman', serif; color: #1e231f;">Book Shelf</span>
 </a>
 </td></tr>
-<tr><td style="padding: 40px 40px 36px; background: #fbf8f0; border-radius: 6px; font: 400 16px/24px -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; color: #1e231f;">
+<tr><td style="padding: 40px 40px 36px; background: #f3ead6; border-radius: 3px; box-shadow: 0 1px 2px rgba(30,35,31,0.14), 0 8px 24px -8px rgba(30,35,31,0.28); font: 400 16px/24px -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; color: #1e231f;">
 <%= yield %>
 </td></tr>
 <tr><td align="center" style="padding-top: 20px; font: 400 13px/18px -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; color: #535b54;">
