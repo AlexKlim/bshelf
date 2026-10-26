@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+reviews:
+  profile: chill
+  high_level_summary: true
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches: [ main ]
+  path_filters:
+    - "!**/package-lock.json"
+    - "!Gemfile.lock"
+    - "!db/schema.rb"
+    - "!.github/readme/**"
+  path_instructions:
+    - path: "**/*.{rb,ts,tsx}"
+      instructions: >-
+        Readers are senior engineers. Do not ask for comments above methods or classes,
+        or for comments that restate the code. Prefer the smallest change that works over new abstractions.
+    - path: "client/src/locales/**"
+      instructions: >-
+        UI copy must not use em or en dashes, and must not join sentences with semicolons.
