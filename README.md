@@ -29,6 +29,6 @@ cd client && npm test -- --run && npm run lint
 
 `Dockerfile` builds the client into `public/` and serves it from Rails on one origin. `railway.toml` deploys it on Railway.
 
-Environment: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_URL` (public URL, used in email links), `MAIL_FROM`, `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`. Set `SOLID_QUEUE_IN_PUMA=false` only if jobs move to a separate worker.
+Environment: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_URL` (public URL, used in email links), `MAIL_FROM`, `RESEND_API_KEY` (mail goes through the Resend HTTP API, Railway blocks outbound SMTP). Set `SOLID_QUEUE_IN_PUMA=false` only if jobs move to a separate worker.
 
 API contract: [API.md](API.md).
