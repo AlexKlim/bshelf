@@ -4,7 +4,7 @@ production:
     schedule: every hour at minute 12
   enrich_missing_books:
     class: EnrichMissingBooksJob
-    schedule: every day at 4am
+    schedule: every 15 minutes
   read_cover_colors:
     class: ReadCoverColorsJob
     schedule: every 15 minutes

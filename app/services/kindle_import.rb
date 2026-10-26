@@ -40,7 +40,7 @@ class KindleImport
 
   def upsert(item)
     asin = item["asin"]
-    title = self.class.decode(item["title"]).strip
+    title = FileTitle.clean(self.class.decode(item["title"]).strip)
     return false if asin.blank? || title.blank?
 
     status = status_for(item)
@@ -61,7 +61,9 @@ class KindleImport
 
   def cover(book, item)
     url = item["productUrl"]
-    book.update!(cover_url: url.sub(/\Ahttp:/, "https:")) if url.is_a?(String) && url.present? && book.cover_url.nil?
+    return unless url.is_a?(String) && url.include?("/images/I/") && book.cover_url.nil?
+
+    book.update!(cover_url: url.sub(/\Ahttp:/, "https:"))
   end
 
   def status_for(item)
