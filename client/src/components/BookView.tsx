@@ -172,7 +172,7 @@ export function BookSpread({ book, error, disabled, onBook, onReload }: SpreadPr
               edition={edition}
               disabled={disabled}
               editing={editor === edition.id}
-              onEdit={(open) => setEditor(open ? edition.id : null)}
+              onEdit={(open) => setEditor((cur) => (open ? edition.id : cur === edition.id ? null : cur))}
               onSaved={onReload}
             />
           ))}
@@ -182,7 +182,7 @@ export function BookSpread({ book, error, disabled, onBook, onReload }: SpreadPr
             book={detail}
             disabled={disabled}
             open={editor === "add"}
-            onOpen={(open) => setEditor(open ? "add" : null)}
+            onOpen={(open) => setEditor((cur) => (open ? "add" : cur === "add" ? null : cur))}
             onBook={onBook}
           />
         )}

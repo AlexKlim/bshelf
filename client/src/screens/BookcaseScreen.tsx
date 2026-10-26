@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { getSources, updateEdition } from "@/api"
@@ -64,11 +64,15 @@ export function BookcaseScreen() {
   }, [location.state, navigate])
 
   const { reload } = shelf
+  const moving = useRef(false)
   const move = useCallback(
     (book: BookSummary, to: ShelfKey) => {
-      Promise.all(book.editions.map((e) => updateEdition(e.id, shelfStatus(e, to))))
-        .catch(() => {})
-        .finally(reload)
+      if (moving.current) return
+      moving.current = true
+      Promise.allSettled(book.editions.map((e) => updateEdition(e.id, shelfStatus(e, to)))).then(() => {
+        moving.current = false
+        reload()
+      })
     },
     [reload],
   )

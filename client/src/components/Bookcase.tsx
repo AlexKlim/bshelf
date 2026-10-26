@@ -8,7 +8,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
-  type PointerEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react"
 import { useTranslation } from "react-i18next"
 import { shelfLabel } from "@/lib/arrange"
@@ -142,7 +142,7 @@ export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
   const onSpineFocus = useCallback((si: number, bi: number) => setFocus([si, bi]), [])
 
   const onSpinePointer = useCallback(
-    (e: PointerEvent, si: number, bi: number) => {
+    (e: ReactPointerEvent, si: number, bi: number) => {
       const shelf = latest.current.shelves[si]
       onPointerDown(e, shelf.books[bi], shelf.key)
     },
@@ -244,7 +244,7 @@ type SpineProps = {
   onSpineClick: (si: number, bi: number) => void
   onSpineKey: (e: KeyboardEvent, si: number, bi: number) => void
   onSpineFocus: (si: number, bi: number) => void
-  onSpinePointer?: (e: PointerEvent, si: number, bi: number) => void
+  onSpinePointer?: (e: ReactPointerEvent, si: number, bi: number) => void
 }
 
 const Spine = memo(function Spine({
