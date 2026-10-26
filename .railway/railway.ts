@@ -9,7 +9,7 @@ export default defineRailway(() => {
     build: { buildEnvironment: "V3", builder: "DOCKERFILE", dockerfilePath: "Dockerfile" },
     healthcheck: "/up",
     replicas: { "europe-west4-drams3a": 1 },
-    domains: [{ domain: "bshelf.org", port: 3000 }, { domain: "www.bshelf.org", port: 3000 }],
+    domains: [{ domain: "bshelf.org", port: 3000 }],
   });
 
   return project("bshelf", {
