@@ -503,6 +503,7 @@
     "queued_one": "Working on {{count}} book. The bookcase will refresh by itself.",
     "queued_other": "Working on {{count}} books. The bookcase will refresh by itself.",
     "nothing": "Everything is in place, nothing to look for.",
-    "error": "That did not work. Try again a little later."
+    "error": "That did not work. Try again a little later.",
+    "duplicates": "Covers are in place. Looking for one book in two languages, any pairs will show up among duplicates."
   }
 }

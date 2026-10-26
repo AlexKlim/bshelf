@@ -5,7 +5,7 @@ class LibraryTidy
     coverless.update_all(enriched_at: nil)
     ids = books.where(enriched_at: nil).or(books.where.not(cover_url: nil).where(cloth_color: nil)).ids
     ActiveJob.perform_all_later(ids.map { EnrichBookJob.new(it) })
-    FindTranslationsJob.perform_later(user.id)
-    ids.size
+    FindTranslationsJob.perform_later(user.id) if JevClient.configured?
+    { queued: ids.size, duplicates: JevClient.configured? }
   end
 end

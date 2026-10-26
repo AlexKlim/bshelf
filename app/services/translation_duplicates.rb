@@ -10,15 +10,20 @@ class TranslationDuplicates
   end
 
   def call
-    candidates.first(CHECKS).count do |a, b|
-      noul = CatalogEntry.fetch("jev:#{[ a, b ].map { "#{it.title_key}|#{surname(it)}" }.sort.join("~")}") { { "noul" => @client.same_book(a, b) } }["noul"]
-      noul.to_f >= SAME && DuplicateCandidate.record!(a, b, reason: "translation")
+    asked = CatalogEntry.where(key: candidates.map { JevClient.cache_key(*it) }).pluck(:key).to_set
+    candidates.reject { asked.include?(JevClient.cache_key(*it)) }.first(CHECKS).count do |a, b|
+      noul = CatalogEntry.fetch(JevClient.cache_key(a, b)) { { "noul" => @client.same_book(a, b) } }["noul"]
+      noul >= SAME && DuplicateCandidate.record!(a, b, reason: "translation")
     end
   end
 
   private
 
   def candidates
+    @candidates ||= pairs
+  end
+
+  def pairs
     books = @user.books.where.not(author: [ nil, "" ]).to_a
     cyrillic, latin = books.partition { it.title.match?(/\p{Cyrillic}/) }
     known = DuplicateCandidate.where(user: @user).pluck(:book_id, :other_book_id).to_set

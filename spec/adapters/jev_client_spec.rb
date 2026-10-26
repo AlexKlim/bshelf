@@ -16,4 +16,10 @@ RSpec.describe JevClient do
     expect(noul).to eq(0.97)
     expect(request).to have_been_made
   end
+
+  it "refuses an answer without a probability instead of reading it as no" do
+    stub_request(:post, "https://openrouter.ai/api/alpha/decisions").to_return(status: 200, body: { answers: {} }.to_json)
+
+    expect { described_class.new.same_book(build(:book), build(:book)) }.to raise_error(JevClient::Error)
+  end
 end

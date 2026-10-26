@@ -15,6 +15,11 @@ class JevClient
 
   def self.configured? = ENV["OPENROUTER_API_KEY"].present?
 
+  def self.cache_key(a, b)
+    books = [ a, b ].map { [ it.title, it.author ] }.sort
+    "jev:#{Digest::SHA256.hexdigest([ MODEL, SAME_BOOK, books ].to_json)}"
+  end
+
   def same_book(a, b)
     describe = ->(label, book) { "Book #{label}, a book: «#{book.title}», #{book.author}" }
     body = { model: MODEL, state: [ describe.("A", a), describe.("B", b) ], questions: { same_book: SAME_BOOK } }
@@ -22,7 +27,10 @@ class JevClient
       "Content-Type" => "application/json")
     raise Error, "openrouter answered #{res.code}" unless res.is_a?(Net::HTTPSuccess)
 
-    JSON.parse(res.body).dig("answers", "same_book", "noul")
+    noul = JSON.parse(res.body).dig("answers", "same_book", "noul")
+    raise Error, "openrouter answered without a probability" unless noul.is_a?(Numeric)
+
+    noul
   rescue Timeout::Error, SocketError, SystemCallError, JSON::ParserError => e
     raise Error, e.class.name
   end

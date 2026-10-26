@@ -9,7 +9,7 @@ describe("LibrarianDesk", () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it("asks the server to tidy up and says how many books it took", async () => {
-    const fetch = mockFetch(() => [200, { queued: 3 }])
+    const fetch = mockFetch(() => [200, { queued: 3, duplicates: false }])
     render(<LibrarianDesk onTidied={() => {}} />)
 
     await userEvent.click(screen.getByRole("button", { name: "Tidy up" }))

@@ -5,7 +5,10 @@ RSpec.describe "Librarian's desk" do
 
   let(:user) { create(:user) }
 
-  before { sign_in_as(user) }
+  before do
+    sign_in_as(user)
+    allow(JevClient).to receive(:configured?).and_return(true)
+  end
 
   it "queues the lookup for the reader's books that miss something, and only theirs" do
     never = create(:book, user:)
@@ -18,7 +21,7 @@ RSpec.describe "Librarian's desk" do
     post "/api/v1/library/tidy", as: :json
 
     expect(response).to have_http_status(:ok)
-    expect(json["queued"]).to eq(3)
+    expect(json).to eq("queued" => 3, "duplicates" => true)
     enriched = enqueued_jobs.select { it["job_class"] == "EnrichBookJob" }.map { it["arguments"].first }
     expect(enriched).to contain_exactly(never.id, coverless.id, colourless.id)
     expect(FindTranslationsJob).to have_been_enqueued.with(user.id)
