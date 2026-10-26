@@ -194,7 +194,7 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
 .bs-source__meta--error { color: var(--danger); }
 
 .bs-closed { position: relative; display: grid; place-items: center; inline-size: 200px; max-inline-size: 100%; aspect-ratio: 2 / 3; padding: var(--space-6) var(--space-4); border-radius: 2px 4px 4px 2px; background-image: linear-gradient(90deg, var(--spine-shade), transparent 7%, var(--spine-band) 8%, transparent 9.5%); box-shadow: 2px 2px 0 -1px var(--page-paper), 3px 3px 0 -1px var(--page-edge), 4px 4px 0 -1px var(--page-paper), 5px 5px 0 -1px var(--page-edge), var(--shadow-spread); }
-.bs-closed__jacket { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: contain; border-radius: inherit; }
+.bs-closed__jacket { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: cover; border-radius: inherit; }
 .bs-closed__label { display: grid; gap: var(--space-1); justify-items: center; inline-size: 78%; padding: var(--space-4) var(--space-3); background: var(--page-paper); color: var(--ink); text-align: center; border-radius: var(--radius-xs); box-shadow: inset 0 0 0 1px var(--page-edge), inset 0 0 0 4px var(--page-paper), inset 0 0 0 5px var(--page-edge); }
 .bs-closed__title { font: 600 18px/22px var(--font-page); text-wrap: balance; }
 .bs-closed__author { font: 400 11px/14px var(--font-page); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
