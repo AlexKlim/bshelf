@@ -4,7 +4,7 @@ import { addBook, type NewBook } from "@/api"
 import type { ApiError } from "@/lib/api"
 import type { BookDetail, BookSummary, Status } from "@/lib/types"
 import { duplicateMessage, errorMessage, statusWord } from "@/lib/vocab"
-import { Choices, Field, Ico } from "./ui"
+import { Choices, Field, Ico, MonthField } from "./ui"
 
 export type EntryDraft = { title?: string; format?: "audio" | "ebook"; status?: Status }
 
@@ -89,7 +89,7 @@ export function EntryForm({ draft = {}, disabled, onSaved, onCancel }: Props) {
         ]}
       />
       {dated && (
-        <Field hand type="month" label={t("entry.when")} value={when} onChange={(e) => setWhen(e.target.value)} />
+        <MonthField label={t("entry.when")} value={when} onChange={setWhen} />
       )}
       <div className="bs-entry__actions">
         <button type="button" className="bs-btn bs-btn--quiet" onClick={onCancel}>

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import i18n from "@/i18n"
 import type { BookDetail } from "@/lib/types"
@@ -61,11 +61,11 @@ describe("editing an edition", () => {
     render(<BookSpread book={detail()} onBook={() => {}} onReload={onReload} />)
 
     await userEvent.click(screen.getByRole("button", { expanded: false, name: /Audio/ }))
-    const when = screen.getByLabelText("When")
-    fireEvent.change(when, { target: { value: "2025-03" } })
-    fireEvent.blur(when)
+    await userEvent.click(screen.getByLabelText("When"))
+    await userEvent.click(screen.getByRole("button", { name: "Previous year" }))
+    await userEvent.click(screen.getByRole("button", { name: "Mar" }))
 
     await waitFor(() => expect(onReload).toHaveBeenCalled())
-    expect(bodies.at(-1)).toEqual({ status: "done", finished_at: "2025-03-01" })
+    expect(bodies.at(-1)).toEqual({ status: "done", finished_at: "2023-03-01" })
   })
 })

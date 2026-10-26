@@ -18,7 +18,7 @@ import { clothStyle } from "@/lib/cloth"
 import { findOpener } from "@/lib/opener"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { statusLine, statusWord, verbForm, errorMessage } from "@/lib/vocab"
-import { Choices, Field, Ico } from "./ui"
+import { Choices, Ico, MonthField } from "./ui"
 
 type ViewProps = {
   bookId: string
@@ -289,15 +289,7 @@ function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLin
         />
       )}
       {editing && status && dateField && (
-        <Field
-          hand
-          type="month"
-          label={t("entry.when")}
-          defaultValue={when}
-          key={`${status}:${when}`}
-          disabled={disabled}
-          onBlur={(e) => e.target.value !== when && save(status, e.target.value)}
-        />
+        <MonthField label={t("entry.when")} value={when} disabled={disabled} onChange={(month) => save(status, month)} />
       )}
       {error && <span className="bs-field__error">{t("book.statusError")}</span>}
     </li>

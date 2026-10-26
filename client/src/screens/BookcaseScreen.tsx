@@ -21,7 +21,7 @@ import { useOnline } from "@/lib/useOnline"
 
 type View = "case" | "list"
 
-const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"]), .bs-month__panel'
 
 function readDismissed() {
   try {

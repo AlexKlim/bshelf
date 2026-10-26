@@ -83,6 +83,10 @@
     "format": "Format",
     "status": "Status",
     "when": "When",
+    "clearMonth": "Clear",
+    "thisMonth": "This month",
+    "prevYear": "Previous year",
+    "nextYear": "Next year",
     "save": "Write it in",
     "saving": "Writing...",
     "duplicate": "Already on the shelf: {{status}}"
