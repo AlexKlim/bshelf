@@ -71,6 +71,15 @@ RSpec.describe MergeEvent do
     expect(event.filled.keys).not_to include("cloth", "cloth_color")
   end
 
+  it "takes the cover colour when both books share the cover" do
+    absorbed.update_columns(cover_url: "https://www.litres.ru/a.jpg", cloth: "oxblood", cloth_color: "#d30535")
+    survivor.update_columns(cover_url: "https://www.litres.ru/a.jpg", cloth: nil, cloth_color: nil)
+
+    described_class.merge!(survivor, absorbed)
+
+    expect(survivor.reload).to have_attributes(cloth: "oxblood", cloth_color: "#d30535")
+  end
+
   it "brings the ISBN provenance along with a filled ISBN" do
     absorbed.update!(isbn_source: "catalog")
 
