@@ -14,6 +14,7 @@ class EnrichBook
 
   def call
     unless book.enriched_at
+      rename_from_file
       known = CatalogBook.for(book)
       known&.cover_url ? known.fill(book) : (rate_limited = lookup)
     end
@@ -30,6 +31,23 @@ class EnrichBook
   end
 
   private
+
+  def rename_from_file
+    return unless book.title.match?(/\A[\p{Latin}\d\s.,'-]+\z/) && book.editions.all? { it.format == "personal_doc" }
+
+    query = Translit.to_cyrillic(book.title)
+    wanted = Translit.words(query).select { it.size > 2 }
+    hit = client.search(:litres, title: query, author: nil, isbn: nil).find do |candidate|
+      known = Translit.words([ candidate["title"], *candidate["authors"] ].join(" "))
+      wanted.all? { known.include?(it) }
+    end
+    return unless hit
+
+    book.title = hit["title"]
+    book.author = Array(hit["authors"]).join(", ").presence || book.author
+  rescue CatalogClient::Error => e
+    Rails.logger.info("litres search: #{e.message}")
+  end
 
   def trusted? = book.match_source == "catalog" || CatalogBook.store_ids(book).any?
 

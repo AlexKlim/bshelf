@@ -1,0 +1,45 @@
+{
+ "status": 200,
+ "payload": {
+  "data": [
+   {
+    "type": "text_book",
+    "instance": {
+     "id": 69484024,
+     "title": "Краткое содержание «Смерть от совещаний. Как сделать совещания эффективными и вдохновляющими»",
+     "persons": [
+      {
+       "full_name": "Екатерина Королева",
+       "role": "author"
+      }
+     ],
+     "cover_url": "/pub/c/cover/69484024.jpg",
+     "date_written_at": null,
+     "language_code": "ru",
+     "art_type": 0
+    }
+   },
+   {
+    "type": "text_book",
+    "instance": {
+     "id": 24867070,
+     "title": "Смерть от совещаний",
+     "persons": [
+      {
+       "full_name": "Патрик Ленсиони",
+       "role": "author"
+      },
+      {
+       "full_name": "Василий Горохов",
+       "role": "translator"
+      }
+     ],
+     "cover_url": "/pub/c/cover/24867070.jpg",
+     "date_written_at": "2004-01-01",
+     "language_code": "ru",
+     "art_type": 0
+    }
+   }
+  ]
+ }
+}
