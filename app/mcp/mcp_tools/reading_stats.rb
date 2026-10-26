@@ -1,8 +1,9 @@
 module McpTools
   class ReadingStats < BaseTool
     tool_name "reading_stats"
-    description "Counts finished books for a year: total, listened (audio), read (any other format), " \
-      "top authors. Pass author to count only that author's books. A book with both formats counts in both."
+    description "Lists the books finished in a year with their authors, formats and finish dates, and counts them: " \
+      "total, listened (audio), read (any other format), top authors. Use it for \"what did I read in 2026\". " \
+      "Pass author to keep only that author's books. A book with both formats counts in both."
     input_schema(properties: {
       year: { type: "integer", description: "Defaults to the current year" },
       author: { type: "string", description: "Substring of the author name" }
@@ -18,9 +19,13 @@ module McpTools
         top_authors: stats[:top_authors], years: stats[:years],
         books: books.map { it.slice(:id, :title, :author, :formats, :finished_at) }
       }.compact
-      summary = "#{data[:year]}#{" #{author}" if author.present?}: #{data[:total]} books, " \
-        "listened #{data[:listened]}, read #{data[:read]}"
+      summary = [ "#{data[:year]}#{" #{author}" if author.present?}: #{data[:total]} books, " \
+        "listened #{data[:listened]}, read #{data[:read]}", *books.map { finished(it) } ].join("\n")
       respond(summary, data)
+    end
+
+    def self.finished(book)
+      "#{book[:title]}#{" - #{book[:author]}" if book[:author]} (#{book[:formats].join(", ")}, #{book[:finished_at]&.to_date})"
     end
   end
 end

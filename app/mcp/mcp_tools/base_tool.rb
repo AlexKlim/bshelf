@@ -6,7 +6,7 @@ module McpTools
       def required_scope = "books:read"
 
       def respond(summary, data, error: false)
-        MCP::Tool::Response.new([ MCP::Content::Text.new(summary) ], structured_content: data.as_json, error:)
+        MCP::Tool::Response.new([ MCP::Content::Text.new(summary).to_h ], structured_content: data.as_json, error:)
       end
 
       def fail_with(code, field: nil, **extra)
