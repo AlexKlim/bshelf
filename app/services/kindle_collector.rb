@@ -84,8 +84,12 @@ class KindleCollector
     token = ""
     (0..).each do |number|
       result = library_page(page, token)
-      raise RemoteBrowser::ProviderRefused if result["error"] && number.zero?
-      break Rails.logger.warn("[kindle] #{result["error"]} after #{books.size} books") if result["error"]
+      if result["error"]
+        Rails.logger.warn("[kindle] #{result["error"]} on page #{number + 1} of #{URI(page.current_url).host}, #{books.size} books read")
+        raise RemoteBrowser::ProviderRefused if number.zero?
+
+        break
+      end
 
       books.concat(result["items"])
       yield
