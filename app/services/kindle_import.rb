@@ -4,6 +4,8 @@ class KindleImport
 
   def self.call(user, items, highlights, owned = {}) = new(user).call(items, highlights, owned)
 
+  def self.decode(text) = Nokogiri::HTML5.fragment(text.to_s).text
+
   def initialize(user)
     @user = user
   end
@@ -38,7 +40,7 @@ class KindleImport
 
   def upsert(item)
     asin = item["asin"]
-    title = CGI.unescapeHTML(item["title"].to_s).strip
+    title = self.class.decode(item["title"]).strip
     return false if asin.blank? || title.blank?
 
     status = status_for(item)
@@ -73,7 +75,7 @@ class KindleImport
   end
 
   def author(names)
-    Array(names).map { CGI.unescapeHTML(it).delete_suffix(":").split(", ", 2).reverse.join(" ").squish }.compact_blank.join(", ").presence
+    Array(names).map { self.class.decode(it).delete_suffix(":").split(", ", 2).reverse.join(" ").squish }.compact_blank.join(", ").presence
   end
 
   def replace_highlights(book_id, notes)

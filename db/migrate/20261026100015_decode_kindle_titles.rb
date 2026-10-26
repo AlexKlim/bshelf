@@ -1,10 +1,11 @@
 class DecodeKindleTitles < ActiveRecord::Migration[8.1]
   def up
-    Book.where("title ~ '&#?[[:alnum:]]+;' OR author ~ '&#?[[:alnum:]]+;'").find_each do |book|
-      title = CGI.unescapeHTML(book.title).strip
+    Book.joins(:editions).where(editions: { store: "amazon" }).distinct
+      .where("books.title ~ '&#?[[:alnum:]]+;' OR books.author ~ '&#?[[:alnum:]]+;'").find_each do |book|
+      title = KindleImport.decode(book.title).strip
       next if title.blank?
 
-      book.update!(title:, author: book.author && CGI.unescapeHTML(book.author))
+      book.update!(title:, author: book.author && KindleImport.decode(book.author))
     end
   end
 
