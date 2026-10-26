@@ -37,14 +37,18 @@ class EnrichBook
 
     query = Translit.to_cyrillic(book.title)
     wanted = Translit.words(query).select { it.size > 2 }
-    hit = client.search(:litres, title: query, author: nil, isbn: nil).find do |candidate|
-      known = Translit.words([ candidate["title"], *candidate["authors"] ].join(" "))
-      wanted.all? { known.include?(it) }
-    end
+    return if wanted.empty?
+
+    hit = client.search(:litres, title: query, author: nil, isbn: nil)
+      .map { [ it, Translit.words([ it["title"], *it["authors"] ].join(" ")) ] }
+      .select { |_, known| wanted.all? { known.include?(it) } }
+      .min_by { |_, known| (known - wanted).size }&.first
     return unless hit
 
     book.title = hit["title"]
     book.author = Array(hit["authors"]).join(", ").presence || book.author
+  rescue CatalogClient::RateLimited
+    raise
   rescue CatalogClient::Error => e
     Rails.logger.info("litres search: #{e.message}")
   end

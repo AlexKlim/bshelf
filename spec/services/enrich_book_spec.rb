@@ -71,6 +71,22 @@ RSpec.describe EnrichBook do
     expect(book.cover_url).to start_with("https://www.litres.ru/pub/c/cover")
   end
 
+  it "prefers the book itself over a summary that repeats its title and author" do
+    person = ->(name) { { full_name: name, role: "author" } }
+    hits = [
+      { instance: { title: "Краткое содержание «Смерть от совещаний» Патрика Ленсиони", persons: [ person.("Патрик Ленсиони") ] } },
+      { instance: { title: "Смерть от совещаний", persons: [ person.("Патрик Ленсиони") ] } }
+    ]
+    stub_request(:get, %r{\Ahttps://api\.litres\.ru/foundation/api/search}).to_return(status: 200, body: { payload: { data: hits } }.to_json)
+    stub_request(:get, %r{\Ahttps://openlibrary\.org/search\.json}).to_return(status: 200, body: { docs: [] }.to_json)
+    stub_google("google_429.json", status: 429)
+    book = create(:book, title: "Lensioni Smert ot soveshchaniy", author: nil, status: "owned", format: "personal_doc")
+
+    suppress(CatalogClient::RateLimited) { described_class.call(book) }
+
+    expect(book.reload.title).to eq("Смерть от совещаний")
+  end
+
   it "falls back to Google Books for a Russian book Open Library does not know" do
     stub_open_library("open_library_solyaris.json")
     stub_google("google_solyaris.json")
