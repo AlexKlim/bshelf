@@ -82,11 +82,13 @@ class LitresCollector
   end
 
   def browse(session)
-    browser = Ferrum::Browser.new(ws_url: session.websocket_url, timeout: TIMEOUT)
-    yield browser.page
+    RemoteBrowser.steel.cdp(session.websocket_url) do |ws_url|
+      browser = Ferrum::Browser.new(ws_url:, timeout: TIMEOUT)
+      yield browser.page
+    ensure
+      browser&.quit
+    end
   rescue Ferrum::Error => e
     raise RemoteBrowser::BrowserFailed, e.class.name
-  ensure
-    browser&.quit
   end
 end

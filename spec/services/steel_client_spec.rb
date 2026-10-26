@@ -29,4 +29,24 @@ RSpec.describe SteelClient do
       expect { client.create_session }.to raise_error(RemoteBrowser::BrowserFailed)
     end
   end
+
+  describe "#cdp" do
+    it "hands Ferrum a loopback address piped to Steel, so Chrome sees an IP in Host" do
+      steel = TCPServer.new("127.0.0.1", 0)
+      client = described_class.new("http://localhost:#{steel.addr[1]}")
+
+      client.cdp("wss://steel.railway.internal:3000/devtools/browser/b1") do |url|
+        expect(URI(url)).to have_attributes(scheme: "ws", host: "127.0.0.1", path: "/devtools/browser/b1")
+
+        ferrum = TCPSocket.new("127.0.0.1", URI(url).port)
+        upstream = steel.accept
+        ferrum.write("ping")
+        expect(upstream.readpartial(4)).to eq("ping")
+        upstream.write("pong")
+        expect(ferrum.readpartial(4)).to eq("pong")
+      end
+    ensure
+      steel&.close
+    end
+  end
 end

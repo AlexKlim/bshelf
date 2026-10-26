@@ -4,6 +4,10 @@ class SteelTunnel
   def self.open(client, upstream, path:, host:, headers:, ttl:)
     lines = [ "GET #{path} HTTP/1.1", "Host: #{host}", *FORWARDED.filter_map { "#{it}: #{headers[it]}" if headers[it].present? } ]
     upstream.write("#{lines.join("\r\n")}\r\n\r\n")
+    pipe(client, upstream, ttl:)
+  end
+
+  def self.pipe(client, upstream, ttl:)
     Thread.new do
       done = Queue.new
       [ [ client, upstream ], [ upstream, client ] ].each do |from, to|
