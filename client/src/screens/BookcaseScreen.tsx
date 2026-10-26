@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
-import { getSources } from "@/api"
+import { getSources, updateEdition } from "@/api"
 import { Bookcase, BookcaseSkeleton } from "@/components/Bookcase"
 import { BookView } from "@/components/BookView"
 import { EmptyCase } from "@/components/EmptyCase"
@@ -11,12 +11,12 @@ import { SearchField } from "@/components/SearchField"
 import { ShelfList } from "@/components/ShelfList"
 import { SourceBanner } from "@/components/SourceBanner"
 import { Choices, Ico } from "@/components/ui"
-import { arrangeShelves, isEmptyCase } from "@/lib/arrange"
+import { arrangeShelves, isEmptyCase, shelfStatus } from "@/lib/arrange"
 import { pickBanner, type BannerEvent } from "@/lib/banner"
 import { readPref, writePref } from "@/lib/cache"
 import { findOpener } from "@/lib/opener"
 import { useShelf } from "@/lib/shelf"
-import type { Banner, BookSummary } from "@/lib/types"
+import type { Banner, BookSummary, ShelfKey } from "@/lib/types"
 import { useOnline } from "@/lib/useOnline"
 
 type View = "case" | "list"
@@ -63,6 +63,20 @@ export function BookcaseScreen() {
     else navigate({ search: "" }, { replace: true })
   }, [location.state, navigate])
 
+  const { reload } = shelf
+  const moving = useRef(false)
+  const move = useCallback(
+    (book: BookSummary, to: ShelfKey) => {
+      if (moving.current) return
+      moving.current = true
+      Promise.allSettled(book.editions.map((e) => updateEdition(e.id, shelfStatus(e, to)))).then(() => {
+        moving.current = false
+        reload()
+      })
+    },
+    [reload],
+  )
+
   const [bookId, setBookId] = useState(openId)
   if (openId && openId !== bookId) setBookId(openId)
 
@@ -105,7 +119,7 @@ export function BookcaseScreen() {
   } else if (view === "list") {
     body = <ShelfList shelves={shelves} onOpen={open} onMore={shelf.loadMore} />
   } else {
-    body = <Bookcase shelves={shelves} matches={matches} onOpen={open} onMore={shelf.loadMore} />
+    body = <Bookcase shelves={shelves} matches={matches} onOpen={open} onMore={shelf.loadMore} onMove={offline ? undefined : move} />
   }
 
   const hasBooks = shelves && !isEmptyCase(shelves)

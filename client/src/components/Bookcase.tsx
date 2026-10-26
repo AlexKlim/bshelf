@@ -1,9 +1,21 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react"
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react"
 import { useTranslation } from "react-i18next"
 import { shelfLabel } from "@/lib/arrange"
 import { bookLang, spineSize } from "@/lib/cloth"
 import type { BookSummary, Shelf, ShelfKey } from "@/lib/types"
 import { useMediaQuery } from "@/lib/useMediaQuery"
+import { useShelfDrag } from "@/lib/useShelfDrag"
 import { formatsOf, primaryEdition, statusLine } from "@/lib/vocab"
 import { Ico, ShelfEnd, StatusMark } from "./ui"
 
@@ -12,6 +24,7 @@ type Props = {
   matches?: ReadonlySet<string>
   onOpen: (book: BookSummary) => void
   onMore?: (key: ShelfKey) => void
+  onMove?: (book: BookSummary, to: ShelfKey) => void
 }
 
 const FADE = 24
@@ -25,7 +38,7 @@ function revealInRow(spine: HTMLElement, smooth: boolean) {
   if (left) row.scrollBy({ left, behavior: smooth ? "smooth" : "auto" })
 }
 
-export function Bookcase({ shelves, matches, onOpen, onMore }: Props) {
+export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
   const { t, i18n } = useTranslation()
   const lng = i18n.language
   const hover = !useMediaQuery("(pointer: coarse)")
@@ -35,9 +48,10 @@ export function Bookcase({ shelves, matches, onOpen, onMore }: Props) {
   const [captionX, setCaptionX] = useState(0)
   const spines = useRef(new Map<string, HTMLButtonElement>())
   const sections = useRef(new Map<string, HTMLElement>())
-  const latest = useRef({ shelves, pulled, hover, onOpen })
+  const { drag, onPointerDown, takeDrop } = useShelfDrag(onMove)
+  const latest = useRef({ shelves, pulled, hover, onOpen, takeDrop })
   useLayoutEffect(() => {
-    latest.current = { shelves, pulled, hover, onOpen }
+    latest.current = { shelves, pulled, hover, onOpen, takeDrop }
   })
 
   const labels = useMemo(() => {
@@ -118,7 +132,8 @@ export function Bookcase({ shelves, matches, onOpen, onMore }: Props) {
   )
 
   const onSpineClick = useCallback((si: number, bi: number) => {
-    const { shelves, pulled, hover, onOpen } = latest.current
+    const { shelves, pulled, hover, onOpen, takeDrop } = latest.current
+    if (takeDrop()) return
     const book = shelves[si].books[bi]
     if (hover || pulled === book.id) onOpen(book)
     else setPulled(book.id)
@@ -126,15 +141,24 @@ export function Bookcase({ shelves, matches, onOpen, onMore }: Props) {
 
   const onSpineFocus = useCallback((si: number, bi: number) => setFocus([si, bi]), [])
 
+  const onSpinePointer = useCallback(
+    (e: ReactPointerEvent, si: number, bi: number) => {
+      const shelf = latest.current.shelves[si]
+      onPointerDown(e, shelf.books[bi], shelf.key)
+    },
+    [onPointerDown],
+  )
+
   return (
-    <div className="bs-case">
+    <div className={drag ? "bs-case is-dragging" : "bs-case"}>
       {shelves.map((shelf, si) => {
         const label = shelfLabel(t, shelf.key)
         const headingId = `shelf-${shelf.key}`
         return (
           <section
             key={shelf.key}
-            className="bs-shelf"
+            className={drag && drag.over === shelf.key && drag.from !== shelf.key ? "bs-shelf is-drop" : "bs-shelf"}
+            data-shelf={shelf.key}
             aria-labelledby={headingId}
             ref={(el) => {
               if (el) sections.current.set(shelf.key, el)
@@ -165,6 +189,7 @@ export function Bookcase({ shelves, matches, onOpen, onMore }: Props) {
                     si={si}
                     bi={bi}
                     pulled={pulled === book.id}
+                    lifted={drag?.item.id === book.id}
                     match={matches?.has(book.id) ?? false}
                     expandable={!hover}
                     tabbable={book.id === tabbable}
@@ -173,6 +198,7 @@ export function Bookcase({ shelves, matches, onOpen, onMore }: Props) {
                     onSpineClick={onSpineClick}
                     onSpineKey={onSpineKey}
                     onSpineFocus={onSpineFocus}
+                    onSpinePointer={onMove ? onSpinePointer : undefined}
                   />
                 </li>
               ))}
@@ -184,8 +210,24 @@ export function Bookcase({ shelves, matches, onOpen, onMore }: Props) {
           </section>
         )
       })}
+      {drag && (
+        <span
+          className={`bs-spine bs-spine--ghost bs-cloth--${drag.item.cloth}`}
+          aria-hidden="true"
+          style={{ "--x": `${drag.x}px`, "--y": `${drag.y}px`, ...ghostSize(drag.item) } as CSSProperties}
+        >
+          <span className="bs-spine__text">
+            <span className="bs-spine__title">{drag.item.title}</span>
+          </span>
+        </span>
+      )}
     </div>
   )
+}
+
+function ghostSize(book: BookSummary) {
+  const { width, height } = spineSize(book)
+  return { "--spine-w": `${width}px`, "--spine-h": `${height}px` }
 }
 
 type SpineProps = {
@@ -193,6 +235,7 @@ type SpineProps = {
   si: number
   bi: number
   pulled: boolean
+  lifted: boolean
   match: boolean
   expandable: boolean
   tabbable: boolean
@@ -201,6 +244,7 @@ type SpineProps = {
   onSpineClick: (si: number, bi: number) => void
   onSpineKey: (e: KeyboardEvent, si: number, bi: number) => void
   onSpineFocus: (si: number, bi: number) => void
+  onSpinePointer?: (e: ReactPointerEvent, si: number, bi: number) => void
 }
 
 const Spine = memo(function Spine({
@@ -208,6 +252,7 @@ const Spine = memo(function Spine({
   si,
   bi,
   pulled,
+  lifted,
   match,
   expandable,
   tabbable,
@@ -216,6 +261,7 @@ const Spine = memo(function Spine({
   onSpineClick,
   onSpineKey,
   onSpineFocus,
+  onSpinePointer,
 }: SpineProps) {
   const { width, height, narrow } = spineSize(book)
   const className = [
@@ -223,6 +269,7 @@ const Spine = memo(function Spine({
     `bs-cloth--${book.cloth}`,
     narrow && "bs-spine--narrow",
     pulled && "is-pulled",
+    lifted && "is-lifted",
     match && !pulled && "is-match",
   ]
     .filter(Boolean)
@@ -241,6 +288,7 @@ const Spine = memo(function Spine({
       onClick={() => onSpineClick(si, bi)}
       onKeyDown={(e) => onSpineKey(e, si, bi)}
       onFocus={() => onSpineFocus(si, bi)}
+      onPointerDown={onSpinePointer && ((e) => onSpinePointer(e, si, bi))}
     >
       <span className="bs-spine__text">
         <span className="bs-spine__title">{book.title}</span>

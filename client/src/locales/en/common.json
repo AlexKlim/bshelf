@@ -111,7 +111,10 @@
     "mergeWith": "Merge with",
     "unmerge": "Unmerge editions",
     "unmergeOne": "Unmerge {{title}}",
-    "addFormat": "Add a format"
+    "addFormat": {
+      "audio": "Add the audiobook",
+      "ebook": "Add the book"
+    }
   },
   "banner": {
     "offline": "No network. The bookcase is shown from cache.",

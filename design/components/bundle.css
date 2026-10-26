@@ -70,6 +70,11 @@
 .bs-spine.is-pulled, .bs-spine[aria-expanded="true"] { transform: translateY(-12px) rotate(-5deg); box-shadow: var(--shadow-lift); z-index: 2; }
 @media (hover: hover) { .bs-spine:hover { transform: translateY(-12px) rotate(-5deg); box-shadow: var(--shadow-lift); z-index: 2; } }
 .bs-spine.is-match { transform: translateY(-12px); box-shadow: 0 0 0 2px var(--wood-back), 0 0 0 4px var(--match); z-index: 1; }
+.bs-spine.is-lifted { opacity: .3; }
+.bs-spine--ghost { position: fixed; left: var(--x); top: var(--y); z-index: 50; pointer-events: none; translate: -50% -50%; rotate: -5deg; box-shadow: var(--shadow-lift); }
+.bs-case.is-dragging, .bs-case.is-dragging * { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+.bs-shelf.is-drop .bs-shelf__plank { box-shadow: var(--shadow-shelf), 0 0 0 3px var(--accent); }
+.bs-spine { -webkit-touch-callout: none; }
 .bs-spine.is-loading { cursor: default; background-image: none; opacity: .5; }
 
 .bs-case { position: relative; display: grid; margin-top: 22px; padding: var(--space-3) var(--space-3) 0; border-radius: 3px; background: repeating-linear-gradient(90deg, var(--wood-grain) 0 1px, transparent 1px 5px, var(--wood-sheen) 5px 6px, transparent 6px 11px), linear-gradient(90deg, var(--wood-edge), var(--wood-frame) 3%, var(--wood-frame) 97%, var(--wood-edge)); box-shadow: var(--shadow-case); }

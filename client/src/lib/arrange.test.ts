@@ -1,5 +1,6 @@
-import { book } from "@/test/fixtures"
-import { arrangeShelves } from "./arrange"
+import { book, edition as fixture } from "@/test/fixtures"
+import { arrangeShelves, shelfStatus } from "./arrange"
+import type { Edition } from "./types"
 
 const books = (prefix: string, n: number) => Array.from({ length: n }, (_, i) => book({ id: `${prefix}${i}` }))
 const ids = (prefix: string, n: number) => books(prefix, n).map((b) => b.id)
@@ -19,5 +20,20 @@ describe("arrangeShelves", () => {
       { key: "owned", count: 3, books: books("o", 3) },
     ])
     expect(complete.find((s) => s.key === "want")!.books.map((b) => b.id)).toEqual([...ids("w", 45), ...ids("o", 3)])
+  })
+})
+
+describe("shelfStatus", () => {
+  const today = new Date(2026, 9, 26)
+  const edition = (over: Partial<Edition> = {}) => fixture(over)
+
+  it("turns the shelf a book is dropped on into a status", () => {
+    expect(shelfStatus(edition(), "now", today)).toEqual({ status: "in_progress" })
+    expect(shelfStatus(edition({ store: null }), "want", today)).toEqual({ status: "want" })
+    expect(shelfStatus(edition({ store: "litres" }), "want", today)).toEqual({ status: "owned" })
+    expect(shelfStatus(edition(), "no_date", today)).toEqual({ status: "done", finished_at: "" })
+    expect(shelfStatus(edition(), "2026", today)).toEqual({ status: "done", finished_at: "2026-10-26" })
+    expect(shelfStatus(edition(), "2019", today)).toEqual({ status: "done", finished_at: "2019-12-31" })
+    expect(shelfStatus(edition({ status: "done", finished_at: "2019-03-02T10:00:00Z" }), "2019", today)).toEqual({ status: "done" })
   })
 })

@@ -185,3 +185,24 @@ describe("paging", () => {
     expect(onMore).toHaveBeenCalledWith("2024")
   })
 })
+
+describe("dragging a book", () => {
+  it("moves a book to the shelf it is dropped on without opening it", async () => {
+    setPointer(false)
+    const user = userEvent.setup()
+    const onMove = vi.fn()
+    const onOpen = vi.fn()
+    render(<Bookcase shelves={shelves} onOpen={onOpen} onMove={onMove} />)
+    const target = document.querySelector('[data-shelf="2024"] .bs-shelf__row')!
+    document.elementFromPoint = () => target
+
+    await user.pointer([
+      { keys: "[MouseLeft>]", target: spine("Now One"), coords: { clientX: 10, clientY: 10 } },
+      { coords: { clientX: 60, clientY: 200 } },
+      { keys: "[/MouseLeft]", coords: { clientX: 60, clientY: 200 } },
+    ])
+
+    expect(onMove).toHaveBeenCalledWith(expect.objectContaining({ id: "n1" }), "2024")
+    expect(onOpen).not.toHaveBeenCalled()
+  })
+})
