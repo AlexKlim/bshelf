@@ -23,8 +23,12 @@ class Shelf
         END
       SQL
       Arel.sql("max(readings.finished_at) FILTER (WHERE readings.status = 'done')"),
-      Arel.sql("COALESCE(max(readings.updated_at), books.created_at)")
-    ).to_h { |id, key, finished_at, activity_at| [ id, Placement.new(key:, finished_at:, activity_at:) ] }
+      Arel.sql("COALESCE(max(readings.updated_at), books.created_at)"),
+      "books.shelved_key", "books.shelved_at"
+    ).to_h do |id, key, finished_at, activity_at, shelved_key, shelved_at|
+      # A book put in place by hand keeps that place while it stays on that shelf.
+      [ id, Placement.new(key:, finished_at:, activity_at: (shelved_key == key && shelved_at) || activity_at) ]
+    end
   end
 
   def key_for(book) = placements([ book.id ]).fetch(book.id).key

@@ -34,6 +34,16 @@ module Api
         render_book(book, merge_id: MergeEvent.merge!(book, other).uuid)
       end
 
+      def shelf
+        key = params.require(:shelf).to_s
+        return render_error(:inclusion, field: :shelf, status: :unprocessable_content) unless ShelfMove.key?(key)
+
+        prev, after = %i[prev next].map { params[it].presence && current_user.books.find_by!(uuid: params[it]) }
+        ShelfMove.call(book, key:, prev:, after:)
+        record = book.reload
+        render json: { book: BookSerializer.summary(record, Shelf.new(current_user).key_for(record)) }
+      end
+
       def add_edition
         AddBook.add_edition(book, **edition_params)
         render_book(book, status: :created)
