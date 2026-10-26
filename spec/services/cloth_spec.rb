@@ -27,6 +27,16 @@ RSpec.describe Cloth do
     expect(described_class.from_image(catalog_fixture("cover_solaris.jpg"))).to match(/\A#[0-9a-f]{6}\z/)
   end
 
+  it "shifts a cover colour until the spine text reads on it" do
+    text = %w[#f4efe3 #1e231f].map { described_class.luminance(*described_class.rgb(it)) }
+
+    %w[#808080 #7a7a90 #d30535 #f0f0f0].each do |hex|
+      y = described_class.luminance(*described_class.rgb(described_class.readable(hex)))
+      expect(text.map { described_class.contrast(y, it) }.max).to be >= 4.5, hex
+    end
+    expect(described_class.readable("#23395b")).to eq("#23395b")
+  end
+
   it "returns nil for bytes that are not an image" do
     expect(described_class.from_image("<html>")).to be_nil
   end
