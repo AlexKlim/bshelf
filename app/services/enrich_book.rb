@@ -22,6 +22,7 @@ class EnrichBook
       book.cloth_color = color
       book.cloth = Cloth.nearest(*Cloth.rgb(color))
     end
+    book.cloth ||= Cloth.nearest(*Cloth.rgb(book.cloth_color)) if book.cloth_color
     book.enriched_at ||= Time.current unless retry_later
     book.save!
     CatalogBook.remember(book) if trusted?
