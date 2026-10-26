@@ -46,7 +46,7 @@ class SteelClient
 
   def open_socket
     TCPSocket.new(@base.host, @base.port, connect_timeout: TIMEOUT)
-  rescue SystemCallError, IOError => e
+  rescue SocketError, SystemCallError, IOError => e
     raise RemoteBrowser::BrowserFailed, e.class.name
   end
 
