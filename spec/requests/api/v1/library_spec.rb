@@ -19,6 +19,8 @@ RSpec.describe "Librarian's desk" do
 
     expect(response).to have_http_status(:ok)
     expect(json["queued"]).to eq(3)
-    expect(enqueued_jobs.map { it["arguments"].first }).to contain_exactly(never.id, coverless.id, colourless.id)
+    enriched = enqueued_jobs.select { it["job_class"] == "EnrichBookJob" }.map { it["arguments"].first }
+    expect(enriched).to contain_exactly(never.id, coverless.id, colourless.id)
+    expect(FindTranslationsJob).to have_been_enqueued.with(user.id)
   end
 end

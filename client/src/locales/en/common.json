@@ -498,7 +498,7 @@
   "desk": {
     "title": "Librarian's desk",
     "tidy": "Tidy up",
-    "idle": "I will look for missing covers, titles and authors.",
+    "idle": "I will look for missing covers, titles and authors, and for one book shelved in two languages.",
     "busy": "Looking at what is needed…",
     "queued_one": "Working on {{count}} book. The bookcase will refresh by itself.",
     "queued_other": "Working on {{count}} books. The bookcase will refresh by itself.",

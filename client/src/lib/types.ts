@@ -14,7 +14,7 @@ export type Assistant = {
   connected_at: string
   last_active_at: string | null
 }
-export type Duplicate = { id: string; reason: "title_author" | "title"; created_at: string; books: [BookSummary, BookSummary] }
+export type Duplicate = { id: string; reason: "title_author" | "title" | "translation"; created_at: string; books: [BookSummary, BookSummary] }
 
 export type Edition = {
   id: string
