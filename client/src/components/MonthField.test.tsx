@@ -15,4 +15,19 @@ describe("MonthField", () => {
     expect(screen.getByRole("button", { name: "окт." })).toHaveAttribute("aria-pressed", "true")
     expect(screen.getByRole("button", { name: "Очистить" })).toBeInTheDocument()
   })
+
+  it("hands focus back to the field and keeps Escape to itself while open", async () => {
+    const onChange = vi.fn()
+    render(<MonthField label="When" value="" onChange={onChange} />)
+
+    await userEvent.click(screen.getByLabelText("When"))
+    await userEvent.click(screen.getByRole("button", { name: "This month" }))
+    expect(screen.getByLabelText("When")).toHaveFocus()
+    expect(onChange).toHaveBeenCalledOnce()
+
+    await userEvent.click(screen.getByLabelText("When"))
+    await userEvent.keyboard("{Escape}")
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(screen.getByLabelText("When")).toHaveFocus()
+  })
 })

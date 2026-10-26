@@ -100,6 +100,7 @@ export function MonthField({ label, value, onChange, disabled }: MonthFieldProps
   const { t, i18n } = useTranslation()
   const id = useId()
   const box = useRef<HTMLDivElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
@@ -122,18 +123,32 @@ export function MonthField({ label, value, onChange, disabled }: MonthFieldProps
     return () => window.removeEventListener("pointerdown", away)
   }, [open])
 
-  const pick = (next: string) => {
+  const close = () => {
     setOpen(false)
+    trigger.current?.focus()
+  }
+  const pick = (next: string) => {
+    close()
     if (next !== value) onChange(next)
   }
 
   return (
-    <div className="bs-field bs-month" ref={box}>
+    <div
+      className="bs-field bs-month"
+      ref={box}
+      data-open={open || undefined}
+      onKeyDown={(e) => {
+        if (!open || e.key !== "Escape") return
+        e.stopPropagation()
+        close()
+      }}
+    >
       <label className="bs-field__label" htmlFor={id}>
         {label}
       </label>
       <button
         id={id}
+        ref={trigger}
         type="button"
         className="bs-field__input bs-month__value"
         aria-expanded={open}
@@ -146,16 +161,7 @@ export function MonthField({ label, value, onChange, disabled }: MonthFieldProps
         {shown || "\u00a0"}
       </button>
       {open && (
-        <div
-          className="bs-month__panel"
-          role="dialog"
-          aria-label={label}
-          onKeyDown={(e) => {
-            if (e.key !== "Escape") return
-            e.stopPropagation()
-            setOpen(false)
-          }}
-        >
+        <div className="bs-month__panel" role="dialog" aria-label={label}>
           <div className="bs-month__year">
             <button type="button" className="bs-iconbtn" aria-label={t("entry.prevYear")} onClick={() => setYear(year - 1)}>
               ‹
