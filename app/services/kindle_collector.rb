@@ -85,7 +85,7 @@ class KindleCollector
     (0..).each do |number|
       result = library_page(page, token)
       if result["error"]
-        Rails.logger.warn("[kindle] #{result["error"]} on page #{number + 1} of #{URI(page.current_url).host}, #{books.size} books read")
+        Rails.logger.warn("[kindle] #{result["error"]} on page #{number + 1} of #{host(page)}, #{books.size} books read")
         raise RemoteBrowser::ProviderRefused if number.zero?
 
         break
@@ -98,6 +98,12 @@ class KindleCollector
     end
     Rails.logger.info("[kindle] library #{books.size} books")
     books
+  end
+
+  def host(page)
+    URI(page.current_url).host
+  rescue Ferrum::Error, URI::Error
+    "an unreachable tab"
   end
 
   def library_page(page, token)
