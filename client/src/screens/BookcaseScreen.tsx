@@ -64,6 +64,8 @@ export function BookcaseScreen() {
     (book: BookSummary) => navigate({ search: `?book=${book.id}` }, { state: { opened: true } }),
     [navigate],
   )
+  const [closingId, setClosingId] = useState<string | null>(null)
+  const closing = !!openId && closingId === openId
   const close = useCallback(() => {
     if ((location.state as { opened?: boolean } | null)?.opened) navigate(-1)
     else navigate({ search: "" }, { replace: true })
@@ -172,7 +174,7 @@ export function BookcaseScreen() {
         open={!!openId}
         label={summary?.title ?? t("book.label")}
         className="bs-dialog--book"
-        onClose={close}
+        onClose={() => setClosingId(openId)}
         onEscapeKeyDown={(e) => {
           if ((e.target as Element).closest?.(FIELD)) e.preventDefault()
         }}
@@ -181,7 +183,20 @@ export function BookcaseScreen() {
           if (bookId) findOpener(bookId)?.focus()
         }}
       >
-        {bookId && <BookView key={bookId} bookId={bookId} summary={summary} disabled={offline} onChanged={shelf.reload} />}
+        {bookId && (
+          <BookView
+            key={bookId}
+            bookId={bookId}
+            summary={summary}
+            disabled={offline}
+            onChanged={shelf.reload}
+            closing={closing}
+            onClosed={() => {
+              setClosingId(null)
+              close()
+            }}
+          />
+        )}
       </Overlay>
       <Overlay open={!!entry} label={t("entry.title")} onClose={() => setEntry(null)}>
         {entry && (

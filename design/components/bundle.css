@@ -5,6 +5,8 @@
   --dur-pull: 180ms;
   --dur-take: 420ms;
   --dur-open: 560ms;
+  --dur-shut: 340ms;
+  --dur-shelve: 300ms;
   --ease-book: cubic-bezier(.2, .7, .2, 1);
   --ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--focus);
 }
@@ -283,11 +285,15 @@
 .bs-fly > .bs-book__frame > .bs-spread { animation: bs-reveal var(--dur-open) linear var(--dur-take) both; }
 @container (max-width: 639px) {
   .bs-flap { left: 0; border-radius: 4px; }
-  .bs-fly > .bs-book__frame, .bs-fly > .bs-book__frame > .bs-spread { animation: none; }
+  .bs-fly > .bs-book__frame, .bs-fly > .bs-book__frame > .bs-spread,
+  .bs-book.is-closing > .bs-book__frame, .bs-book.is-closing > .bs-book__frame > .bs-spread { animation: none; }
 }
 .bs-scrim[data-state="open"] { animation: bs-fade var(--dur-pull) ease-out both; }
 .bs-scrim[data-state="closed"], .bs-dialog--book[data-state="closed"] { animation: bs-fade var(--dur-pull) ease-in reverse both; }
-.bs-dialog--book[data-state="closed"] .bs-book { animation: bs-fly var(--dur-pull) var(--ease-book) reverse both; }
+.bs-book.is-closing { animation: bs-fly var(--dur-shelve) var(--ease-book) var(--dur-shut) reverse both; }
+.bs-book.is-closing .bs-flap { animation: bs-flap var(--dur-shut) cubic-bezier(.45, .05, .3, 1) reverse both; }
+.bs-book.is-closing > .bs-book__frame { animation: bs-shift var(--dur-shut) var(--ease-book) reverse both; }
+.bs-book.is-closing > .bs-book__frame > .bs-spread { animation: bs-reveal var(--dur-shut) linear reverse both; }
 @keyframes bs-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes bs-fly { from { transform: translate(var(--from-x, 0px), var(--from-y, 0px)) scale(.16) rotateY(75deg); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes bs-shift { from { transform: translateX(-25%); } to { transform: none; } }
@@ -340,6 +346,6 @@
 .bs-token__value { display: block; padding: var(--space-3); background: var(--paper); border: 1px solid var(--hairline); border-radius: var(--radius-sm); font: 500 14px/20px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); overflow-wrap: anywhere; user-select: all; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bs-fly, .bs-fly > .bs-book__frame, .bs-fly > .bs-book__frame > .bs-spread, .bs-scrim, .bs-dialog--book, .bs-dialog--book .bs-book { animation: none !important; }
+  .bs-fly, .bs-fly > .bs-book__frame, .bs-fly > .bs-book__frame > .bs-spread, .bs-scrim, .bs-dialog--book, .bs-dialog--book .bs-book, .bs-book.is-closing .bs-flap { animation: none !important; }
   .bs-flap { display: none; }
 }

@@ -109,6 +109,9 @@ describe("BookcaseScreen opening a book", () => {
     await userEvent.keyboard("{Escape}")
     await waitFor(() => expect(spread()).toBeNull())
     expect(spine("Solaris")).toHaveFocus()
+
+    await userEvent.click(spine("Solaris"))
+    await waitFor(() => expect(spread()).toHaveFocus())
   })
 
   it("returns focus to the list row that opened the book", async () => {

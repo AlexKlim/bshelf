@@ -24,9 +24,11 @@ type ViewProps = {
   summary?: BookSummary
   disabled?: boolean
   onChanged: () => void
+  closing?: boolean
+  onClosed?: () => void
 }
 
-export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
+export function BookView({ bookId, summary, disabled, onChanged, closing, onClosed }: ViewProps) {
   const { t } = useTranslation()
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
   const [detail, setDetail] = useState<BookDetail | null>(null)
@@ -65,11 +67,29 @@ export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
     setFrom({ "--from-x": `${Math.round(dx)}px`, "--from-y": `${Math.round(dy)}px` } as CSSProperties)
   }, [bookId, ready, opened, from])
 
+  useLayoutEffect(() => {
+    const book = frame.current?.parentElement
+    if (!closing) return
+    if (reduced || !book) return onClosed?.()
+    const spine = findOpener(bookId)?.getBoundingClientRect()
+    const r = book.getBoundingClientRect()
+    const dx = spine ? spine.left + spine.width / 2 - (r.left + r.width / 2) : 0
+    const dy = spine ? spine.top + spine.height / 2 - (r.top + r.height / 2) : 0
+    setFrom({ "--from-x": `${Math.round(dx)}px`, "--from-y": `${Math.round(dy)}px` } as CSSProperties)
+    const animation = getComputedStyle(book).animationName
+    if (!animation || animation === "none") onClosed?.()
+  }, [closing, reduced, bookId, onClosed])
+
   if (!ready) return <p className="bs-sr">{t("book.loading")}</p>
 
   const flying = !opened && from
+  const className = ["bs-book", flying && !closing && "bs-fly", closing && "is-closing"].filter(Boolean).join(" ")
   return (
-    <div className={`bs-book${flying ? " bs-fly" : ""}`} style={from ?? undefined}>
+    <div
+      className={className}
+      style={from ?? undefined}
+      onAnimationEnd={(e) => closing && e.target === e.currentTarget && onClosed?.()}
+    >
       <div className="bs-book__frame" ref={frame}>
         <BookSpread
           book={detail ?? shown!}
@@ -84,7 +104,7 @@ export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
             onChanged()
           }}
         />
-        {!opened && shown && (
+        {(!opened || closing) && shown && (
           <div
             className={`bs-flap bs-cloth--${shown.cloth}`}
             aria-hidden="true"
