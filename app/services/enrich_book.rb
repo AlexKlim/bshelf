@@ -41,7 +41,7 @@ class EnrichBook
 
     hit = client.search(:litres, title: query, author: nil, isbn: nil)
       .map { [ it, Translit.words([ it["title"], *it["authors"] ].join(" ")) ] }
-      .select { |_, known| wanted.all? { known.include?(it) } }
+      .select { |hit, known| wanted.all? { known.include?(it) } && Translit.words(hit["title"].to_s).intersect?(wanted) }
       .min_by { |_, known| (known - wanted).size }&.first
     return unless hit
 
