@@ -8,7 +8,8 @@ class KindleCollector
 
   LIBRARY_JS = <<~JS.freeze
     (async (token) => {
-      const query = `query=&libraryType=BOOKS&sortType=acquisition_desc&querySize=50&paginationToken=${encodeURIComponent(token)}`
+      const cursor = token ? `&paginationToken=${encodeURIComponent(token)}` : ""
+      const query = `query=&libraryType=BOOKS${cursor}&sortType=acquisition_desc&querySize=50`
       const r = await fetch(`/kindle-library/search?${query}`).catch(() => null)
       if (!r?.ok) return { error: `library ${r?.status || 0}` }
       const page = await r.json().catch(() => null)
