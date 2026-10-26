@@ -15,3 +15,4 @@
 /public/index.html
 /.dockerignore
 /Dockerfile*
+/.railway

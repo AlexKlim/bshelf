@@ -74,3 +74,4 @@ book-shelf-design.md
 /public/icon.svg
 
 .claude/worktrees/
+/.railway/node_modules
