@@ -360,3 +360,10 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
   .bs-fly, .bs-fly > .bs-book__frame, .bs-fly > .bs-book__frame > .bs-spread, .bs-scrim, .bs-dialog--book, .bs-dialog--book .bs-book, .bs-book.is-closing .bs-flap { animation: none !important; }
   .bs-flap { display: none; }
 }
+
+.bs-desk { display: grid; justify-items: center; margin-top: var(--space-8); }
+.bs-desk__top { box-sizing: border-box; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-2) var(--space-4); inline-size: min(100%, 640px); padding: var(--space-4) var(--space-5); border-radius: 6px 6px 2px 2px; background: repeating-linear-gradient(90deg, var(--wood-grain) 0 1px, transparent 1px 7px, var(--wood-sheen) 7px 8px, transparent 8px 15px), linear-gradient(180deg, var(--wood-light), var(--wood-oak) 70%, var(--wood-shelf-top)); box-shadow: var(--shadow-shelf); color: var(--ink); }
+.bs-desk__plaque { grid-column: 1 / -1; justify-self: start; margin: 0; padding: 2px 14px; background: radial-gradient(circle at 6px 50%, var(--brass-screw) 1.6px, transparent 2.2px), radial-gradient(circle at calc(100% - 6px) 50%, var(--brass-screw) 1.6px, transparent 2.2px), linear-gradient(180deg, var(--brass-light), var(--brass) 55%, var(--brass-dark)); border-radius: var(--radius-xs); box-shadow: var(--shadow-plaque); font: 600 11px/14px var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.bs-desk__note { margin: 0; font: 400 15px/22px var(--font-ui); }
+.bs-desk__front { inline-size: min(calc(100% - 32px), 600px); block-size: 36px; background: linear-gradient(90deg, var(--wood-shade), transparent 18px, transparent calc(100% - 18px), var(--wood-shade)), var(--wood-frame); border-radius: 0 0 4px 4px; }
+@media (max-width: 480px) { .bs-desk__top { grid-template-columns: 1fr; } }

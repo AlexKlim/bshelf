@@ -1,0 +1,24 @@
+require "rails_helper"
+
+RSpec.describe "Librarian's desk" do
+  include ActiveJob::TestHelper
+
+  let(:user) { create(:user) }
+
+  before { sign_in_as(user) }
+
+  it "queues the lookup for the reader's books that miss something, and only theirs" do
+    never = create(:book, user:)
+    coverless = create(:book, user:, enriched_at: 1.day.ago)
+    colourless = create(:book, user:, enriched_at: 1.day.ago, cover_url: "https://www.litres.ru/a.jpg")
+    create(:book, user:, enriched_at: 1.day.ago, cover_url: "https://www.litres.ru/b.jpg").update_columns(cloth_color: "#d30535")
+    create(:book)
+    clear_enqueued_jobs
+
+    post "/api/v1/library/tidy", as: :json
+
+    expect(response).to have_http_status(:ok)
+    expect(json["queued"]).to eq(3)
+    expect(enqueued_jobs.map { it["arguments"].first }).to contain_exactly(never.id, coverless.id, colourless.id)
+  end
+end

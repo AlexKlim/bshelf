@@ -6,6 +6,7 @@ import { Bookcase, BookcaseSkeleton } from "@/components/Bookcase"
 import { BookView } from "@/components/BookView"
 import { EmptyCase } from "@/components/EmptyCase"
 import { EntryForm, type EntryDraft } from "@/components/EntryForm"
+import { LibrarianDesk } from "@/components/LibrarianDesk"
 import { Overlay } from "@/components/Overlay"
 import { SearchField } from "@/components/SearchField"
 import { ShelfList } from "@/components/ShelfList"
@@ -169,6 +170,7 @@ export function BookcaseScreen() {
           </div>
         )}
         {body}
+        {hasBooks && <LibrarianDesk disabled={offline} onTidied={shelf.reload} />}
       </div>
       <Overlay
         open={!!openId}

@@ -58,14 +58,4 @@ RSpec.describe EnrichBookJob do
     expect { book.update!(cover_url: "https://cv1.litres.ru/cover.jpg") }.to have_enqueued_job(described_class)
     expect(book.reload.cloth).to be_nil
   end
-
-  it "queues books whose lookup never finished for the daily retry" do
-    stale = travel_to(2.hours.ago) { create(:book) }
-    create(:book)
-    clear_enqueued_jobs
-
-    EnrichMissingBooksJob.perform_now
-
-    expect(enqueued_jobs.map { it["arguments"] }).to eq([ [ stale.id ] ])
-  end
 end

@@ -494,5 +494,15 @@
   },
   "lang": {
     "label": "Language"
+  },
+  "desk": {
+    "title": "Librarian's desk",
+    "tidy": "Tidy up",
+    "idle": "I will look for missing covers, titles and authors.",
+    "busy": "Looking at what is needed…",
+    "queued_one": "Working on {{count}} book. The bookcase will refresh by itself.",
+    "queued_other": "Working on {{count}} books. The bookcase will refresh by itself.",
+    "nothing": "Everything is in place, nothing to look for.",
+    "error": "That did not work. Try again a little later."
   }
 }
