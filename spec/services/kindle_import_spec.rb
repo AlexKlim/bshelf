@@ -20,6 +20,14 @@ RSpec.describe KindleImport do
     expect(edition("A1").reading.status_source).to eq("kindle_browser")
   end
 
+  it "takes the cover from the library or from Manage your content" do
+    owned = { "Ebook" => [ { "asin" => "A2", "title" => "Solaris", "productImage" => "https://m.media-amazon.com/images/I/2.jpg" } ] }
+    described_class.call(user, [ item("A1", "Roadside Picnic").merge("productUrl" => "https://m.media-amazon.com/images/I/1.jpg") ], {}, owned)
+
+    expect(edition("A1").book.cover_url).to eq("https://m.media-amazon.com/images/I/1.jpg")
+    expect(edition("A2").book.cover_url).to eq("https://m.media-amazon.com/images/I/2.jpg")
+  end
+
   it "moves an existing Kindle edition forward on the next sync without adding it again" do
     described_class.call(user, [ item("A1", "Roadside Picnic", percent: 10) ], {})
 
