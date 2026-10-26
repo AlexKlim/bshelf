@@ -57,8 +57,8 @@ class KindleImport
   end
 
   def cover(book, item)
-    url = item["productUrl"].presence
-    book.update!(cover_url: url.sub(/\Ahttp:/, "https:")) if url && book.cover_url.nil?
+    url = item["productUrl"]
+    book.update!(cover_url: url.sub(/\Ahttp:/, "https:")) if url.is_a?(String) && url.present? && book.cover_url.nil?
   end
 
   def status_for(item)

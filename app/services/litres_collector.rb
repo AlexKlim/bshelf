@@ -41,7 +41,7 @@ class LitresCollector
 
       log_shape(lists)
       arts = lists.flat_map { |path, found| Array(found).map { it.merge("status" => LISTS[path]) } }
-        .group_by { it["id"] }.map { |_, same| same.max_by { StatusResolver::STATUS_RANK[it["status"]] } }
+        .group_by { it["id"] }.map { |_, same| same.first.merge("status" => same.pluck("status").max_by { StatusResolver::STATUS_RANK[it] }) }
       yield "library"
       LitresImport.call(session.user, arts)
     end

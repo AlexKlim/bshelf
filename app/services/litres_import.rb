@@ -37,8 +37,10 @@ class LitresImport
   end
 
   def cover(book, art)
-    url = art["cover_url"].presence
-    book.update!(cover_url: URI.join(SITE, url).to_s) if url && book.cover_url.nil?
+    url = art["cover_url"]
+    book.update!(cover_url: URI.join(SITE, url).to_s) if url.is_a?(String) && url.present? && book.cover_url.nil?
+  rescue URI::Error
+    nil
   end
 
   def author(art)
