@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { getSources, updateEdition } from "@/api"
@@ -64,11 +64,17 @@ export function BookcaseScreen() {
   }, [location.state, navigate])
 
   const { reload, place } = shelf
+  const saving = useRef(new Map<string, Promise<void>>())
   const move = useCallback(
     (book: BookSummary, to: ShelfKey) => {
       const changes = book.editions.map((e) => shelfStatus(e, to))
       place(movedBook(book, to, changes))
-      Promise.all(book.editions.map((e, i) => updateEdition(e.id, changes[i]))).catch(reload)
+      const save = (saving.current.get(book.id) ?? Promise.resolve())
+        .then(() => Promise.allSettled(book.editions.map((e, i) => updateEdition(e.id, changes[i]))))
+        .then((results) => {
+          if (results.some((r) => r.status === "rejected")) reload()
+        })
+      saving.current.set(book.id, save)
     },
     [reload, place],
   )
