@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { getShelfPage, getShelves } from "@/api"
 import type { ApiError } from "./api"
+import { placeBook } from "./arrange"
 import { readCache, writeCache } from "./cache"
 import type { BookSummary, Shelf, ShelfKey } from "./types"
 
@@ -22,7 +23,11 @@ async function refill(shelf: Shelf, length: number) {
 }
 
 type State = { shelves: Shelf[] | null; fromCache: boolean; error: string | null }
-type ShelfData = State & { reload: () => Promise<void>; loadMore: (key: ShelfKey) => void }
+type ShelfData = State & {
+  reload: () => Promise<void>
+  loadMore: (key: ShelfKey) => void
+  place: (book: BookSummary) => void
+}
 
 const ShelfContext = createContext<ShelfData>({
   shelves: null,
@@ -30,6 +35,7 @@ const ShelfContext = createContext<ShelfData>({
   error: null,
   reload: async () => {},
   loadMore: () => {},
+  place: () => {},
 })
 
 export function ShelfProvider({ children }: { children: ReactNode }) {
@@ -78,13 +84,17 @@ export function ShelfProvider({ children }: { children: ReactNode }) {
     [state.shelves],
   )
 
+  const place = useCallback((book: BookSummary) => {
+    setState((prev) => (prev.shelves ? { ...prev, shelves: placeBook(prev.shelves, book) } : prev))
+  }, [])
+
   useEffect(() => {
     reload()
     window.addEventListener("online", reload)
     return () => window.removeEventListener("online", reload)
   }, [reload])
 
-  return <ShelfContext.Provider value={{ ...state, reload, loadMore }}>{children}</ShelfContext.Provider>
+  return <ShelfContext.Provider value={{ ...state, reload, loadMore, place }}>{children}</ShelfContext.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

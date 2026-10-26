@@ -11,7 +11,7 @@ import { SearchField } from "@/components/SearchField"
 import { ShelfList } from "@/components/ShelfList"
 import { SourceBanner } from "@/components/SourceBanner"
 import { Choices, Ico } from "@/components/ui"
-import { arrangeShelves, isEmptyCase, shelfStatus } from "@/lib/arrange"
+import { arrangeShelves, isEmptyCase, movedBook, shelfStatus } from "@/lib/arrange"
 import { pickBanner, type BannerEvent } from "@/lib/banner"
 import { readPref, writePref } from "@/lib/cache"
 import { findOpener } from "@/lib/opener"
@@ -63,18 +63,22 @@ export function BookcaseScreen() {
     else navigate({ search: "" }, { replace: true })
   }, [location.state, navigate])
 
-  const { reload } = shelf
-  const moving = useRef(false)
+  const { reload, place } = shelf
+  const saving = useRef(new Map<string, Promise<void>>())
   const move = useCallback(
     (book: BookSummary, to: ShelfKey) => {
-      if (moving.current) return
-      moving.current = true
-      Promise.allSettled(book.editions.map((e) => updateEdition(e.id, shelfStatus(e, to)))).then(() => {
-        moving.current = false
-        reload()
-      })
+      const changes = book.editions.map((e) => shelfStatus(e, to))
+      place(movedBook(book, to, changes))
+      const save = (saving.current.get(book.id) ?? Promise.resolve())
+        .then(() => Promise.allSettled(book.editions.map((e, i) => updateEdition(e.id, changes[i]))))
+        .then((results) => {
+          const last = saving.current.get(book.id) === save
+          if (last) saving.current.delete(book.id)
+          if (last && results.some((r) => r.status === "rejected")) reload()
+        })
+      saving.current.set(book.id, save)
     },
-    [reload],
+    [reload, place],
   )
 
   const [bookId, setBookId] = useState(openId)

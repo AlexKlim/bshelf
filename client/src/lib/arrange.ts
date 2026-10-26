@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next"
-import type { Edition, Shelf, ShelfKey, Status } from "./types"
+import type { BookSummary, Edition, Shelf, ShelfKey, Status } from "./types"
 
 export function arrangeShelves(shelves: Shelf[]): Shelf[] {
   const byKey = new Map(shelves.map((s) => [s.key, s]))
@@ -38,4 +38,22 @@ export function shelfStatus(edition: Edition, key: ShelfKey, today = new Date())
   if (edition.status === "done" && edition.finished_at?.startsWith(key)) return { status: "done" }
   // A past year has no day to go by, so the book lands on its last day.
   return { status: "done", finished_at: Number(key) === today.getFullYear() ? isoDay(today) : `${key}-12-31` }
+}
+
+export function movedBook(book: BookSummary, to: ShelfKey, changes: ReturnType<typeof shelfStatus>[]): BookSummary {
+  const editions = book.editions.map((e, i) => {
+    const { status, finished_at } = changes[i]
+    return { ...e, status, finished_at: finished_at === undefined ? e.finished_at : finished_at || null }
+  })
+  return { ...book, shelf: to, editions }
+}
+
+export function placeBook(shelves: Shelf[], book: BookSummary): Shelf[] {
+  const placed = shelves.map((s) => {
+    const had = s.books.some((b) => b.id === book.id)
+    const books = s.books.filter((b) => b.id !== book.id)
+    if (s.key === book.shelf) return { ...s, count: s.count + (had ? 0 : 1), books: [book, ...books] }
+    return had ? { ...s, count: s.count - 1, books } : s
+  })
+  return placed.some((s) => s.key === book.shelf) ? placed : [...placed, { key: book.shelf, count: 1, books: [book] }]
 }
