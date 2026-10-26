@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import i18n from "@/i18n"
 import type { BookDetail } from "@/lib/types"
@@ -44,5 +44,28 @@ describe("BookSpread", () => {
     await userEvent.click(screen.getByRole("button", { name: "Unmerge editions" }))
     await vi.waitFor(() => expect(onReload).toHaveBeenCalled())
     expect(screen.queryByText("Not found.")).toBeNull()
+  })
+})
+
+describe("editing an edition", () => {
+  beforeEach(() => i18n.changeLanguage("en"))
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("sets the month a book was finished from the edition line", async () => {
+    const bodies: unknown[] = []
+    mockFetch((url, init) => {
+      if (init.method === "PATCH") bodies.push(JSON.parse(String(init.body)))
+      return [200, { book: book() }]
+    })
+    const onReload = vi.fn()
+    render(<BookSpread book={detail()} onBook={() => {}} onReload={onReload} />)
+
+    await userEvent.click(screen.getByRole("button", { expanded: false, name: /Audio/ }))
+    const when = screen.getByLabelText("When")
+    fireEvent.change(when, { target: { value: "2025-03" } })
+    fireEvent.blur(when)
+
+    await waitFor(() => expect(onReload).toHaveBeenCalled())
+    expect(bodies.at(-1)).toEqual({ status: "done", finished_at: "2025-03-01" })
   })
 })

@@ -17,7 +17,7 @@ import type { BookDetail, BookSummary, Edition, Highlight, Note, Status } from "
 import { findOpener } from "@/lib/opener"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { statusLine, statusWord, verbForm, errorMessage } from "@/lib/vocab"
-import { Choices, Ico } from "./ui"
+import { Choices, Field, Ico } from "./ui"
 
 type ViewProps = {
   bookId: string
@@ -216,14 +216,17 @@ function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLin
   const [error, setError] = useState(false)
   const shown = { ...edition, status }
   const where = [t(`format.${edition.format}`), edition.store && t(`store.${edition.store}`)].filter(Boolean).join(", ")
+  const dateField = status === "done" ? "finished_at" : status === "in_progress" ? "started_at" : null
+  const when = dateField ? (edition[dateField] ?? "").slice(0, 7) : ""
 
-  const change = async (next: Status) => {
+  const save = async (next: Status, month?: string) => {
     const previous = status
     setStatus(next)
     setError(false)
+    const field = next === "done" ? "finished_at" : next === "in_progress" ? "started_at" : null
     try {
-      await updateEdition(edition.id, { status: next })
-      onEdit(false)
+      await updateEdition(edition.id, { status: next, ...(field && month !== undefined ? { [field]: month && `${month}-01` } : {}) })
+      if (!field) onEdit(false)
       onSaved()
     } catch {
       setStatus(previous)
@@ -250,11 +253,22 @@ function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLin
           legend={t("entry.status")}
           hideLegend
           value={status ?? ("" as Status)}
-          onChange={change}
+          onChange={(next) => save(next)}
           options={(["want", "owned", "in_progress", "done"] as Status[]).map((s) => ({
             value: s,
             label: statusWord(t, s, edition.format),
           }))}
+        />
+      )}
+      {editing && status && dateField && (
+        <Field
+          hand
+          type="month"
+          label={t("entry.when")}
+          defaultValue={when}
+          key={`${status}:${when}`}
+          disabled={disabled}
+          onBlur={(e) => e.target.value !== when && save(status, e.target.value)}
         />
       )}
       {error && <span className="bs-field__error">{t("book.statusError")}</span>}
