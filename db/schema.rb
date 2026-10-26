@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_100013) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100014) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -69,6 +69,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100013) do
     t.index ["user_id", "title_key"], name: "index_books_on_user_id_and_title_key"
     t.index ["user_id"], name: "index_books_on_user_id"
     t.index ["uuid"], name: "index_books_on_uuid", unique: true
+  end
+
+  create_table "catalog_books", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "title_key", null: false
+    t.string "author"
+    t.string "original_title"
+    t.string "isbn"
+    t.integer "year"
+    t.string "language"
+    t.integer "page_count"
+    t.string "cover_url"
+    t.string "cloth"
+    t.string "cloth_color"
+    t.string "litres_id"
+    t.string "amazon_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["amazon_id"], name: "index_catalog_books_on_amazon_id", unique: true, where: "(amazon_id IS NOT NULL)"
+    t.index ["isbn"], name: "index_catalog_books_on_isbn"
+    t.index ["litres_id"], name: "index_catalog_books_on_litres_id", unique: true, where: "(litres_id IS NOT NULL)"
+    t.index ["title_key"], name: "index_catalog_books_on_title_key"
   end
 
   create_table "catalog_entries", force: :cascade do |t|

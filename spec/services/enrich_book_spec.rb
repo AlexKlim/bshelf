@@ -128,7 +128,7 @@ RSpec.describe EnrichBook do
     expect(book.reload.enriched_at).to be_nil
   end
 
-  it "caches catalog answers across users, but not a 429" do
+  it "serves the second reader of a book from the shared catalog without asking anyone" do
     stub_open_library("open_library_solaris.json")
     google = stub_google("google_429.json", status: 429)
     stub_cover
@@ -136,6 +136,7 @@ RSpec.describe EnrichBook do
     2.times { described_class.call(create(:book, title: "Solaris", author: "Stanisław Lem")) }
 
     expect(a_request(:get, %r{openlibrary\.org/search})).to have_been_made.once
-    expect(google).to have_been_made.twice
+    expect(google).to have_been_made.once
+    expect(Book.last).to have_attributes(year: 1961, cloth: "linen")
   end
 end
