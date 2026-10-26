@@ -20,6 +20,17 @@ RSpec.describe ShelfMove do
     expect(moved.editions.first.reading.reload.finished_at).to eq(Time.zone.local(2026, 6, 1))
   end
 
+  it "keeps the dropped place between two books read on the same day" do
+    newer, older = %w[Newer Older].map { done(it, Time.zone.local(2026, 5, 1)) }
+    newer.editions.first.reading.update_columns(updated_at: 1.hour.ago)
+    older.editions.first.reading.update_columns(updated_at: 2.hours.ago)
+    moved = create(:book, user:, title: "Moved", status: "want")
+
+    described_class.call(moved, key: "2026", before: newer, after: older)
+
+    expect(row("2026")).to eq(%w[Newer Moved Older])
+  end
+
   it "keeps a past year's date inside that year at either end" do
     only = done("Only", Time.zone.local(2019, 1, 1, 6))
     moved = create(:book, user:, title: "Moved", status: "want")

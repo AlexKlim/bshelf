@@ -70,7 +70,7 @@ class Shelf
   end
 
   def sort_rows(key, rows)
-    rows.sort_by { |id, place| [ -(year?(key) ? place.finished_at : place.activity_at).to_f, -id ] }
+    rows.sort_by { |id, place| [ -(year?(key) ? place.finished_at : place.activity_at).to_f, -place.activity_at.to_f, -id ] }
   end
 
   def shelf_rank(key)

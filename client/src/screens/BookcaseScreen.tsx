@@ -31,6 +31,12 @@ function readDismissed() {
   }
 }
 
+function neighboursOnShelf(row: BookSummary[], index: number, same: (b: BookSummary) => boolean) {
+  const before = row.slice(0, index).filter(same).at(-1)
+  const after = row.slice(index).find(same)
+  return [before, after] as const
+}
+
 export function BookcaseScreen() {
   const { t } = useTranslation()
   const shelf = useShelf()
@@ -68,9 +74,9 @@ export function BookcaseScreen() {
   const shelves = useMemo(() => (shelf.shelves ? arrangeShelves(shelf.shelves) : null), [shelf.shelves])
   const move = useCallback(
     (book: BookSummary, to: ShelfKey, index: number) => {
+      const key = to === "want" && book.editions.some((e) => e.store) ? "owned" : to
       const row = (shelves?.find((s) => s.key === to)?.books ?? []).filter((b) => b.id !== book.id)
-      const [before, after] = [row[index - 1], row[index]]
-      const key = to === "want" ? (after?.shelf ?? before?.shelf ?? to) : to
+      const [before, after] = neighboursOnShelf(row, index, (b) => to !== "want" || b.shelf === key)
       place(movedBook(book, key, book.editions.map((e) => shelfStatus(e, to))), before?.id, after?.id)
       const save: Promise<void> = (saving.current.get(book.id) ?? Promise.resolve())
         .then(() => moveBook(book.id, { shelf: to, before: before?.id, after: after?.id }))
