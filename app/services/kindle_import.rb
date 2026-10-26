@@ -4,7 +4,7 @@ class KindleImport
 
   def self.call(user, items, highlights, owned = {}) = new(user).call(items, highlights, owned)
 
-  def self.decode(text) = Nokogiri::HTML5.fragment(text.to_s).text
+  def self.decode(text) = text.to_s.gsub(/&#?[[:alnum:]]+;/) { Nokogiri::HTML5.fragment(it).text }
 
   def initialize(user)
     @user = user

@@ -32,6 +32,7 @@ RSpec.describe KindleImport do
     described_class.call(user, [ item("A9", "&#1050;&#1086;&#1084;&#1072;&#1085;&#1076;&#1072; &amp; &#1103;", authors: [ "&#1051;&#1077;&#1084;, &#1057;&#1090;&#1072;&#1085;&#1080;&#1089;&#1083;&#1072;&#1074;:" ]) ], {})
 
     expect(edition("A9").book).to have_attributes(title: "Команда & я", author: "Станислав Лем")
+    expect(described_class.decode("Learn <C++> &mdash; fast & well")).to eq("Learn <C++> — fast & well")
   end
 
   it "moves an existing Kindle edition forward on the next sync without adding it again" do
