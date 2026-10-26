@@ -277,11 +277,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100017) do
     t.jsonb "viewport"
     t.index ["status"], name: "index_remote_browser_sessions_on_status"
     t.index ["user_id"], name: "index_remote_browser_sessions_on_user_id"
-    t.index ["user_id"], name: "index_remote_browser_sessions_one_active_per_user", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'connecting'::character varying, 'live'::character varying, 'collecting'::character varying])::text[]))"
+    t.index ["user_id"], name: "index_remote_browser_sessions_one_active_per_user", unique: true, where: "((status)::text = ANY (ARRAY[('queued'::character varying)::text, ('connecting'::character varying)::text, ('live'::character varying)::text, ('collecting'::character varying)::text]))"
     t.index ["uuid"], name: "index_remote_browser_sessions_on_uuid", unique: true
-    t.check_constraint "interruption::text = ANY (ARRAY['aborted'::character varying, 'timeout'::character varying, 'provider_refused'::character varying, 'deploy_interrupted'::character varying, 'browser_failed'::character varying]::text[])", name: "remote_browser_sessions_interruption"
-    t.check_constraint "purpose::text = ANY (ARRAY['kindle'::character varying, 'litres'::character varying]::text[])", name: "remote_browser_sessions_purpose"
-    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'connecting'::character varying, 'live'::character varying, 'collecting'::character varying, 'done'::character varying, 'interrupted'::character varying]::text[])", name: "remote_browser_sessions_status"
+    t.check_constraint "interruption::text = ANY (ARRAY['aborted'::character varying::text, 'timeout'::character varying::text, 'provider_refused'::character varying::text, 'deploy_interrupted'::character varying::text, 'browser_failed'::character varying::text])", name: "remote_browser_sessions_interruption"
+    t.check_constraint "purpose::text = ANY (ARRAY['kindle'::character varying::text, 'litres'::character varying::text])", name: "remote_browser_sessions_purpose"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying::text, 'connecting'::character varying::text, 'live'::character varying::text, 'collecting'::character varying::text, 'done'::character varying::text, 'interrupted'::character varying::text])", name: "remote_browser_sessions_status"
   end
 
   create_table "solid_queue_batch_executions", force: :cascade do |t|
@@ -443,8 +443,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100017) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id", "kind"], name: "index_source_connections_on_user_id_and_kind", unique: true
-    t.check_constraint "kind::text = ANY (ARRAY['litres'::character varying, 'kindle_export'::character varying, 'kindle_browser'::character varying]::text[])", name: "source_connections_kind"
-    t.check_constraint "status::text = ANY (ARRAY['never'::character varying, 'ok'::character varying, 'error'::character varying, 'needs_login'::character varying]::text[])", name: "source_connections_status"
+    t.check_constraint "kind::text = ANY (ARRAY['litres'::character varying::text, 'kindle_export'::character varying::text, 'kindle_browser'::character varying::text])", name: "source_connections_kind"
+    t.check_constraint "status::text = ANY (ARRAY['never'::character varying::text, 'ok'::character varying::text, 'error'::character varying::text, 'needs_login'::character varying::text])", name: "source_connections_status"
   end
 
   create_table "status_changes", force: :cascade do |t|
