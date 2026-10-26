@@ -81,6 +81,6 @@ Environment: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_URL` (public URL, used in e
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](LICENSE.md). The code is public: read it, run it for yourself, change it, share it. Personal use, study, hobby projects and noncommercial organizations are fine. Making money with it (selling it, running it as a paid service, using it inside a business) is not allowed without a separate license, so ask first.
+[PolyForm Noncommercial 1.0.0](LICENSE.md). You may read, run, change and share the code for any noncommercial purpose. Personal use, study and hobby projects are fine when there is no anticipated commercial application, and so are noncommercial organizations. Commercial use, such as selling it or running it as a paid service, needs a separate license, so ask first.
 
 Strictly speaking this is source-available rather than OSI open source, because open source licenses cannot forbid commercial use.

@@ -2,24 +2,17 @@ class LitresCollector
   LOGIN = "https://www.litres.ru/auth/login/".freeze
   TIMEOUT = 60
 
+  API = "https://api.litres.ru".freeze
+  PAGE_GAP = 0.4
+
   # Session-Id and supersid come from cookies the page cannot read itself, so Ruby passes them in.
-  ARTS_JS = <<~JS.freeze
-    (async (headers, limit) => {
-      const api = "https://api.litres.ru"
-      const arts = []
-      let url = `${api}/foundation/api/users/me/arts?limit=${limit}`
-      while (url) {
-        const r = await fetch(url, { headers, credentials: "include" })
-        if (!r.ok || !r.headers.get("Powered-By-Litres")) return { status: r.status, arts }
-        const payload = (await r.json()).payload || {}
-        arts.push(...(payload.data || []))
-        if (limit === 1) break
-        const next = payload.pagination?.next_page
-        url = next ? (next.startsWith("http") ? next : api + next).replace("/api/", "/foundation/api/") : null
-        await new Promise((ok) => setTimeout(ok, 400))
-      }
-      return { status: 200, arts }
-    })(HEADERS, LIMIT).then(arguments[0])
+  PAGE_JS = <<~JS.freeze
+    (async (url, headers) => {
+      const r = await fetch(url, { headers, credentials: "include" })
+      if (!r.ok || !r.headers.get("Powered-By-Litres")) return { status: r.status }
+      const payload = (await r.json()).payload || {}
+      return { status: 200, arts: payload.data || [], next: payload.pagination?.next_page || null }
+    })(URL, HEADERS).then(arguments[0])
   JS
 
   def steps = %w[library]
@@ -30,27 +23,51 @@ class LitresCollector
     browse(session) do |page|
       next false if URI(page.current_url).path.start_with?("/auth/")
 
-      arts(page, limit: 1)["status"] == 200
+      fetch_page(page, library_url(1))["status"] == 200
     end
   end
 
   def collect(session)
     browse(session) do |page|
-      result = arts(page, limit: 24)
-      raise RemoteBrowser::ProviderRefused unless result["status"] == 200
-
-      log_shape(result["arts"])
+      arts = library(page) { yield nil }
+      log_shape(arts)
       yield "library"
-      LitresImport.call(session.user, result["arts"])
+      LitresImport.call(session.user, arts)
     end
   end
 
   private
 
-  def arts(page, limit:)
+  def library(page)
+    arts = []
+    url = library_url(24)
+    while url
+      result = fetch_page(page, url)
+      raise RemoteBrowser::ProviderRefused if result["status"] != 200 && arts.empty?
+      break if result["status"] != 200
+
+      arts.concat(result["arts"])
+      url = next_url(result["next"])
+      yield
+      sleep PAGE_GAP
+    end
+    arts
+  end
+
+  def library_url(limit) = "#{API}/foundation/api/users/me/arts?limit=#{limit}"
+
+  # The cursor carries + and =, so the reported address is used as is, only its /api/ prefix is wrong.
+  def next_url(path)
+    return if path.blank?
+
+    url = path.start_with?("http") ? path : API + path
+    url.sub(%r{\A#{API}/api/}, "#{API}/foundation/api/")
+  end
+
+  def fetch_page(page, url)
     cookies = page.cookies.all
     headers = { "Session-Id" => cookies["SID"]&.value, "supersid" => cookies["supersid"]&.value }.compact
-    page.evaluate_async(ARTS_JS.sub("HEADERS", headers.to_json).sub("LIMIT", limit.to_s), TIMEOUT)
+    page.evaluate_async(PAGE_JS.sub("URL") { url.to_json }.sub("HEADERS") { headers.to_json }, TIMEOUT)
   end
 
   # ponytail: field names beyond id/title/art_type are unconfirmed, drop this once a real library has been read.
