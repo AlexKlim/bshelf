@@ -1,5 +1,9 @@
 class KindleCollector
   LIBRARY = "https://read.amazon.com/kindle-library".freeze
+  CONTENT_PAGE = "https://www.amazon.com/hz/mycd/digital-console/contentlist/booksAll/dateDsc/".freeze
+  # ponytail: Audible/audible is a guess, Ebook and KindlePDoc are confirmed. Check the log line after a real sync.
+  CONTENT = { "Ebook" => "booksAll", "KindlePDoc" => "pdocs", "Audible" => "audible" }.freeze
+  CONTENT_BATCH = 50
   TIMEOUT = 60
 
   LIBRARY_JS = <<~JS.freeze
@@ -40,6 +44,22 @@ class KindleCollector
     })(ASIN).then(arguments[0])
   JS
 
+  # One page of "Manage your content and devices": books with Kindle's own READ mark, documents, audiobooks.
+  CONTENT_JS = <<~'JS'.freeze
+    (async (contentType, contentCategoryReference, startIndex, batchSize) => {
+      const csrfToken = (document.documentElement.innerHTML.match(/csrfToken\s*=\s*["']([^"']+)["']/) || [])[1]
+      if (!csrfToken) return { items: [], total: 0 }
+      const activityInput = JSON.stringify({ contentType, contentCategoryReference, itemStatusList: ["Active"],
+        showSharedContent: true, surfaceType: "LargeDesktop",
+        fetchCriteria: { sortOrder: "DESCENDING", sortIndex: "DATE", startIndex, batchSize, totalContentCount: -1 } })
+      const body = new URLSearchParams({ activity: "GetContentOwnershipData", activityInput, csrfToken })
+      const r = await fetch("/hz/mycd/digital-console/ajax", { method: "POST", body })
+      if (!r.ok) return { items: [], total: 0 }
+      const data = (await r.json()).GetContentOwnershipData || {}
+      return { items: data.items || [], total: data.numberOfItems || 0 }
+    })(ARGS).then(arguments[0])
+  JS
+
   def steps = %w[library highlights]
 
   def start(session) = browse(session) { it.go_to(LIBRARY) }
@@ -54,12 +74,32 @@ class KindleCollector
         yield nil
         page.evaluate_async(NOTEBOOK_JS.sub("ASIN", asin.to_json), TIMEOUT)
       end
+      owned = content(page) { yield nil }
       yield "highlights"
-      KindleImport.call(session.user, books, highlights)
+      KindleImport.call(session.user, books, highlights, owned)
     end
   end
 
   private
+
+  def content(page)
+    page.go_to(CONTENT_PAGE)
+    owned = CONTENT.to_h { |kind, category| [ kind, content_pages(page, kind, category) { yield } ] }
+    Rails.logger.info("[kindle] content #{owned.transform_values(&:size)}")
+    owned
+  end
+
+  def content_pages(page, kind, category)
+    items = []
+    loop do
+      args = [ kind, category, items.size, CONTENT_BATCH ].map(&:to_json).join(", ")
+      result = page.evaluate_async(CONTENT_JS.sub("ARGS") { args }, TIMEOUT)
+      items.concat(result["items"])
+      yield
+      break if result["items"].size < CONTENT_BATCH || items.size >= result["total"]
+    end
+    items
+  end
 
   def browse(session)
     browser = Ferrum::Browser.new(ws_url: session.websocket_url, timeout: TIMEOUT)

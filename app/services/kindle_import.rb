@@ -1,20 +1,39 @@
 class KindleImport
   SOURCE = "kindle_browser".freeze
+  FORMATS = { "Ebook" => "ebook", "KindlePDoc" => "personal_doc", "Audible" => "audio" }.freeze
 
-  def self.call(user, items, highlights) = new(user).call(items, highlights)
+  def self.call(user, items, highlights, owned = {}) = new(user).call(items, highlights, owned)
 
   def initialize(user)
     @user = user
   end
 
-  def call(items, highlights)
-    added = items.count { |item| upsert(item) }
+  def call(items, highlights, owned = {})
+    added = with_owned(items, owned).count { |item| upsert(item) }
     books = @user.editions.where(store: "amazon", external_id: highlights.keys).pluck(:external_id, :book_id).to_h
     saved = highlights.sum { |asin, notes| books[asin] ? replace_highlights(books[asin], notes) : 0 }
     { books: added, highlights: saved }
   end
 
   private
+
+  # "Manage your content" adds Kindle's own READ mark, documents and audiobooks the reader library does not list.
+  def with_owned(items, owned)
+    read = owned.fetch("Ebook", []).select { it["readStatus"] == "READ" }.pluck("asin").to_set
+    known = items.pluck("asin").to_set
+    extra = owned.flat_map do |kind, list|
+      list.reject { known.include?(it["asin"]) || it["originType"] == "KindleDictionary" }.map { owned_item(it, kind) }
+    end
+    items.map { read.include?(it["asin"]) ? it.merge("percentageRead" => 100) : it } + extra
+  end
+
+  def owned_item(item, kind)
+    authors = Array(item["bookProducerDetails"]).select { it["role"] == "author" }.pluck("name")
+    authors = item["authors"].to_s.split(",") if authors.empty?
+    { "asin" => item["asin"], "title" => item["title"].to_s.strip, "authors" => authors.map(&:strip),
+      "originType" => item["originType"].to_s.casecmp?("sample") ? "SAMPLE" : item["originType"],
+      "percentageRead" => item["readStatus"] == "READ" ? 100 : 0, "format" => FORMATS.fetch(kind, "ebook") }
+  end
 
   def upsert(item)
     asin, title = item.values_at("asin", "title")
@@ -26,7 +45,7 @@ class KindleImport
       return false
     end
 
-    attrs = { format: "ebook", status:, source: SOURCE, store: "amazon", external_id: asin, status_source: SOURCE }
+    attrs = { format: item["format"] || "ebook", status:, source: SOURCE, store: "amazon", external_id: asin, status_source: SOURCE }
     AddBook.call(user: @user, title:, author: author(item["authors"]), **attrs)
     true
   rescue AddBook::Duplicate => e

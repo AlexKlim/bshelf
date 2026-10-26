@@ -56,4 +56,29 @@ RSpec.describe KindleImport do
     expect(result[:highlights]).to eq(1)
     expect(user.highlights.pluck(:text, :note, :location, :source)).to eq([ [ "Happiness for everybody", "end", "42", "kindle_browser" ] ])
   end
+
+  describe "with the content page" do
+    def owned(asin, title, read: false, origin: "Purchase", authors: [ "Tom DeMarco" ])
+      { "asin" => asin, "title" => title, "readStatus" => read ? "READ" : "UNKNOWN", "originType" => origin,
+        "bookProducerDetails" => authors.map { { "name" => it, "role" => "author" } } }
+    end
+
+    it "marks books Kindle calls READ as done and adds documents and audiobooks the library does not list" do
+      result = described_class.call(user, [ item("A1", "Roadside Picnic", percent: 30) ], {},
+        "Ebook" => [ owned("A1", "Roadside Picnic", read: true), owned("A2", "Slack", read: true),
+          owned("D1", "Dictionary", origin: "KindleDictionary") ],
+        "KindlePDoc" => [ owned("P1", "Пять искушений руководителя", authors: [ "Патрик Ленсиони" ]) ],
+        "Audible" => [ owned("U1", "Project Hail Mary", authors: [ "Andy Weir" ]) ])
+
+      expect(result[:books]).to eq(4)
+      expect(edition("A1").reading.status).to eq("done")
+      expect(edition("A2")).to have_attributes(format: "ebook")
+      expect(edition("A2").reading.status).to eq("done")
+      expect(edition("A2").book.author).to eq("Tom DeMarco")
+      expect(edition("P1")).to have_attributes(format: "personal_doc")
+      expect(edition("P1").reading.status).to eq("owned")
+      expect(edition("U1")).to have_attributes(format: "audio")
+      expect(edition("D1")).to be_nil
+    end
+  end
 end
