@@ -117,7 +117,7 @@ export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
     };
     window.addEventListener("pointerdown", clear);
     return () => window.removeEventListener("pointerdown", clear);
-  }, [pulled, hover, pulledShelf]);
+  }, [pulled, hover, pulledShelf, caseWidth]);
 
   useEffect(() => {
     if (!matches?.size) return;
