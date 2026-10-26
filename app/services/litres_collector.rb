@@ -10,7 +10,7 @@ class LitresCollector
     (async (url, headers) => {
       const r = await fetch(url, { headers, credentials: "include" }).catch(() => null)
       if (!r?.ok) return { status: r?.status || 0 }
-      const payload = await r.json().then((body) => body.payload, () => null)
+      const payload = await r.json().then((body) => body?.payload, () => null)
       if (!payload) return { status: 0 }
       return { status: 200, arts: payload.data || [], next: payload.pagination?.next_page || null }
     })(URL, HEADERS).then(arguments[0])
