@@ -25,7 +25,8 @@ class EnrichBook
 
   def lookup
     rate_limited = nil
-    CatalogClient::PROVIDERS.each do |provider|
+    providers = book.title.match?(/\p{Cyrillic}/) ? CatalogClient::RUSSIAN_PROVIDERS : CatalogClient::PROVIDERS
+    providers.each do |provider|
       break if complete?
 
       match = (book.isbn.present? && pick(client.search(provider, isbn: book.isbn), by_isbn: true)) ||
@@ -33,6 +34,11 @@ class EnrichBook
       apply(*match) if match
     rescue CatalogClient::RateLimited => e
       rate_limited = e
+    rescue CatalogClient::Error => e
+      # Litres sits behind DDoS-Guard, so its refusal leaves the lookup to the open catalogs instead of failing it.
+      raise unless provider == :litres
+
+      Rails.logger.info("litres search: #{e.message}")
     end
     rate_limited
   end

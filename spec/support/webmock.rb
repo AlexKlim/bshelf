@@ -10,6 +10,11 @@ module CatalogStubs
       .to_return(status: 200, body: catalog_fixture(fixture), headers: { "Content-Type" => "application/json" })
   end
 
+  def stub_litres(fixture = nil, status: 200)
+    stub_request(:get, %r{\Ahttps://api\.litres\.ru/foundation/api/search})
+      .to_return(status:, body: fixture ? catalog_fixture(fixture) : "", headers: { "Content-Type" => "application/json" })
+  end
+
   def stub_google(fixture = nil, status: 200, headers: {})
     body = fixture ? catalog_fixture(fixture) : ""
     stub_request(:get, %r{\Ahttps://www\.googleapis\.com/books/v1/volumes})
@@ -17,4 +22,8 @@ module CatalogStubs
   end
 end
 
-RSpec.configure { it.include CatalogStubs }
+RSpec.configure do |config|
+  config.include CatalogStubs
+  # Litres sits behind DDoS-Guard, so specs see the refusal unless they stub an answer.
+  config.before { stub_litres(status: 403) }
+end
