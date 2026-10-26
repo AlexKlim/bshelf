@@ -24,6 +24,7 @@ class RemoteBrowserSessionJob < ApplicationJob
       expires_at: RemoteBrowserSession::LOGIN_TIME.from_now)
     return RemoteBrowser.release(browser.id) unless live
 
+    RemoteBrowser.collectors.fetch(session.purpose).start(session.reload)
     tick(session)
   end
 

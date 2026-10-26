@@ -16,6 +16,14 @@ RSpec.describe RemoteBrowserSessionJob do
     expect(session.seconds_left).to be_within(2).of(300)
   end
 
+  it "opens the store sign-in page once the browser is live" do
+    allow(collector).to receive(:start)
+
+    tick!
+
+    expect(collector).to have_received(:start).with(have_attributes(status: "live", id: session.id))
+  end
+
   it "keeps ticking while the person signs in" do
     collector.login_delay = 1.minute
     tick!

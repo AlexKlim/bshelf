@@ -23,6 +23,14 @@ class SteelClient
     Session.new(body.fetch("id"), body["websocketUrl"], URI(body.fetch("debugUrl")).request_uri.delete_prefix("/"))
   end
 
+  def ws_root = "ws://#{@base.host}:#{@base.port}/"
+
+  def open_socket
+    TCPSocket.new(@base.host, @base.port, connect_timeout: TIMEOUT)
+  rescue SystemCallError, IOError => e
+    raise RemoteBrowser::BrowserFailed, e.class.name
+  end
+
   def release(id) = request(Net::HTTP::Post.new("/v1/sessions/#{CGI.escape(id)}/release"), {})
 
   def view(_id, path, query)

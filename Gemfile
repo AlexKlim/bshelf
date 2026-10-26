@@ -11,6 +11,7 @@ gem "devise", "~> 5.0"
 gem "doorkeeper", "6.0.0.rc2"
 gem "mcp", "~> 1.8"
 gem "ruby-vips", "~> 2.3", require: false
+gem "ferrum", "~> 0.19"
 
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"

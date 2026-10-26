@@ -124,6 +124,27 @@ RSpec.describe "Remote browser sessions" do
         expect(response).to have_http_status(:ok)
       end
 
+      it "points the viewer's websocket at this proxy instead of Steel's private address" do
+        allow(steel).to receive(:view).and_return([ 200, "text/html", "const baseWsUrl = 'ws://steel.fake/v1/sessions/cast';" ])
+
+        get viewer_url(session)
+
+        expect(response.body).to include("'ws://www.example.com/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/cast'")
+      end
+
+      it "lets the websocket upgrade through only with the viewer cookie" do
+        upgrade = { "Upgrade" => "websocket", "Connection" => "Upgrade" }
+        get "/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/cast", headers: upgrade
+        expect(response).to have_http_status(:forbidden)
+
+        get viewer_url(session)
+        get "/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/cast", headers: upgrade
+        expect(response).to have_http_status(:not_implemented)
+
+        get "/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/cast"
+        expect(response).to have_http_status(:not_found)
+      end
+
       it "rejects requests without a token or cookie" do
         session
         get "/api/v1/remote_browser_sessions/#{session.uuid}/view/v1/sessions/debug"

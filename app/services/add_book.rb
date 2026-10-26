@@ -21,13 +21,13 @@ class AddBook
   end
 
   def self.add_edition(book, format: "unknown", status: "want", source: "manual", store: nil,
-    external_id: nil, **dates)
+    external_id: nil, status_source: "manual", **dates)
     dates = ReadingDates.parse(dates)
     Book.transaction do
       edition = book.editions.create!(user: book.user, format:, source:, store:,
         external_id: store && external_id)
-      reading = edition.create_reading!(user: book.user, status:, status_source: "manual", **dates)
-      StatusChange.create!(user: book.user, reading:, to_status: status, source: "manual")
+      reading = edition.create_reading!(user: book.user, status:, status_source:, **dates)
+      StatusChange.create!(user: book.user, reading:, to_status: status, source: status_source)
       edition
     end
   end

@@ -52,12 +52,14 @@ module Api
         end
 
         path = params[:path].to_s
+        return tunnel(session) if path == CAST_PATH && request.headers["Upgrade"].to_s.casecmp?("websocket")
         return render_error(:not_found, status: :not_found) unless viewer_path?(session, path)
 
         # The client's query never reaches Steel; only the viewer page gets the query Steel itself issued.
         viewer, query = session.viewer_path.to_s.split("?", 2)
         status, content_type, body = RemoteBrowser.steel.view(session.steel_session_id, path,
           path == viewer ? query.to_s : "")
+        body = body.gsub(RemoteBrowser.steel.ws_root, "#{request.ssl? ? "wss" : "ws"}://#{request.host_with_port}#{view_root}/") if path == viewer
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
@@ -65,6 +67,25 @@ module Api
       end
 
       private
+
+      CAST_PATH = "v1/sessions/cast".freeze
+      CAST_QUERY = %w[pageId pageIndex tabInfo].freeze
+
+      # Steel's viewer streams the browser over a websocket on its private address, so after the cookie check
+      # the upgrade is piped byte for byte to Steel.
+      def tunnel(session)
+        hijack = request.env["rack.hijack"]
+        return head(:not_implemented) unless hijack
+
+        upstream = RemoteBrowser.steel.open_socket
+        query = request.query_parameters.slice(*CAST_QUERY).to_query
+        SteelTunnel.open(hijack.call, upstream, path: "/#{CAST_PATH}#{"?#{query}" if query.present?}",
+          host: URI(RemoteBrowser.steel.ws_root).then { "#{it.host}:#{it.port}" }, headers: SteelTunnel::FORWARDED.index_with { request.headers[it] },
+          ttl: session.seconds_left.to_i)
+        head :ok
+      rescue RemoteBrowser::BrowserFailed
+        head :bad_gateway
+      end
 
       def browser_session = @browser_session ||= current_user.remote_browser_sessions.find_by!(uuid: params[:id])
 

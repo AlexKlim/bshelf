@@ -8,6 +8,8 @@ class FakeCollector
 
   def steps = %w[library highlights]
 
+  def start(_session) = nil
+
   def logged_in?(session) = session.expires_at - RemoteBrowserSession::LOGIN_TIME + login_delay <= Time.current
 
   def collect(_session)
