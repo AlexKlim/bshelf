@@ -1,5 +1,5 @@
 class DuplicateCandidate < ApplicationRecord
-  REASONS = %w[title_author title].freeze
+  REASONS = %w[title_author title translation].freeze
 
   belongs_to :user
   belongs_to :book

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_100016) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100017) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -114,7 +114,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100016) do
     t.index ["user_id"], name: "index_duplicate_candidates_on_user_id"
     t.index ["uuid"], name: "index_duplicate_candidates_on_uuid", unique: true
     t.check_constraint "book_id < other_book_id", name: "duplicate_candidates_ordered_pair"
-    t.check_constraint "reason::text = ANY (ARRAY['title_author'::character varying, 'title'::character varying]::text[])", name: "duplicate_candidates_reason"
+    t.check_constraint "reason::text = ANY (ARRAY['title_author'::text, 'title'::text, 'translation'::text])", name: "duplicate_candidates_reason"
   end
 
   create_table "editions", force: :cascade do |t|

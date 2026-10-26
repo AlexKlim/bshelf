@@ -106,7 +106,7 @@ The client shows "Already on the shelf: Listened · 2024" from `existing`.
 
 ### Merge, unmerge and possible duplicates
 
-`POST /library/tidy` is the librarian's desk: it queues the lookup again for the user's books that are missing something, a book never looked up, one without a cover, or a cover whose colour is not read yet, and answers how many it queued. At most three times a minute.
+`POST /library/tidy` is the librarian's desk: it queues the lookup again for the user's books that are missing something, a book never looked up, one without a cover, or a cover whose colour is not read yet, and answers how many it queued. It also looks for one book shelved in two languages: books by the same author with a Cyrillic and a Latin title are asked about in pairs through Jev (TypeSafe's classifier on OpenRouter), and a pair it calls one book with probability 0.9 or more shows up under `/duplicates` with reason `translation`. At most three times a minute.
 
 `PATCH /books/:id/shelf` puts a book on a shelf of the bookcase between `before` and `after`, the ids of the books shown before and after it (either may be left out at an end). Every edition takes the shelf's status: `now` is reading, `want` is owned for a store copy and want otherwise, `no_date` is read without a date, and a year is read on a date between its neighbours' within that year. On the other shelves the place is kept until the book's status changes.
 

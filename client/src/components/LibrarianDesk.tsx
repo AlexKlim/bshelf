@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { tidyLibrary } from "@/api"
 
-type DeskState = { kind: "idle" | "busy" | "error" } | { kind: "queued"; count: number }
+type DeskState = { kind: "idle" | "busy" | "error" } | { kind: "queued"; count: number; duplicates: boolean }
 
 const RELOADS = [15_000, 60_000]
 
@@ -16,9 +16,9 @@ export function LibrarianDesk({ disabled, onTidied }: { disabled?: boolean; onTi
   const tidy = async () => {
     setState({ kind: "busy" })
     try {
-      const { queued } = await tidyLibrary()
-      setState({ kind: "queued", count: queued })
-      if (queued) timers.current = RELOADS.map((ms) => window.setTimeout(onTidied, ms))
+      const { queued, duplicates } = await tidyLibrary()
+      setState({ kind: "queued", count: queued, duplicates })
+      if (queued || duplicates) timers.current = RELOADS.map((ms) => window.setTimeout(onTidied, ms))
     } catch {
       setState({ kind: "error" })
     }
@@ -28,7 +28,9 @@ export function LibrarianDesk({ disabled, onTidied }: { disabled?: boolean; onTi
     state.kind === "queued"
       ? state.count
         ? t("desk.queued", { count: state.count })
-        : t("desk.nothing")
+        : state.duplicates
+          ? t("desk.duplicates")
+          : t("desk.nothing")
       : t(`desk.${state.kind}`)
 
   return (
