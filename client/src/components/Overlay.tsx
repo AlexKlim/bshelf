@@ -19,7 +19,7 @@ export function Overlay({ open, label, onClose, children, className, onEscapeKey
         <Dialog.Content
           {...content}
           onEscapeKeyDown={(e) => {
-            if (document.querySelector(".bs-month[data-open]")) return e.preventDefault()
+            if ((e.target as Element | null)?.closest?.(".bs-month[data-open]")) return e.preventDefault()
             onEscapeKeyDown?.(e)
           }}
           className={className ? `bs-dialog ${className}` : "bs-dialog"}
