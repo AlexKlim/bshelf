@@ -9,7 +9,23 @@ module RemoteBrowser
   mattr_reader :running, default: Concurrent::Set.new
   mattr_reader :guards, default: Concurrent::Map.new
   GUARDED = %w[live collecting].freeze
-  PASSKEYLESS = { protocol: "ctap2", transport: "internal", hasResidentKey: true, hasUserVerification: true }.freeze
+  NO_PASSKEYS = <<~JS.freeze
+    (() => {
+      const credentials = navigator.credentials
+      if (!credentials) return
+      const refuse = () => Promise.reject(new DOMException("Passkeys are not available in this browser", "NotAllowedError"))
+      for (const name of ["get", "create"]) {
+        const original = credentials[name].bind(credentials)
+        credentials[name] = (options) => (options && options.publicKey ? refuse() : original(options))
+      }
+      if (window.PublicKeyCredential) {
+        PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable = () => Promise.resolve(false)
+        PublicKeyCredential.isConditionalMediationAvailable = () => Promise.resolve(false)
+      }
+    })()
+  JS
+  GUARD_WAIT = 10
+  Guard = Data.define(:thread, :ready)
 
   def self.available?(purpose) = !disabled && steel.present? && collectors.key?(purpose)
 
@@ -23,38 +39,44 @@ module RemoteBrowser
     connect(session, timeout:) do |browser|
       # A context of its own keeps the person's cookies in memory, off Steel's profile that the next person gets.
       context = browser.command("Target.createBrowserContext", disposeOnDetach: false)["browserContextId"]
-      id = browser.command("Target.createTarget", url:, browserContextId: context)["targetId"]
+      id = browser.command("Target.createTarget", url: "about:blank", browserContextId: context)["targetId"]
       browser.command("Target.getTargets")["targetInfos"].each do |info|
         browser.command("Target.closeTarget", targetId: info["targetId"]) if info["type"] == "page" && info["targetId"] != id
       end
       session.update!(target_id: id)
+      guard(session, timeout:).wait(GUARD_WAIT)
+      tab(browser, id).go_to(url)
     end
-    guard(session, timeout:)
   end
 
   def self.browse(session, timeout:)
-    guard(session, timeout:)
+    guard(session, timeout:).wait(GUARD_WAIT)
     connect(session, timeout:) { yield tab(it, session.target_id) }
   end
 
   def self.guard(session, timeout:)
-    return if guards[session.id]&.alive?
+    current = guards[session.id]
+    return current.ready if current&.thread&.alive?
 
-    # A passkey prompt opens a dialog headless Chrome never shows, and the page takes no input while it waits. A virtual
-    # authenticator with no keys turns the prompt down at once, but only while the CDP session that added it stays
-    # open, so a thread holds that connection for the whole session.
-    guards[session.id] = Thread.new do
+    # A passkey prompt opens a dialog headless Chrome never shows, and the page takes no input while it waits. A script
+    # run before each page turns the prompt down at once. It lives only as long as the CDP session that added it, and
+    # a virtual authenticator would not do either: any other session detaching from the tab switches it off.
+    ready = Concurrent::Event.new
+    thread = Thread.new do
       connect(session, timeout:) do |browser|
         page = tab(browser, session.target_id)
-        page.command("WebAuthn.enable", enableUI: false)
-        page.command("WebAuthn.addVirtualAuthenticator", options: PASSKEYLESS)
+        page.command("Page.addScriptToEvaluateOnNewDocument", source: NO_PASSKEYS)
+        ready.set
         sleep 2 while Rails.application.executor.wrap { RemoteBrowserSession.exists?(id: session.id, status: GUARDED) }
       end
     rescue StandardError => e
       Rails.logger.warn({ event: "remote_browser.guard_failed", session: session.uuid, error: e.class.name }.to_json)
     ensure
-      guards.delete_pair(session.id, Thread.current)
+      ready.set
+      guards.compute_if_present(session.id) { it.thread == Thread.current ? nil : it }
     end
+    guards[session.id] = Guard.new(thread, ready)
+    ready
   end
 
   def self.connect(session, timeout:)
