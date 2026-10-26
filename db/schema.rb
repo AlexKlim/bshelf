@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_100011) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_100013) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -61,6 +61,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_100011) do
     t.string "original_title_key", null: false
     t.string "shelved_key"
     t.datetime "shelved_at"
+    t.string "cloth_color"
     t.index ["author"], name: "index_books_on_author", opclass: :gin_trgm_ops, using: :gin
     t.index ["id"], name: "index_books_not_enriched", where: "(enriched_at IS NULL)"
     t.index ["original_title"], name: "index_books_on_original_title", opclass: :gin_trgm_ops, using: :gin

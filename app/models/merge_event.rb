@@ -1,5 +1,5 @@
 class MergeEvent < ApplicationRecord
-  FILLABLE = %w[author original_title language isbn isbn_source year page_count audio_minutes cover_url cloth].freeze
+  FILLABLE = %w[author original_title language isbn isbn_source year page_count audio_minutes cover_url cloth cloth_color].freeze
   MOVED = { "editions" => Edition, "highlights" => Highlight, "notes" => Note, "merge_events" => MergeEvent }.freeze
 
   belongs_to :user
@@ -20,6 +20,7 @@ class MergeEvent < ApplicationRecord
       moved = MOVED.to_h { |key, model| [ key, model.where(book_id: absorbed.id).ids ] }
       filled = absorbed.attributes.slice(*FILLABLE).select { |field, value| !value.nil? && survivor[field].nil? }
       filled.delete("isbn_source") unless filled.key?("isbn")
+      filled.except!("cloth", "cloth_color") if survivor.cover_url && survivor.cover_url != absorbed.cover_url
 
       MOVED.each { |key, model| model.where(id: moved[key]).update_all(book_id: survivor.id) }
       moved.merge!(hand_over_candidates(survivor, absorbed))

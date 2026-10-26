@@ -15,7 +15,11 @@ class EnrichBook
   def call
     rate_limited = lookup unless book.enriched_at
     retry_later = rate_limited && book.cover_url.nil?
-    book.cloth ||= cloth
+    if book.cloth_color.nil? && (color = cover_color)
+      book.cloth_color = color
+      book.cloth = Cloth.nearest(*Cloth.rgb(color))
+    end
+    book.cloth ||= Cloth.nearest(*Cloth.rgb(book.cloth_color)) if book.cloth_color
     book.enriched_at ||= Time.current unless retry_later
     book.save!
     raise rate_limited if retry_later
@@ -77,7 +81,7 @@ class EnrichBook
     book.match_confidence = [ book.match_confidence.to_f, confidence ].max
   end
 
-  def cloth
+  def cover_color
     bytes = book.cover_url && client.cover(book.cover_url)
     Cloth.from_image(bytes) if bytes
   rescue CatalogClient::Error => e

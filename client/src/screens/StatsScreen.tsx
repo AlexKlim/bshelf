@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { getStats } from "@/api"
 import { Ico } from "@/components/ui"
 import type { Stats } from "@/lib/types"
+import { clothStyle } from "@/lib/cloth"
 
 const monthName = (lng: string, month: number, style: "long" | "short") =>
   new Intl.DateTimeFormat(lng, { month: style, timeZone: "UTC" }).format(new Date(Date.UTC(2000, month - 1, 1)))
@@ -145,7 +146,7 @@ export function StatsScreen() {
                     }}
                   >
                     {m.books.map((b) => (
-                      <span className={`bs-stack__book bs-cloth--${b.cloth ?? "blank"}`} key={b.id}>
+                      <span className={`bs-stack__book bs-cloth--${b.cloth ?? "blank"}`} style={clothStyle(b)} key={b.id}>
                         <Ico name={b.formats.includes("audio") ? "audio" : "ebook"} />
                       </span>
                     ))}

@@ -12,7 +12,7 @@ import {
 } from "react"
 import { useTranslation } from "react-i18next"
 import { shelfLabel } from "@/lib/arrange"
-import { bookLang, spineSize } from "@/lib/cloth"
+import { bookLang, clothStyle, spineSize } from "@/lib/cloth"
 import type { BookSummary, Shelf, ShelfKey } from "@/lib/types"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { useShelfDrag } from "@/lib/useShelfDrag"
@@ -221,7 +221,7 @@ export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
         <span
           className={`bs-spine bs-spine--ghost bs-cloth--${drag.item.cloth}`}
           aria-hidden="true"
-          style={{ "--x": `${drag.x}px`, "--y": `${drag.y}px`, ...ghostSize(drag.item) } as CSSProperties}
+          style={{ "--x": `${drag.x}px`, "--y": `${drag.y}px`, ...ghostSize(drag.item), ...clothStyle(drag.item) } as CSSProperties}
         >
           <span className="bs-spine__text">
             <span className="bs-spine__title">{drag.item.title}</span>
@@ -291,7 +291,7 @@ const Spine = memo(function Spine({
       className={className}
       lang={bookLang(book)}
       data-book={book.id}
-      style={{ "--spine-w": `${width}px`, "--spine-h": `${height}px` } as CSSProperties}
+      style={{ "--spine-w": `${width}px`, "--spine-h": `${height}px`, ...clothStyle(book) } as CSSProperties}
       aria-label={label}
       aria-expanded={expandable ? pulled : undefined}
       tabIndex={tabbable ? 0 : -1}
