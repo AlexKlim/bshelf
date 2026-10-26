@@ -219,19 +219,25 @@ function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLin
   const dateField = status === "done" ? "finished_at" : status === "in_progress" ? "started_at" : null
   const when = dateField ? (edition[dateField] ?? "").slice(0, 7) : ""
 
-  const save = async (next: Status, month?: string) => {
+  const queue = useRef(Promise.resolve())
+  const save = (next: Status, month?: string) => {
     const previous = status
     setStatus(next)
     setError(false)
     const field = next === "done" ? "finished_at" : next === "in_progress" ? "started_at" : null
-    try {
-      await updateEdition(edition.id, { status: next, ...(field && month !== undefined ? { [field]: month && `${month}-01` } : {}) })
-      if (!field) onEdit(false)
-      onSaved()
-    } catch {
-      setStatus(previous)
-      setError(true)
-    }
+    const body = { status: next, ...(field && month !== undefined ? { [field]: month && `${month}-01` } : {}) }
+    queue.current = queue.current
+      .then(() => updateEdition(edition.id, body))
+      .then(
+        () => {
+          if (!field) onEdit(false)
+          onSaved()
+        },
+        () => {
+          setStatus(previous)
+          setError(true)
+        },
+      )
   }
 
   return (
