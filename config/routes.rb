@@ -30,6 +30,7 @@ Rails.application.routes.draw do
       end
 
       resources :shelves, only: %i[index show], path: "shelf"
+      post "library/tidy", to: "library#tidy"
       resource :search, only: :show
       resources :books, only: %i[show create update destroy] do
         post :merge, on: :member
