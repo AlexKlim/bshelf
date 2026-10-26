@@ -77,6 +77,7 @@ Every sign up, confirmation, sign in (and failed attempt for a known email), sig
 | GET | `/books/:id/highlights` | `offset`, `limit` | `200 { highlights: [Highlight], count }` |
 | POST | `/books/:id/editions` | `edition: { format, store, status, started_at, finished_at }` | `201 { book: BookDetail }`, `422` field codes |
 | POST | `/books/:id/merge` | `other_id` | `200 { book: BookDetail, merge_id }`; `422 { code: "invalid", field: "other_id" }` for the book itself |
+| PATCH | `/books/:id/shelf` | `shelf`, `before`, `after` | `200 { book: BookSummary }`, `422 { code: "inclusion", field: "shelf" }` |
 | DELETE | `/merges/:id` | | `200 { books: [BookSummary, BookSummary] }` (survivor, restored); `409 already_unmerged` |
 | GET | `/duplicates` | | `200 { duplicates: [Duplicate] }`, open ones only |
 | DELETE | `/duplicates/:id` | | `204`, dismissed for good |
@@ -103,6 +104,8 @@ The client shows "Already on the shelf: Listened · 2024" from `existing`.
 `POST /books/:id/editions` adds another format or a copy from another store to a book already on the shelf, with the same defaults and manual status as adding a book. `edition.store` is `litres`, `amazon` or omitted. An existing "want" edition is kept; the shelf already prefers the stronger status.
 
 ### Merge, unmerge and possible duplicates
+
+`PATCH /books/:id/shelf` puts a book on a shelf of the bookcase between `before` and `after`, the ids of the books shown before and after it (either may be left out at an end). Every edition takes the shelf's status: `now` is reading, `want` is owned for a store copy and want otherwise, `no_date` is read without a date, and a year is read on a date between its neighbours' within that year. On the other shelves the place is kept until the book's status changes.
 
 `POST /books/:id/merge` folds `other_id` into `:id`: editions with their statuses, notes and highlights move over, blank fields of `:id` are filled from the other book, its possible duplicates (dismissed ones too) now pair with `:id`, and the other book disappears (its id answers `404`). `merge_id` lets the client offer "Undo".
 

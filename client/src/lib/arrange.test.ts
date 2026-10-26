@@ -55,3 +55,15 @@ describe("placeBook", () => {
     expect(placeBook(shelves, { ...moved, shelf: "no_date" }).at(-1)).toEqual({ key: "no_date", count: 1, books: [{ ...moved, shelf: "no_date" }] })
   })
 })
+
+describe("placeBook between neighbours", () => {
+  it("puts the book right after the one shown before it, or right before the one after it", () => {
+    const shelves: Shelf[] = [{ key: "now", count: 3, books: ["a", "b", "c"].map((id) => book({ id, shelf: "now" })) }]
+    const moved = book({ id: "m", shelf: "now" })
+    const ids = (placed: Shelf[]) => placed[0].books.map((b) => b.id)
+
+    expect(ids(placeBook(shelves, moved, "b", "c"))).toEqual(["a", "b", "m", "c"])
+    expect(ids(placeBook(shelves, moved, undefined, "a"))).toEqual(["m", "a", "b", "c"])
+    expect(ids(placeBook(shelves, moved, "c"))).toEqual(["a", "b", "c", "m"])
+  })
+})

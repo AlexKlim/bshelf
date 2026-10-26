@@ -33,6 +33,7 @@ Rails.application.routes.draw do
       resource :search, only: :show
       resources :books, only: %i[show create update destroy] do
         post :merge, on: :member
+        patch :shelf, on: :member
         post :editions, on: :member, action: :add_edition
         resources :notes, only: %i[index create update destroy], shallow: true
         resources :highlights, only: :index

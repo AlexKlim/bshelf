@@ -211,6 +211,28 @@ RSpec.describe "Books, editions, notes and highlights" do
     end
   end
 
+  describe "PATCH /api/v1/books/:id/shelf" do
+    it "moves a book between two others and answers with its new shelf" do
+      newer = create(:book, user:, status: "done", finished_at: Time.zone.local(2025, 9, 1))
+      older = create(:book, user:, status: "done", finished_at: Time.zone.local(2025, 3, 1))
+      moved = create(:book, user:, status: "in_progress")
+
+      patch "/api/v1/books/#{moved.uuid}/shelf", params: { shelf: "2025", before: newer.uuid, after: older.uuid }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json["book"]).to include("id" => moved.uuid, "shelf" => "2025")
+    end
+
+    it "refuses a shelf that cannot exist" do
+      moved = create(:book, user:, status: "want")
+
+      patch "/api/v1/books/#{moved.uuid}/shelf", params: { shelf: "3020" }, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]).to eq([ { "code" => "inclusion", "field" => "shelf" } ])
+    end
+  end
+
   describe "notes" do
     let(:book) { create(:book, user:, status: "want") }
 

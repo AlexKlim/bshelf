@@ -48,12 +48,18 @@ export function movedBook(book: BookSummary, to: ShelfKey, changes: ReturnType<t
   return { ...book, shelf: to, editions }
 }
 
-export function placeBook(shelves: Shelf[], book: BookSummary): Shelf[] {
+export function placeBook(shelves: Shelf[], book: BookSummary, before?: string, after?: string): Shelf[] {
   const placed = shelves.map((s) => {
     const had = s.books.some((b) => b.id === book.id)
     const books = s.books.filter((b) => b.id !== book.id)
-    if (s.key === book.shelf) return { ...s, count: s.count + (had ? 0 : 1), books: [book, ...books] }
-    return had ? { ...s, count: s.count - 1, books } : s
+    if (s.key !== book.shelf) return had ? { ...s, count: s.count - 1, books } : s
+    const left = books.findIndex((b) => b.id === before)
+    const right = books.findIndex((b) => b.id === after)
+    const at = left >= 0 ? left + 1 : Math.max(right, 0)
+    return { ...s, count: s.count + (had ? 0 : 1), books: [...books.slice(0, at), book, ...books.slice(at)] }
   })
   return placed.some((s) => s.key === book.shelf) ? placed : [...placed, { key: book.shelf, count: 1, books: [book] }]
 }
+
+export const swapBook = (shelves: Shelf[], book: BookSummary): Shelf[] =>
+  shelves.map((s) => (s.books.some((b) => b.id === book.id) ? { ...s, books: s.books.map((b) => (b.id === book.id ? book : b)) } : s))

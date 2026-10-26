@@ -51,6 +51,7 @@ class StatusResolver
 
       StatusChange.create!(user_id: reading.user_id, reading_id: reading.id,
         from_status: old_status, to_status: status, source:)
+      Book.joins(:editions).where(editions: { id: reading.edition_id }).update_all(shelved_key: nil) if old_status != status
       true
     end.tap { reading.reload }
   end

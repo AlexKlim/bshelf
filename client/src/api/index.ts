@@ -54,6 +54,8 @@ export type NewBook = {
 }
 export const addBook = (book: NewBook) => post<{ book: BookDetail }>("/books", book)
 export const getBook = (id: string) => api<{ book: BookDetail }>(`/books/${id}`)
+export const moveBook = (id: string, body: { shelf: ShelfKey; before?: string; after?: string }) =>
+  patch<{ book: BookSummary }>(`/books/${id}/shelf`, body)
 export const updateEdition = (id: string, body: { status: Status; started_at?: string; finished_at?: string }) =>
   patch<{ book: BookSummary }>(`/editions/${id}`, body)
 

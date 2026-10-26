@@ -202,7 +202,7 @@ describe("dragging a book", () => {
       { keys: "[/MouseLeft]", coords: { clientX: 60, clientY: 200 } },
     ])
 
-    expect(onMove).toHaveBeenCalledWith(expect.objectContaining({ id: "n1" }), "2024")
+    expect(onMove).toHaveBeenCalledWith(expect.objectContaining({ id: "n1" }), "2024", 3)
     expect(onOpen).not.toHaveBeenCalled()
   })
 })
