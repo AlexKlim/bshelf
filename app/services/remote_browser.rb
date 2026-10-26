@@ -7,6 +7,9 @@ module RemoteBrowser
   mattr_accessor :collectors, default: {}
   mattr_accessor :max_sessions, default: 1
   mattr_reader :running, default: Concurrent::Set.new
+  mattr_reader :guards, default: Concurrent::Map.new
+  GUARDED = %w[live collecting].freeze
+  PASSKEYLESS = { protocol: "ctap2", transport: "internal", hasResidentKey: true, hasUserVerification: true }.freeze
 
   def self.available?(purpose) = !disabled && steel.present? && collectors.key?(purpose)
 
@@ -26,10 +29,32 @@ module RemoteBrowser
       end
       session.update!(target_id: id)
     end
+    guard(session, timeout:)
   end
 
   def self.browse(session, timeout:)
+    guard(session, timeout:)
     connect(session, timeout:) { yield tab(it, session.target_id) }
+  end
+
+  def self.guard(session, timeout:)
+    return if guards[session.id]&.alive?
+
+    # A passkey prompt opens a dialog headless Chrome never shows, and the page takes no input while it waits. A virtual
+    # authenticator with no keys turns the prompt down at once, but only while the CDP session that added it stays
+    # open, so a thread holds that connection for the whole session.
+    guards[session.id] = Thread.new do
+      connect(session, timeout:) do |browser|
+        page = tab(browser, session.target_id)
+        page.command("WebAuthn.enable", enableUI: false)
+        page.command("WebAuthn.addVirtualAuthenticator", options: PASSKEYLESS)
+        sleep 2 while Rails.application.executor.wrap { RemoteBrowserSession.exists?(id: session.id, status: GUARDED) }
+      end
+    rescue StandardError => e
+      Rails.logger.warn({ event: "remote_browser.guard_failed", session: session.uuid, error: e.class.name }.to_json)
+    ensure
+      guards.delete_pair(session.id, Thread.current)
+    end
   end
 
   def self.connect(session, timeout:)
@@ -52,7 +77,7 @@ module RemoteBrowser
     end
     raise PageChanged
   end
-  private_class_method :connect, :tab
+  private_class_method :guard, :connect, :tab
 
   def self.interrupt_running!
     RemoteBrowserSession.where(id: running.to_a, status: "collecting")
