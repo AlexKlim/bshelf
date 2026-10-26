@@ -27,4 +27,14 @@ RSpec.describe TranslationDuplicates do
 
     expect(client).to have_received(:same_book).once
   end
+
+  it "offers a pair another reader's question already settled, without asking again" do
+    ru = create(:book, user:, title: "Вдохновленные", author: "Марти Каган")
+    en = create(:book, user:, title: "Inspired", author: "Marty Cagan")
+    CatalogEntry.fetch(JevClient.cache_key(ru, en)) { { "noul" => 0.97 } }
+    allow(client).to receive(:same_book)
+
+    expect(described_class.call(user, client:)).to eq(1)
+    expect(client).not_to have_received(:same_book)
+  end
 end

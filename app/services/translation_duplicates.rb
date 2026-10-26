@@ -10,11 +10,11 @@ class TranslationDuplicates
   end
 
   def call
-    asked = CatalogEntry.where(key: candidates.map { JevClient.cache_key(*it) }).pluck(:key).to_set
-    candidates.reject { asked.include?(JevClient.cache_key(*it)) }.first(CHECKS).count do |a, b|
-      noul = CatalogEntry.fetch(JevClient.cache_key(a, b)) { { "noul" => @client.same_book(a, b) } }["noul"]
-      noul >= SAME && DuplicateCandidate.record!(a, b, reason: "translation")
+    answers = CatalogEntry.where(key: candidates.map { key(*it) }).pluck(:key, :data).to_h
+    candidates.reject { answers.key?(key(*it)) }.first(CHECKS).each do |a, b|
+      answers[key(a, b)] = CatalogEntry.fetch(key(a, b)) { { "noul" => @client.same_book(a, b) } }
     end
+    candidates.count { |a, b| answers[key(a, b)].to_h["noul"].to_f >= SAME && DuplicateCandidate.record!(a, b, reason: "translation") }
   end
 
   private
@@ -36,6 +36,8 @@ class TranslationDuplicates
     x, y = surname(a), surname(b)
     x.size > 3 && y.size > 3 && DidYouMean::Levenshtein.distance(x, y) <= 2
   end
+
+  def key(a, b) = JevClient.cache_key(a, b)
 
   def surname(book) = Translit.words(Translit.to_cyrillic(book.author.split(",").first.to_s)).last.to_s
 end
