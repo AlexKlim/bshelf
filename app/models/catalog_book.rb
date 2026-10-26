@@ -17,13 +17,13 @@ class CatalogBook < ApplicationRecord
     book.editions.filter_map { |edition| [ STORE_IDS[edition.store], edition.external_id ] if STORE_IDS[edition.store] && edition.external_id }
   end
 
-  def self.remember(book)
+  def self.remember(book, retried: false)
     entry = self.for(book) || new(title: book.title, author: book.author)
     entry.assign_attributes(book.attributes.slice(*FIELDS, *COVER).compact.select { |field, _| entry[field].blank? })
     store_ids(book).each { |column, id| entry[column] ||= id }
     entry.save!
   rescue ActiveRecord::RecordNotUnique
-    nil
+    remember(book, retried: true) unless retried
   end
 
   def fill(book)
