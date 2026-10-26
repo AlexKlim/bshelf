@@ -20,7 +20,7 @@ class RemoteBrowserSessionJob < ApplicationJob
   private
 
   def connect(session)
-    browser = RemoteBrowser.steel.create_session
+    browser = RemoteBrowser.steel.create_session(dimensions: session.viewport)
     live = session.transition!(from: "connecting", to: "live", steel_session_id: browser.id,
       websocket_url: browser.websocket_url, viewer_path: browser.viewer_path,
       expires_at: RemoteBrowserSession::LOGIN_TIME.from_now)

@@ -8,6 +8,13 @@ import { useShelf } from "@/lib/shelf"
 import type { RemoteSession } from "@/lib/types"
 import { errorMessage, isActive, syncResult } from "@/lib/vocab"
 
+// Steel draws the page at the size it gets inside the frame, so the stream is never scaled. Mirrors .bs-session__bar,
+// .bs-session__frame and Steel's own toolbar inside the frame.
+const FRAME_MAX = 1280
+const FRAME_MIN = 600
+const BAR = 52
+const STEEL_TOOLBAR = 48
+
 type Purpose = RemoteSession["purpose"]
 
 const storageKey = (purpose: Purpose) => `bs:remote:${purpose}`
@@ -116,7 +123,9 @@ export function RemoteBrowserScreen({ purpose }: { purpose: Purpose }) {
     setStarting(true)
     setError(null)
     try {
-      const { session } = await startRemoteSession(purpose)
+      const height = Math.max(window.innerHeight - BAR, FRAME_MIN) - STEEL_TOOLBAR
+      const viewport = { width: Math.min(window.innerWidth, FRAME_MAX), height }
+      const { session } = await startRemoteSession(purpose, viewport)
       remember(session.purpose, session.id)
       apply(session)
     } catch (e) {

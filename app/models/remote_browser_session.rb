@@ -6,6 +6,7 @@ class RemoteBrowserSession < ApplicationRecord
   # Interruptions that are the store's doing and so mark its source as failing. A broken browser is ours.
   SOURCE_ERRORS = { "provider_refused" => "provider_refused" }.freeze
   LOGIN_TIME = 5.minutes
+  VIEWPORT = { width: 320..1280, height: 400..1000 }.freeze
   VIEWER_TOKEN_TTL = 1.minute
   STALE_AFTER = 15.minutes
   LOCK_KEY = 0x62736862
@@ -16,13 +17,19 @@ class RemoteBrowserSession < ApplicationRecord
 
   scope :active, -> { where(status: ACTIVE) }
 
-  def self.start!(user, purpose)
+  def self.start!(user, purpose, viewport: nil)
     dispatch!
-    session = user.remote_browser_sessions.active.first || user.remote_browser_sessions.create!(purpose:)
+    session = user.remote_browser_sessions.active.first || user.remote_browser_sessions.create!(purpose:, viewport: fit(viewport))
     dispatch!
     session.reload
   rescue ActiveRecord::RecordNotUnique
     user.remote_browser_sessions.active.first!
+  end
+
+  def self.fit(viewport)
+    return unless viewport
+
+    { width: viewport[:width].to_i.clamp(VIEWPORT[:width]), height: viewport[:height].to_i.clamp(VIEWPORT[:height]) }
   end
 
   def self.dispatch!

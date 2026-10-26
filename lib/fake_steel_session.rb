@@ -6,7 +6,7 @@ class FakeSteelSession
     @released = []
   end
 
-  def create_session
+  def create_session(dimensions: nil)
     SteelClient::Session.new(SecureRandom.uuid, "ws://steel.fake/devtools", "v1/sessions/debug").tap { @created << it.id }
   end
 

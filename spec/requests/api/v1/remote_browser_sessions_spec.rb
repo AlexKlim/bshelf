@@ -14,6 +14,12 @@ RSpec.describe "Remote browser sessions" do
   context "when signed in" do
     before { sign_in_as(user) }
 
+    it "keeps the frame size inside what Steel draws well" do
+      start(viewport: { width: 4000, height: 120, depth: 3 })
+
+      expect(RemoteBrowserSession.last.viewport).to eq("width" => 1280, "height" => 400)
+    end
+
     it "starts a session after the disclosure and returns it again on reconnect" do
       start(disclosure_accepted: false)
       expect(response).to have_http_status(:unprocessable_content)
