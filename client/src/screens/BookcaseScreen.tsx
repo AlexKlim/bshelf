@@ -16,7 +16,7 @@ import { pickBanner, type BannerEvent } from "@/lib/banner"
 import { readPref, writePref } from "@/lib/cache"
 import { findOpener } from "@/lib/opener"
 import { useShelf } from "@/lib/shelf"
-import type { Banner, BookSummary, Source } from "@/lib/types"
+import type { Banner, BookSummary } from "@/lib/types"
 import { useOnline } from "@/lib/useOnline"
 
 type View = "case" | "list"
@@ -43,7 +43,6 @@ export function BookcaseScreen() {
   const [view, setView] = useState<View>(() => (readPref("view") === "list" ? "list" : "case"))
   const [matches, setMatches] = useState<Set<string>>(new Set())
   const [entry, setEntry] = useState<EntryDraft | null>(null)
-  const [sources, setSources] = useState<Source[]>([])
   const [serverBanner, setServerBanner] = useState<Banner | null>(null)
   const [dismissed, setDismissed] = useState(readDismissed)
 
@@ -51,10 +50,7 @@ export function BookcaseScreen() {
 
   useEffect(() => {
     getSources()
-      .then((r) => {
-        setSources(r.sources)
-        setServerBanner(r.banner)
-      })
+      .then((r) => setServerBanner(r.banner))
       .catch(() => {})
   }, [])
 
@@ -102,7 +98,6 @@ export function BookcaseScreen() {
   } else if (isEmptyCase(shelves)) {
     body = (
       <EmptyCase
-        exportSource={sources.find((s) => s.kind === "kindle_export")}
         disabled={offline}
         onAdd={() => setEntry({})}
       />

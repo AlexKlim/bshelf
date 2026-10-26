@@ -28,7 +28,6 @@ const AccountScreen = lazyScreen(account, "AccountScreen")
 const DeletedScreen = lazyScreen(account, "DeletedScreen")
 const sources = () => import("@/screens/SourcesScreen")
 const SourcesScreen = lazyScreen(sources, "SourcesScreen")
-const KindleExportScreen = lazyScreen(sources, "KindleExportScreen")
 const StatsScreen = lazyScreen(() => import("@/screens/StatsScreen"), "StatsScreen")
 const ShareScreen = lazyScreen(() => import("@/screens/ShareScreen"), "ShareScreen")
 const RemoteBrowserScreen = lazyScreen(() => import("@/screens/RemoteBrowserScreen"), "RemoteBrowserScreen")
@@ -133,7 +132,6 @@ export default function App({ initialUser }: { initialUser?: User | null }) {
                 <Route path="/" element={<BookcaseScreen />} />
                 <Route path="/stats" element={<StatsScreen />} />
                 <Route path="/sources" element={<SourcesScreen />} />
-                <Route path="/sources/kindle-export" element={<KindleExportScreen />} />
                 <Route path="/account/:section?" element={<AccountScreen />} />
                 <Route path="/profile" element={<Navigate to="/account" replace />} />
                 <Route path="/share" element={<ShareScreen />} />

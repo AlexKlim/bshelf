@@ -49,7 +49,7 @@ describe("App shell", () => {
 
     expect(await screen.findByRole("heading", { name: "The bookcase is empty for now" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Sign in to Litres" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Request Kindle history" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Sync Kindle" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Add book" })).toBeInTheDocument()
   })
 

@@ -1,9 +1,7 @@
-import { useEffect, useState, type ChangeEvent } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { dismissDuplicate, getDuplicates, getSources, mergeBooks, unmerge } from "@/api"
-import { notOfferedYet, requestKindleExport, uploadKindleExport, type SyncResult } from "@/api/pending"
-import { Ico } from "@/components/ui"
 import type { ApiError } from "@/lib/api"
 import { useShelf } from "@/lib/shelf"
 import { errorMessage, isActive, syncResult } from "@/lib/vocab"
@@ -36,20 +34,16 @@ export function SourcesScreen() {
     <div className="bs-screen bs-screen--sheet">
       <h1 className="bs-screen__title">{t("tabs.sources")}</h1>
       {error && <p className="bs-source__meta bs-source__meta--error">{t("sources.loadError")}</p>}
-      {sources?.map((s) => <SourceRow key={s.kind} source={s} onChange={(next) => setSources(sources.map((x) => (x.kind === next.kind ? next : x)))} />)}
+      {sources?.map((s) => <SourceRow key={s.kind} source={s} />)}
       <Duplicates />
     </div>
   )
 }
 
-function SourceRow({ source, onChange }: { source: Source; onChange: (s: Source) => void }) {
+function SourceRow({ source }: { source: Source }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const online = useOnline()
-  const { reload } = useShelf()
-  const [busy, setBusy] = useState(false)
-  const [result, setResult] = useState<SyncResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const lng = i18n.language
 
   let meta = t("sources.never")
@@ -58,30 +52,11 @@ function SourceRow({ source, onChange }: { source: Source; onChange: (s: Source)
       .filter(Boolean)
       .join(" · ")
   }
-  if (source.status === "requested" && source.requested_at) meta = t("sources.exportRequested", { when: ago(source.requested_at, lng) })
-  if (source.status === "ready") meta = t("sources.exportReady")
   const session = source.session
   if (session?.status === "done" && session.result) meta = syncResult(t, session.result)
   if (session && isActive(session.status)) meta = t("sources.collecting")
   if (session?.status === "interrupted" && session.interruption !== "aborted") meta = t("sources.interrupted")
-  if (result) meta = syncResult(t, result)
-  const failed = error ?? (source.status === "error" || source.status === "needs_login" ? t(`sourceErrors.${source.error ?? source.status}`, { defaultValue: t("sourceErrors.generic") }) : null)
-
-  const upload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setBusy(true)
-    setError(null)
-    try {
-      setResult(await uploadKindleExport(file))
-      onChange({ ...source, status: "ok", last_sync_at: new Date().toISOString() })
-      reload()
-    } catch (err) {
-      setError(notOfferedYet(err) ? t("sources.notAvailableYet") : errorMessage(t, err))
-    } finally {
-      setBusy(false)
-    }
-  }
+  const failed = (source.status === "error" || source.status === "needs_login" ? t(`sourceErrors.${source.error ?? source.status}`, { defaultValue: t("sourceErrors.generic") }) : null)
 
   let action
   if (source.kind === "litres") {
@@ -95,25 +70,6 @@ function SourceRow({ source, onChange }: { source: Source; onChange: (s: Source)
       <button type="button" className="bs-btn bs-btn--secondary" disabled={!online} onClick={() => navigate("/sources/kindle")}>
         {t("sources.kindleAction")}
       </button>
-    )
-  } else if (source.status === "requested") {
-    action = (
-      <button type="button" className="bs-btn bs-btn--secondary" disabled>
-        {t("sources.waitingArchive")}
-      </button>
-    )
-  } else if (source.status === "never") {
-    action = (
-      <button type="button" className="bs-btn bs-btn--secondary" disabled={!online} onClick={() => navigate("/sources/kindle-export")}>
-        {t("sources.requestExport")}
-      </button>
-    )
-  } else {
-    action = (
-      <label className={`bs-btn bs-btn--secondary${!online ? " is-disabled" : ""}`} aria-busy={busy}>
-        <input type="file" accept=".zip,application/zip" className="bs-sr" disabled={!online || busy} onChange={upload} />
-        {busy ? t("sources.importing") : t("sources.uploadArchive")}
-      </label>
     )
   }
 
@@ -225,70 +181,3 @@ function Duplicates() {
   )
 }
 
-export function KindleExportScreen() {
-  const { t, i18n } = useTranslation()
-  const online = useOnline()
-  const [requestedAt, setRequestedAt] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [unavailable, setUnavailable] = useState(false)
-  const [busy, setBusy] = useState(false)
-
-  const confirm = async () => {
-    setBusy(true)
-    try {
-      await requestKindleExport()
-      setRequestedAt(new Date().toISOString())
-    } catch (e) {
-      if (notOfferedYet(e)) setUnavailable(true)
-      else setError(errorMessage(t, e))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div className="bs-screen bs-screen--sheet">
-      <h1 className="bs-screen__title">{t("sources.requestKindle")}</h1>
-      <p className="bs-session__text">{t("export.lead")}</p>
-      <ol className="bs-steps">
-        <li>
-          {t("export.step1")}{" "}
-          <a href="https://www.amazon.com/hz/privacy-central/data-requests/preview.html" target="_blank" rel="noreferrer">
-            {t("export.step1Link")}
-          </a>
-        </li>
-        <li>{t("export.step2")}</li>
-        <li>{t("export.step3")}</li>
-        <li>{t("export.step4")}</li>
-      </ol>
-      {requestedAt ? (
-        <p className="bs-path__note" role="status">
-          <Ico name="progress" />
-          {t("sources.exportWaiting", {
-            date: new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "long" }).format(new Date(requestedAt)),
-          })}
-        </p>
-      ) : (
-        <div className="bs-auth__actions">
-          <button type="button" className="bs-btn bs-btn--primary" disabled={busy || !online} aria-busy={busy} onClick={confirm}>
-            {t("export.done")}
-          </button>
-          <Link className="bs-btn bs-btn--quiet" to="/sources">
-            {t("common.cancel")}
-          </Link>
-        </div>
-      )}
-      {unavailable && <Unavailable />}
-      {error && <p className="bs-field__error">{error}</p>}
-    </div>
-  )
-}
-
-function Unavailable() {
-  const { t } = useTranslation()
-  return (
-    <div className="bs-banner bs-banner--notice" role="status">
-      <p className="bs-banner__text">{t("sources.notAvailableYet")}</p>
-    </div>
-  )
-}
