@@ -111,11 +111,16 @@ RSpec.describe "OAuth for MCP clients" do
 
       get "/oauth/authorize", params: authorize_params
       csrf = response.body[/name="authenticity_token" value="([^"]+)"/, 1]
+      # Under no-referrer Chrome posts the form with Origin: null, which the origin check refuses.
+      expect(response.body).to include('<meta name="referrer" content="same-origin">')
 
       post "/oauth/authorize", params: authorize_params
       expect(response).to have_http_status(:unprocessable_content)
 
-      post "/oauth/authorize", params: authorize_params.merge(authenticity_token: csrf)
+      post "/oauth/authorize", params: authorize_params.merge(authenticity_token: csrf), headers: { "Origin" => "null" }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      post "/oauth/authorize", params: authorize_params.merge(authenticity_token: csrf), headers: { "Origin" => "http://www.example.com" }
       expect(response.location).to start_with(OauthHelpers::CLAUDE_CALLBACK)
     ensure
       ActionController::Base.allow_forgery_protection = false
