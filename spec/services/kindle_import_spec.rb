@@ -28,6 +28,12 @@ RSpec.describe KindleImport do
     expect(edition("A2").book.cover_url).to eq("https://m.media-amazon.com/images/I/2.jpg")
   end
 
+  it "decodes the HTML entities Amazon sends for Cyrillic titles and authors" do
+    described_class.call(user, [ item("A9", "&#1050;&#1086;&#1084;&#1072;&#1085;&#1076;&#1072; &amp; &#1103;", authors: [ "&#1051;&#1077;&#1084;, &#1057;&#1090;&#1072;&#1085;&#1080;&#1089;&#1083;&#1072;&#1074;:" ]) ], {})
+
+    expect(edition("A9").book).to have_attributes(title: "Команда & я", author: "Станислав Лем")
+  end
+
   it "moves an existing Kindle edition forward on the next sync without adding it again" do
     described_class.call(user, [ item("A1", "Roadside Picnic", percent: 10) ], {})
 

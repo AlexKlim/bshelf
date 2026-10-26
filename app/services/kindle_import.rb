@@ -37,7 +37,8 @@ class KindleImport
   end
 
   def upsert(item)
-    asin, title = item.values_at("asin", "title")
+    asin = item["asin"]
+    title = CGI.unescapeHTML(item["title"].to_s).strip
     return false if asin.blank? || title.blank?
 
     status = status_for(item)
@@ -72,7 +73,7 @@ class KindleImport
   end
 
   def author(names)
-    Array(names).map { it.delete_suffix(":").split(", ", 2).reverse.join(" ").squish }.compact_blank.join(", ").presence
+    Array(names).map { CGI.unescapeHTML(it).delete_suffix(":").split(", ", 2).reverse.join(" ").squish }.compact_blank.join(", ").presence
   end
 
   def replace_highlights(book_id, notes)
