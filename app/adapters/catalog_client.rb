@@ -72,10 +72,6 @@ class CatalogClient
         page_count: nil, work_title: nil, cover_url: art["cover_url"].presence && "https://www.litres.ru#{art["cover_url"]}"
       }
     end
-  rescue Error => e
-    # The API sits behind DDoS-Guard, so a refusal leaves the lookup to the other catalogs instead of failing it.
-    Rails.logger.info("litres search: #{e.message}")
-    []
   end
 
   def open_library(title:, author:, isbn:)

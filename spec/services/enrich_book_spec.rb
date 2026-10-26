@@ -48,6 +48,16 @@ RSpec.describe EnrichBook do
     expect(book.reload).to have_attributes(cover_url: "https://www.litres.ru/pub/c/cover/65834170.jpg", year: 2020, language: "ru")
   end
 
+  it "does not remember a Litres refusal as an empty answer" do
+    stub_open_library("open_library_solyaris.json")
+    stub_google("google_429.json", status: 429)
+    book = create(:book, title: "Солярис", author: "Станислав Лем")
+
+    suppress(CatalogClient::RateLimited) { described_class.call(book) }
+
+    expect(CatalogEntry.where("key LIKE 'litres:%'")).to be_empty
+  end
+
   it "falls back to Google Books for a Russian book Open Library does not know" do
     stub_open_library("open_library_solyaris.json")
     stub_google("google_solyaris.json")
