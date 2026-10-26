@@ -89,6 +89,10 @@
     "format": "Формат",
     "status": "Статус",
     "when": "Когда",
+    "clearMonth": "Очистить",
+    "thisMonth": "Этот месяц",
+    "prevYear": "Предыдущий год",
+    "nextYear": "Следующий год",
     "save": "Записать",
     "saving": "Записываю…",
     "duplicate": "Уже на полке: {{status}}"

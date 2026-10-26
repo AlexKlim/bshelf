@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type InputHTMLAttributes, type ReactNode } from "react"
+import { useEffect, useId, useMemo, useRef, useState, type InputHTMLAttributes, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import type { ShelfKey } from "@/lib/types"
 
@@ -88,6 +88,122 @@ export function Field({ label, error, hint, hand, className, ...input }: FieldPr
         </span>
       )}
       {hint && !error && <span className="bs-field__hint">{hint}</span>}
+    </div>
+  )
+}
+
+const monthKey = (year: number, month: number) => `${year}-${String(month + 1).padStart(2, "0")}`
+
+type MonthFieldProps = { label: string; value: string; onChange: (value: string) => void; disabled?: boolean }
+
+export function MonthField({ label, value, onChange, disabled }: MonthFieldProps) {
+  const { t, i18n } = useTranslation()
+  const id = useId()
+  const box = useRef<HTMLDivElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const [open, setOpen] = useState(false)
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const names = useMemo(() => {
+    const short = new Intl.DateTimeFormat(i18n.language, { month: "short" })
+    return Array.from({ length: 12 }, (_, m) => short.format(new Date(2000, m, 1)))
+  }, [i18n.language])
+  const shown = value
+    ? new Intl.DateTimeFormat(i18n.language, { month: "long", year: "numeric" }).format(
+        new Date(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, 1),
+      )
+    : ""
+
+  useEffect(() => {
+    if (!open) return
+    const away = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener("pointerdown", away)
+    return () => window.removeEventListener("pointerdown", away)
+  }, [open])
+
+  const close = () => {
+    setOpen(false)
+    trigger.current?.focus()
+  }
+  const pick = (next: string) => {
+    close()
+    if (next !== value) onChange(next)
+  }
+
+  return (
+    <div
+      className="bs-field bs-month"
+      ref={box}
+      data-open={open || undefined}
+      onKeyDown={(e) => {
+        if (!open || e.key !== "Escape") return
+        e.stopPropagation()
+        close()
+      }}
+    >
+      <label className="bs-field__label" htmlFor={id}>
+        {label}
+      </label>
+      <button
+        id={id}
+        ref={trigger}
+        type="button"
+        className="bs-field__input bs-month__value"
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() => {
+          setYear(Number(value.slice(0, 4)) || now.getFullYear())
+          setOpen(!open)
+        }}
+      >
+        {shown || "\u00a0"}
+      </button>
+      {open && (
+        <div className="bs-month__panel" role="dialog" aria-label={label}>
+          <div className="bs-month__year">
+            <button type="button" className="bs-iconbtn" aria-label={t("entry.prevYear")} onClick={() => setYear(year - 1)}>
+              ‹
+            </button>
+            <span>{year}</span>
+            <button
+              type="button"
+              className="bs-iconbtn"
+              aria-label={t("entry.nextYear")}
+              disabled={year >= now.getFullYear()}
+              onClick={() => setYear(year + 1)}
+            >
+              ›
+            </button>
+          </div>
+          <div className="bs-month__grid">
+            {names.map((name, m) => (
+              <button
+                key={name}
+                type="button"
+                aria-pressed={monthKey(year, m) === value}
+                disabled={new Date(year, m, 1) > now}
+                onClick={() => pick(monthKey(year, m))}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+          <div className="bs-month__actions">
+            <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" onClick={() => pick("")}>
+              {t("entry.clearMonth")}
+            </button>
+            <button
+              type="button"
+              className="bs-btn bs-btn--quiet bs-btn--sm"
+              onClick={() => pick(monthKey(now.getFullYear(), now.getMonth()))}
+            >
+              {t("entry.thisMonth")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -10,7 +10,7 @@ type Props = {
   children: ReactNode
 } & Pick<Dialog.DialogContentProps, "className" | "onEscapeKeyDown" | "onCloseAutoFocus">
 
-export function Overlay({ open, label, onClose, children, className, ...content }: Props) {
+export function Overlay({ open, label, onClose, children, className, onEscapeKeyDown, ...content }: Props) {
   const { t } = useTranslation()
   return (
     <Dialog.Root open={open} onOpenChange={(next) => !next && onClose()}>
@@ -18,6 +18,10 @@ export function Overlay({ open, label, onClose, children, className, ...content 
         <Dialog.Overlay className="bs-scrim" />
         <Dialog.Content
           {...content}
+          onEscapeKeyDown={(e) => {
+            if ((e.target as Element | null)?.closest?.(".bs-month[data-open]")) return e.preventDefault()
+            onEscapeKeyDown?.(e)
+          }}
           className={className ? `bs-dialog ${className}` : "bs-dialog"}
           aria-describedby={undefined}
           onClick={(e) => e.target === e.currentTarget && onClose()}

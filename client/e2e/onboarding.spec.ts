@@ -40,7 +40,12 @@ test("register, add the first book, find it on the right shelf and open it", asy
   await form.getByLabel("Author").fill("Stanisław Lem")
   await form.getByRole("radio", { name: "Audio" }).check()
   await form.getByRole("radio", { name: "Listened" }).check()
-  await form.getByLabel("When").fill("2024-03")
+  await form.getByLabel("When").click()
+  const months = page.getByRole("dialog", { name: "When" })
+  while ((await months.locator(".bs-month__year span").textContent()) !== "2024") {
+    await months.getByRole("button", { name: "Previous year" }).click()
+  }
+  await months.getByRole("button", { name: "Mar" }).click()
   await form.getByRole("button", { name: "Write it in" }).click()
   await expect(form).toBeHidden()
 

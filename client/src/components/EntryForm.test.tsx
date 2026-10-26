@@ -48,11 +48,13 @@ describe("EntryForm", () => {
     await userEvent.type(screen.getByLabelText("Title"), "Solaris")
     await userEvent.click(screen.getByRole("radio", { name: "Audio" }))
     await userEvent.click(screen.getByRole("radio", { name: "Listened" }))
-    await userEvent.type(screen.getByLabelText("When"), "2024-03")
+    await userEvent.click(screen.getByLabelText("When"))
+    await userEvent.click(screen.getByRole("button", { name: "Previous year" }))
+    await userEvent.click(screen.getByRole("button", { name: "Mar" }))
     await userEvent.click(screen.getByRole("button", { name: "Write it in" }))
 
     const body = JSON.parse(fetch.mock.calls[0][1].body as string)
-    expect(body).toEqual({ title: "Solaris", edition: { format: "audio", status: "done", finished_at: "2024-03-01" } })
+    expect(body).toEqual({ title: "Solaris", edition: { format: "audio", status: "done", finished_at: `${new Date().getFullYear() - 1}-03-01` } })
   })
 
   it("asks for a title before sending", async () => {
