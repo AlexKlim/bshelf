@@ -9,7 +9,7 @@ class Book < ApplicationRecord
   validates :title, presence: true, length: { maximum: 500 }
   validates :author, length: { maximum: 500 }
 
-  before_save { self.cloth = self.cloth_color = nil if cover_url_changed? && !cloth_changed? }
+  before_save { self.cloth = self.cloth_color = nil if cover_url_changed? && !cloth_changed? && !cloth_color_changed? }
   # Duplicate checks look titles up by these keys, so they follow the matcher's TextKey rule.
   before_save do
     self.title_key = TextKey.title(title)
