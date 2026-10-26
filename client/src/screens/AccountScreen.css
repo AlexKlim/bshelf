@@ -1,0 +1,55 @@
+.ac-head { display: grid; gap: 2px; padding: 0 var(--space-4); }
+.ac-title { margin: 0; font: 600 22px/28px var(--font-ui); text-wrap: balance; }
+.ac-email { margin: 0; font: 400 15px/22px var(--font-ui); color: var(--ink-muted); overflow-wrap: anywhere; }
+
+.ac-menu { display: grid; gap: var(--space-4); margin: var(--space-2) calc(-1 * var(--space-4)) 0; }
+.ac-list { background: var(--surface); border-top: 1px solid var(--hairline); }
+.ac-item { display: flex; align-items: center; gap: var(--space-3); min-block-size: 56px; padding: var(--space-2) var(--space-4); box-sizing: border-box; border-bottom: 1px solid var(--hairline); color: var(--ink); text-decoration: none; }
+.ac-item:hover { background: var(--paper); color: var(--ink); }
+.ac-item:focus-visible { outline: none; box-shadow: var(--ring); }
+.ac-item__body { flex: 1; min-inline-size: 0; display: grid; }
+.ac-item__title { font: 600 15px/20px var(--font-ui); }
+.ac-item__meta { font: 400 13px/18px var(--font-ui); color: var(--ink-muted); }
+.ac-chev { inline-size: 8px; block-size: 8px; border-right: 2px solid var(--ink-muted); border-top: 2px solid var(--ink-muted); transform: rotate(45deg); flex: none; }
+.ac-item.ac-danger, .ac-nav a.ac-danger { color: var(--danger); }
+
+.ac-page { max-inline-size: var(--content-w); margin: var(--space-2) auto 0; }
+.ac-section { display: grid; gap: var(--space-6); align-content: start; min-inline-size: 0; }
+.ac-section__head { display: grid; gap: var(--space-2); }
+.ac-group { display: grid; gap: var(--space-3); min-inline-size: 0; }
+.ac-group--start { justify-items: start; }
+.ac-group--steps { gap: var(--space-4); }
+.ac-group--tight { gap: var(--space-1); }
+.ac-form { gap: var(--space-4); }
+.ac-wide { justify-self: stretch; }
+.ac-key { display: grid; gap: var(--space-3); margin-top: var(--space-2); }
+.ac-copy { display: grid; gap: var(--space-1); }
+.ac-copy__label { font: 500 12px/16px var(--font-ui); letter-spacing: .04em; color: var(--ink-muted); }
+
+.mc-h2 { margin: 0; font: 600 17px/24px var(--font-ui); }
+.mc-text { margin: 0; font: 400 15px/22px var(--font-ui); color: var(--ink-muted); }
+.mc-note { font-size: 13px; line-height: 18px; }
+.mc-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-4); counter-reset: step; }
+.mc-steps li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--space-1) var(--space-3); counter-increment: step; font: 400 15px/22px var(--font-ui); }
+.mc-steps li::before { content: counter(step); grid-row: span 2; font: 600 22px/24px var(--font-page); color: var(--accent-text); }
+.mc-steps li > * { grid-column: 2; }
+.mc-steps b { font-weight: 600; }
+.mc-url { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3); background: var(--paper); border: 1px solid var(--hairline); border-radius: var(--radius-sm); }
+.mc-url code { flex: 1; min-inline-size: 0; font: 500 14px/20px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); overflow-wrap: anywhere; }
+.mc-ask { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-2); }
+.mc-ask li { justify-self: start; padding: 10px 14px; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: var(--shadow-sheet); font: 400 15px/22px var(--font-ui); }
+
+@media (min-width: 768px) {
+  .ac-layout { max-inline-size: var(--content-w); margin: var(--space-4) auto 0; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--space-8); align-items: start; }
+  .ac-side { display: grid; gap: var(--space-4); }
+  .ac-side .ac-head { padding: 0 var(--space-3); }
+  .ac-side .ac-email { font-size: 13px; line-height: 18px; }
+  .ac-nav { display: grid; align-content: start; gap: 2px; }
+  .ac-nav a { display: flex; align-items: center; min-block-size: 40px; padding: 0 var(--space-3); border-radius: var(--radius-sm); color: var(--ink-muted); font: 500 15px/20px var(--font-ui); text-decoration: none; }
+  .ac-nav a:hover { background: var(--surface); color: var(--ink); }
+  .ac-nav a:focus-visible { outline: none; box-shadow: var(--ring); }
+  .ac-nav a[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: inset 3px 0 0 var(--accent); }
+  .ac-nav a.ac-danger[aria-current="page"] { color: var(--danger); }
+  .ac-section { gap: 28px; }
+  .mc-ask { display: flex; flex-wrap: wrap; }
+}

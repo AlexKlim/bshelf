@@ -280,7 +280,7 @@ The date part is left out when the edition has no finish date. For `not_found` a
 
 ### iOS Shortcut
 
-Installed from "Profile" -> "Install shortcut" (an iCloud link; the client creates an API token and copies it to the clipboard). The shortcut, built by hand:
+Installed from "Account" -> "Share shortcut" -> "Install the shortcut" (an iCloud link; the client creates an API token and copies it to the clipboard). The shortcut, built by hand:
 
 1. Receives URLs and text from the share sheet. On first run it asks for the token and saves it to a file in Shortcuts.
 2. `Get contents of URL`: `POST https://<host>/api/v1/share`, headers `Authorization: Bearer bsh_...`, `Content-Type: application/json`, JSON body `{ "url": <Shortcut Input as URL>, "text": <Name of Shortcut Input> }`.
