@@ -11,6 +11,7 @@ class RemoteBrowserSessionJob < ApplicationJob
   rescue RemoteBrowser::PageChanged
     session.finish!(interruption: "browser_failed", source_error: "page_changed")
   rescue StandardError => e
+    Rails.logger.warn({ event: "remote_browser.failed", session: session.uuid, error: e.message }.to_json)
     session.finish!(interruption: "browser_failed")
     raise unless e.is_a?(RemoteBrowser::BrowserFailed)
   end

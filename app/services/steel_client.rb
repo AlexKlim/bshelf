@@ -4,6 +4,7 @@ class SteelClient
   Session = Data.define(:id, :websocket_url, :viewer_path)
   TIMEOUT = 5
   WAKE = 60
+  CDP_TTL = 15.minutes
 
   def self.private_host?(host)
     host = host.to_s.downcase
@@ -25,6 +26,24 @@ class SteelClient
   end
 
   def ws_root = "ws://#{@base.host}:#{@base.port}/"
+
+  def cdp(ws_url)
+    # Chrome refuses a DevTools websocket whose Host header is a name, so Ferrum dials a loopback port piped to Steel.
+    server = TCPServer.new("127.0.0.1", 0)
+    Thread.new do
+      loop do
+        client = server.accept
+        SteelTunnel.pipe(client, open_socket, ttl: CDP_TTL)
+      rescue RemoteBrowser::BrowserFailed
+        client.close
+      end
+    rescue IOError
+      nil
+    end
+    yield URI(ws_url).tap { it.host = "127.0.0.1"; it.port = server.addr[1] }.to_s
+  ensure
+    server&.close
+  end
 
   def open_socket
     TCPSocket.new(@base.host, @base.port, connect_timeout: TIMEOUT)
