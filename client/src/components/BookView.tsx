@@ -14,6 +14,7 @@ import {
 } from "@/api"
 import type { ApiError } from "@/lib/api"
 import type { BookDetail, BookSummary, Edition, Highlight, Note, Status } from "@/lib/types"
+import { clothStyle } from "@/lib/cloth"
 import { findOpener } from "@/lib/opener"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { statusLine, statusWord, verbForm, errorMessage } from "@/lib/vocab"
@@ -87,6 +88,7 @@ export function BookView({ bookId, summary, disabled, onChanged }: ViewProps) {
         {!opened && shown && (
           <div
             className={`bs-flap bs-cloth--${shown.cloth}`}
+            style={clothStyle(shown)}
             aria-hidden="true"
             onAnimationEnd={(e) => e.target === e.currentTarget && setOpened(true)}
           >
@@ -151,12 +153,12 @@ export function BookSpread({ book, error, disabled, onBook, onReload }: SpreadPr
   }
 
   return (
-    <article className={`bs-spread bs-cloth--${cloth}`} aria-labelledby="book-title">
+    <article className={`bs-spread bs-cloth--${cloth}`} style={clothStyle(book)} aria-labelledby="book-title">
       <section className="bs-page bs-page--left bs-title-page" aria-label={t("book.page", { n: 2 })}>
         {book.cover_url ? (
           <img className="bs-cover" src={book.cover_url} alt={t("book.cover")} />
         ) : (
-          <div className={`bs-cover bs-cloth--${cloth}`} role="img" aria-label={t("book.cover")}>
+          <div className={`bs-cover bs-cloth--${cloth}`} style={clothStyle(book)} role="img" aria-label={t("book.cover")}>
             {book.title}
           </div>
         )}

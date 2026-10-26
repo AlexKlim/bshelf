@@ -4,6 +4,7 @@ import { isYear, shelfLabel } from "@/lib/arrange"
 import type { BookSummary, Shelf, ShelfKey } from "@/lib/types"
 import { formatsOf, primaryEdition, statusLine } from "@/lib/vocab"
 import { ShelfEnd, StatusMark } from "./ui"
+import { clothStyle } from "@/lib/cloth"
 
 type Props = { shelves: Shelf[]; onOpen: (book: BookSummary) => void; onMore?: (key: ShelfKey) => void }
 
@@ -35,7 +36,7 @@ export function ShelfList({ shelves, onOpen, onMore }: Props) {
                 return (
                   <li key={book.id}>
                     <button type="button" className="bs-row" data-book={book.id} onClick={() => onOpen(book)}>
-                      <span className={`bs-row__spine bs-cloth--${book.cloth}`} aria-hidden="true" />
+                      <span className={`bs-row__spine bs-cloth--${book.cloth}`} style={clothStyle(book)} aria-hidden="true" />
                       <span className="bs-row__body">
                         <span className="bs-row__title">{book.title}</span>
                         {book.author && <span className="bs-row__author">{book.author}</span>}

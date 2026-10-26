@@ -13,6 +13,7 @@ module BookSerializer
       audio_minutes: book.audio_minutes,
       cover_url: book.cover_url,
       cloth: book.cloth || Cloth.for_uuid(book.uuid),
+      cloth_color: book.cloth_color,
       shelf: shelf_key,
       bought_twice: book.editions.filter_map(&:store).uniq.size > 1,
       editions: book.editions.sort_by(&:id).map { edition(it) }

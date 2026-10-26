@@ -1,5 +1,5 @@
 class MergeEvent < ApplicationRecord
-  FILLABLE = %w[author original_title language isbn isbn_source year page_count audio_minutes cover_url cloth].freeze
+  FILLABLE = %w[author original_title language isbn isbn_source year page_count audio_minutes cover_url cloth cloth_color].freeze
   MOVED = { "editions" => Edition, "highlights" => Highlight, "notes" => Note, "merge_events" => MergeEvent }.freeze
 
   belongs_to :user

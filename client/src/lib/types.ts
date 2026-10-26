@@ -41,6 +41,7 @@ export type BookSummary = {
   audio_minutes: number | null
   cover_url: string | null
   cloth: Cloth
+  cloth_color?: string | null
   shelf: ShelfKey
   bought_twice?: boolean
   editions: Edition[]
@@ -77,6 +78,7 @@ export type SearchResult = { query: string; answer: SearchAnswer; books: BookSum
 export type StatsBook = {
   id: string
   cloth?: Cloth
+  cloth_color?: string | null
   title: string
   author: string | null
   formats: Format[]

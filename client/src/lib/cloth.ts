@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import type { BookSummary } from "./types"
 
 export function hash(id: string) {
@@ -28,3 +29,6 @@ export function spineSize(book: Sized) {
 export function bookLang(book: { title: string; language?: string | null }) {
   return book.language || (/[а-яё]/i.test(book.title) ? "ru" : "en")
 }
+
+export const clothStyle = (book: { cloth_color?: string | null }) =>
+  (book.cloth_color ? { "--cloth-color": book.cloth_color } : {}) as CSSProperties
