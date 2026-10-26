@@ -65,9 +65,12 @@ module RemoteBrowser
     thread = Thread.new do
       connect(session, timeout:) do |browser|
         page = tab(browser, session.target_id)
-        page.command("Page.addScriptToEvaluateOnNewDocument", source: NO_PASSKEYS)
+        page.command("Page.addScriptToEvaluateOnNewDocument", source: NO_PASSKEYS, runImmediately: true)
         ready.set
-        sleep 2 while Rails.application.executor.wrap { RemoteBrowserSession.exists?(id: session.id, status: GUARDED) }
+        while Rails.application.executor.wrap { RemoteBrowserSession.exists?(id: session.id, status: GUARDED) }
+          sleep 2
+          browser.command("Target.getTargets")
+        end
       end
     rescue StandardError => e
       Rails.logger.warn({ event: "remote_browser.guard_failed", session: session.uuid, error: e.class.name }.to_json)
