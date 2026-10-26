@@ -4,7 +4,6 @@ class SteelClient
   Session = Data.define(:id, :websocket_url, :viewer_path)
   TIMEOUT = 5
   WAKE = 60
-  CDP_TTL = 15.minutes
 
   def self.private_host?(host)
     host = host.to_s.downcase
@@ -33,14 +32,14 @@ class SteelClient
     Thread.new do
       loop do
         client = server.accept
-        SteelTunnel.pipe(client, open_socket, ttl: CDP_TTL)
+        SteelTunnel.pipe(client, open_socket, ttl: nil)
       rescue RemoteBrowser::BrowserFailed
         client.close
       end
     rescue IOError
       nil
     end
-    yield URI(ws_url).tap { it.host = "127.0.0.1"; it.port = server.addr[1] }.to_s
+    yield URI(ws_url).tap { it.scheme = "ws"; it.host = "127.0.0.1"; it.port = server.addr[1] }.to_s
   ensure
     server&.close
   end

@@ -35,8 +35,8 @@ RSpec.describe SteelClient do
       steel = TCPServer.new("127.0.0.1", 0)
       client = described_class.new("http://localhost:#{steel.addr[1]}")
 
-      client.cdp("ws://steel.railway.internal:3000/devtools/browser/b1") do |url|
-        expect(URI(url)).to have_attributes(host: "127.0.0.1", path: "/devtools/browser/b1")
+      client.cdp("wss://steel.railway.internal:3000/devtools/browser/b1") do |url|
+        expect(URI(url)).to have_attributes(scheme: "ws", host: "127.0.0.1", path: "/devtools/browser/b1")
 
         ferrum = TCPSocket.new("127.0.0.1", URI(url).port)
         upstream = steel.accept
