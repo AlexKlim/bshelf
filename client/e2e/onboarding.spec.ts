@@ -49,12 +49,10 @@ test("register, add the first book, find it on the right shelf and open it", asy
   await form.getByRole("button", { name: "Write it in" }).click()
   await expect(form).toBeHidden()
 
-  await expect(page.getByRole("button", { name: "Now, Want" })).toBeVisible()
-  await page.getByRole("button", { name: "2024, books: 1" }).click()
-
   const shelf = page.getByRole("region", { name: "2024 · 1" })
   const spine = shelf.locator(".bs-spine")
   await expect(spine).toHaveAccessibleName("Solaris, Stanisław Lem. Listened, Mar 2024")
+  await expect(page.getByRole("region", { name: "Now · 0" })).toBeVisible()
 
   await spine.click()
   await expect(spine).toHaveAttribute("aria-expanded", "true")
