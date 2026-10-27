@@ -25,6 +25,7 @@ function dropAt<K extends string>(x: number, y: number, id: string) {
     ?.closest<HTMLElement>("[data-shelf]");
   if (!shelf) return { over: null, index: 0 };
   const rows = [...shelf.querySelectorAll<HTMLElement>(".bs-shelf__row")];
+  if (!rows.length) return { over: shelf.dataset.shelf as K, index: 0 };
   const row =
     rows.find((r) => r.getBoundingClientRect().bottom >= y) ??
     rows[rows.length - 1];

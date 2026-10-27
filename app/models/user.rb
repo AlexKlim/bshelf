@@ -5,6 +5,7 @@ class User < ApplicationRecord
   has_many :audit_events
   has_many :books
   has_many :editions
+  has_many :discarded_editions
   has_many :readings
   has_many :notes
   has_many :highlights

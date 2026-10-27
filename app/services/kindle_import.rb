@@ -50,14 +50,19 @@ class KindleImport
       return false
     end
 
+    author = author(item["authors"])
+    return false if discarded.include?(asin) || (author == "Amazon" && title.match?(/kindle/i))
+
     attrs = { format: item["format"] || "ebook", status:, source: SOURCE, store: "amazon", external_id: asin, status_source: SOURCE }
-    cover(AddBook.call(user: @user, title:, author: author(item["authors"]), **attrs), item)
+    cover(AddBook.call(user: @user, title:, author:, **attrs), item)
     true
   rescue AddBook::Duplicate => e
     AddBook.add_edition(e.book, **attrs)
     cover(e.book, item)
     true
   end
+
+  def discarded = @discarded ||= @user.discarded_editions.where(store: "amazon").pluck(:external_id).to_set
 
   def cover(book, item)
     url = item["productUrl"]

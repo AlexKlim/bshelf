@@ -24,4 +24,13 @@ class Book < ApplicationRecord
   after_update_commit -> { enrich_later if saved_change_to_cover_url? && (cloth.nil? || cloth_color.nil?) }
 
   def enrich_later = EnrichBookJob.perform_later(id)
+
+  def discard!
+    transaction do
+      editions.where.not(store: nil).where.not(external_id: nil).each do
+        user.discarded_editions.find_or_create_by!(store: it.store, external_id: it.external_id)
+      end
+      destroy!
+    end
+  end
 end

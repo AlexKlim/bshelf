@@ -19,6 +19,13 @@ RSpec.describe LitresImport do
     expect(edition(2).format).to eq("ebook")
   end
 
+  it "does not bring back a book the person threw away" do
+    described_class.call(user, [ art(1, "Пикник на обочине") ])
+    edition(1).book.discard!
+
+    expect(described_class.call(user, [ art(1, "Пикник на обочине") ])).to eq(books: 0, highlights: 0)
+  end
+
   it "does not add a book twice or override a status set by hand" do
     described_class.call(user, [ art(1, "Пикник на обочине") ])
     StatusResolver.manual!(edition(1).reading, status: "done")

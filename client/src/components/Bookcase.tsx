@@ -27,12 +27,14 @@ type Props = {
   onOpen: (book: BookSummary) => void;
   onMore?: (key: ShelfKey) => void;
   onMove?: (book: BookSummary, to: ShelfKey, index: number) => void;
+  onDiscard?: (book: BookSummary) => void;
   width?: number;
   minRows?: number;
 };
 
 const FADE = 24;
 const ROW_PADDING = 36;
+const FALL_MS = 600;
 
 function revealInRow(spine: HTMLElement, smooth: boolean) {
   const row = spine.closest<HTMLElement>(".bs-shelf__row");
@@ -54,6 +56,7 @@ export function Bookcase({
   onOpen,
   onMore,
   onMove,
+  onDiscard,
   width,
   minRows = 0,
 }: Props) {
@@ -87,10 +90,26 @@ export function Bookcase({
   const spareRows = Math.max(0, minRows - rowCounts.reduce((a, b) => a + b, 0));
   const spines = useRef(new Map<string, HTMLButtonElement>());
   const sections = useRef(new Map<string, HTMLElement>());
-  const { drag, onPointerDown, takeDrop } = useShelfDrag(onMove);
-  const latest = useRef({ shelves, pulled, hover, onOpen, takeDrop });
+  const [falling, setFalling] = useState<BookSummary | null>(null);
+  const fallen = useRef(0);
+  useEffect(() => () => window.clearTimeout(fallen.current), []);
+  const drop = useCallback(
+    (book: BookSummary, to: ShelfKey | "trash", index: number) => {
+      if (to !== "trash") return onMove?.(book, to, index);
+      window.clearTimeout(fallen.current);
+      setFalling(book);
+      fallen.current = window.setTimeout(() => setFalling(null), FALL_MS);
+      onDiscard?.(book);
+    },
+    [onMove, onDiscard],
+  );
+  const { drag, onPointerDown, takeDrop } = useShelfDrag(
+    onMove ? drop : undefined,
+  );
+  const discard = onDiscard && onMove ? drop : undefined;
+  const latest = useRef({ shelves, pulled, hover, onOpen, takeDrop, discard });
   useLayoutEffect(() => {
-    latest.current = { shelves, pulled, hover, onOpen, takeDrop };
+    latest.current = { shelves, pulled, hover, onOpen, takeDrop, discard };
   });
 
   const labels = useMemo(() => {
@@ -160,7 +179,7 @@ export function Bookcase({
 
   const onSpineKey = useCallback(
     (e: KeyboardEvent, si: number, bi: number) => {
-      const { shelves, pulled, onOpen } = latest.current;
+      const { shelves, pulled, onOpen, discard } = latest.current;
       const vertical = (step: 1 | -1) => {
         for (let i = si + step; i >= 0 && i < shelves.length; i += step) {
           if (shelves[i].books.length)
@@ -176,6 +195,17 @@ export function Bookcase({
         End: () => move(si, shelves[si].books.length - 1),
         Enter: () => onOpen(shelves[si].books[bi]),
         Escape: pulled ? () => setPulled(null) : null,
+        Delete: discard
+          ? () => {
+              const book = shelves[si].books[bi];
+              const next = shelves[si].books[bi + 1] ? bi + 1 : bi - 1;
+              if (next >= 0) {
+                move(si, next);
+                setFocus([si, Math.min(next, bi)]);
+              }
+              discard(book, "trash", 0);
+            }
+          : null,
       };
       const action = actions[e.key];
       if (!action) return;
@@ -332,6 +362,30 @@ export function Bookcase({
               <div className="bs-shelf__plank" />
             </Fragment>
           ))}
+        </div>
+      )}
+      {onDiscard && onMove && (
+        <div
+          className={[
+            "bs-bin",
+            drag?.over === "trash" && "is-over",
+            falling && "is-taking",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          data-shelf="trash"
+          aria-hidden="true"
+        >
+          <span className="bs-bin__rim" />
+          {falling && (
+            <span
+              key={falling.id}
+              className={`bs-bin__book bs-cloth--${falling.cloth}`}
+              style={clothStyle(falling)}
+            />
+          )}
+          <span className="bs-bin__body" />
+          <span className="bs-bin__lip" />
         </div>
       )}
       {drag && (

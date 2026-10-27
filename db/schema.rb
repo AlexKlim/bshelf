@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_150001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -99,6 +99,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_catalog_entries_on_key", unique: true
+  end
+
+  create_table "discarded_editions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "store", null: false
+    t.string "external_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "store", "external_id"], name: "index_discarded_editions_on_user_id_and_store_and_external_id", unique: true
+    t.index ["user_id"], name: "index_discarded_editions_on_user_id"
   end
 
   create_table "duplicate_candidates", force: :cascade do |t|
@@ -479,6 +489,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_120000) do
   add_foreign_key "api_tokens", "users", on_delete: :cascade
   add_foreign_key "audit_events", "users", on_delete: :nullify
   add_foreign_key "books", "users", on_delete: :cascade
+  add_foreign_key "discarded_editions", "users", on_delete: :cascade
   add_foreign_key "duplicate_candidates", "books", column: "other_book_id", on_delete: :cascade
   add_foreign_key "duplicate_candidates", "books", on_delete: :cascade
   add_foreign_key "duplicate_candidates", "users", on_delete: :cascade

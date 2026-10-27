@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { getShelfPage, getShelves } from "@/api"
 import type { ApiError } from "./api"
-import { placeBook, swapBook } from "./arrange"
+import { placeBook, removeBook, swapBook } from "./arrange"
 import { readCache, writeCache } from "./cache"
 import type { BookSummary, Shelf, ShelfKey } from "./types"
 
@@ -28,6 +28,7 @@ type ShelfData = State & {
   loadMore: (key: ShelfKey) => void
   place: (book: BookSummary, before?: string, after?: string) => void
   swap: (book: BookSummary) => void
+  remove: (id: string) => void
 }
 
 const ShelfContext = createContext<ShelfData>({
@@ -38,6 +39,7 @@ const ShelfContext = createContext<ShelfData>({
   loadMore: () => {},
   place: () => {},
   swap: () => {},
+  remove: () => {},
 })
 
 export function ShelfProvider({ children }: { children: ReactNode }) {
@@ -92,6 +94,9 @@ export function ShelfProvider({ children }: { children: ReactNode }) {
   const swap = useCallback((book: BookSummary) => {
     setState((prev) => (prev.shelves ? { ...prev, shelves: swapBook(prev.shelves, book) } : prev))
   }, [])
+  const remove = useCallback((id: string) => {
+    setState((prev) => (prev.shelves ? { ...prev, shelves: removeBook(prev.shelves, id) } : prev))
+  }, [])
 
   useEffect(() => {
     reload()
@@ -99,7 +104,7 @@ export function ShelfProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("online", reload)
   }, [reload])
 
-  return <ShelfContext.Provider value={{ ...state, reload, loadMore, place, swap }}>{children}</ShelfContext.Provider>
+  return <ShelfContext.Provider value={{ ...state, reload, loadMore, place, swap, remove }}>{children}</ShelfContext.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

@@ -3,6 +3,7 @@ body { margin: 0; background: var(--wall); color: var(--ink); font-family: var(-
 .app { display: flex; flex-direction: column; min-block-size: 100dvh; }
 .app__main { flex: 1; min-inline-size: 0; padding: var(--space-4); }
 .app__tabs { position: sticky; bottom: 0; z-index: 10; }
+.app:has(> .app__tabs) { --tabs-h: calc(57px + env(safe-area-inset-bottom, 0px)); }
 .app__foot { padding: 0 var(--space-4); }
 .app__back { margin-right: auto; padding: 0; }
 

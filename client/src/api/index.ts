@@ -63,6 +63,7 @@ export const updateEdition = (id: string, body: { status: Status; started_at?: s
 export const addNote = (bookId: string, body: string) => post<{ note: Note }>(`/books/${bookId}/notes`, { body })
 export const updateNote = (id: string, body: string) => patch<{ note: Note }>(`/notes/${id}`, { body })
 export const deleteNote = (id: string) => del(`/notes/${id}`)
+export const deleteBook = (id: string) => del(`/books/${id}`)
 export const getHighlights = (bookId: string, offset: number) =>
   api<{ highlights: Highlight[]; count: number }>(`/books/${bookId}/highlights?offset=${offset}&limit=50`)
 
