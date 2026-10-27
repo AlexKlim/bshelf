@@ -77,8 +77,9 @@
 .bs-spine.is-gap { margin-inline-start: var(--drop-gap); }
 @keyframes bs-trash-in { from { opacity: 0; translate: -50% 16px; } }
 @keyframes bs-bin-wobble { 25% { rotate: -3deg; } 75% { rotate: 3deg; } }
-.bs-bin { position: fixed; z-index: 40; bottom: calc(var(--space-6) + var(--tabs-h, 0px)); right: var(--space-4); display: none; inline-size: 80px; block-size: 104px; transform-origin: 50% 100%; transition: translate .2s, rotate .2s, scale .2s; animation: bs-trash-in .2s ease-out; }
-.bs-case.is-dragging .bs-bin { display: block; animation: bs-bin-wobble .6s ease-in-out 2; }
+.bs-bin { position: fixed; z-index: 40; bottom: calc(var(--space-6) + var(--tabs-h, 0px)); right: var(--space-4); display: none; inline-size: 80px; block-size: 104px; transform-origin: 50% 100%; transition: translate .2s, rotate .2s, scale .2s; }
+@keyframes bs-bin-show { from { opacity: 0; translate: 0 24px; } }
+.bs-case.is-dragging .bs-bin { display: block; animation: bs-bin-show .2s ease-out, bs-bin-wobble .6s ease-in-out .2s 2; }
 .bs-bin.is-over { translate: -6px -6px; rotate: -10deg; scale: 1.12; animation: none; }
 .bs-bin.is-taking { display: block; }
 @keyframes bs-bin-in { from { translate: 0 -40%; scale: 2; rotate: -5deg; } 70% { opacity: 1; } to { translate: 0 30%; rotate: 0deg; opacity: 0; } }
@@ -90,7 +91,7 @@
 .bs-bin.is-over .bs-bin__rim, .bs-bin.is-over .bs-bin__lip { box-shadow: 0 2px 3px rgba(0, 0, 0, .35), 0 0 0 3px var(--danger); }
 .bs-bin::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: -6px; block-size: 8px; border-radius: 50%; background: rgba(0, 0, 0, .18); filter: blur(2px); z-index: -1; }
 @media (min-width: 960px) {
-  .bs-bin { display: block; right: auto; left: calc(50% + var(--content-w) / 2 + var(--space-8)); animation: none; }
+  .bs-bin { right: auto; left: calc(50% + var(--content-w) / 2 + var(--space-8)); }
 }
 .bs-toast { position: fixed; z-index: 40; left: 50%; bottom: calc(var(--space-6) + var(--tabs-h, 0px)); translate: -50% 0; display: flex; align-items: center; gap: var(--space-3); max-inline-size: calc(100vw - 2 * var(--space-4)); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-6); border-radius: var(--radius-pill); background: var(--ink); color: var(--paper); box-shadow: var(--shadow-sheet); font: 400 14px/20px var(--font-ui); animation: bs-trash-in .2s ease-out; }
 .bs-toast__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
