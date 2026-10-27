@@ -249,6 +249,7 @@ export function LibraryHall({
   };
 
   const leave = () => {
+    if (closing) return;
     if (reduced) return setOpenedKey(null);
     setClosing(true);
     timer.current = window.setTimeout(() => {
