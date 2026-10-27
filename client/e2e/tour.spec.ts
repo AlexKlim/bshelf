@@ -50,7 +50,8 @@ for (const lng of ["en", "ru"]) {
       await shoot(page, `${lng}-hall-desk`, false)
       await page.locator(".bs-hall__bar .bs-btn").first().click()
       await page.locator(".bs-hall__face").first().click()
-      await expect(page.locator(".bs-hall--open .bs-spine").first()).toBeVisible()
+      await expect(page.locator(".bs-hall__stage .bs-spine").first()).toBeVisible()
+      await page.waitForTimeout(700)
       await shoot(page, `${lng}-hall-case`, false)
       await page.evaluate(() => localStorage.setItem("bs:view", "case"))
 
