@@ -34,6 +34,7 @@ type Props = {
 
 const FADE = 24;
 const ROW_PADDING = 36;
+const FALL_MS = 600;
 
 function revealInRow(spine: HTMLElement, smooth: boolean) {
   const row = spine.closest<HTMLElement>(".bs-shelf__row");
@@ -89,9 +90,17 @@ export function Bookcase({
   const spareRows = Math.max(0, minRows - rowCounts.reduce((a, b) => a + b, 0));
   const spines = useRef(new Map<string, HTMLButtonElement>());
   const sections = useRef(new Map<string, HTMLElement>());
+  const [falling, setFalling] = useState<BookSummary | null>(null);
+  const fallen = useRef(0);
+  useEffect(() => () => window.clearTimeout(fallen.current), []);
   const drop = useCallback(
-    (book: BookSummary, to: ShelfKey | "trash", index: number) =>
-      to === "trash" ? onDiscard?.(book) : onMove?.(book, to, index),
+    (book: BookSummary, to: ShelfKey | "trash", index: number) => {
+      if (to !== "trash") return onMove?.(book, to, index);
+      window.clearTimeout(fallen.current);
+      setFalling(book);
+      fallen.current = window.setTimeout(() => setFalling(null), FALL_MS);
+      onDiscard?.(book);
+    },
     [onMove, onDiscard],
   );
   const { drag, onPointerDown, takeDrop } = useShelfDrag(
@@ -345,12 +354,26 @@ export function Bookcase({
       )}
       {onDiscard && onMove && (
         <div
-          className={drag?.over === "trash" ? "bs-bin is-over" : "bs-bin"}
+          className={[
+            "bs-bin",
+            drag?.over === "trash" && "is-over",
+            falling && "is-taking",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           data-shelf="trash"
           aria-hidden="true"
         >
-          <span className="bs-bin__body" />
           <span className="bs-bin__rim" />
+          {falling && (
+            <span
+              key={falling.id}
+              className={`bs-bin__book bs-cloth--${falling.cloth}`}
+              style={clothStyle(falling)}
+            />
+          )}
+          <span className="bs-bin__body" />
+          <span className="bs-bin__lip" />
         </div>
       )}
       {drag && (
