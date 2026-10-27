@@ -27,6 +27,8 @@ type Props = {
   onOpen: (book: BookSummary) => void;
   onMore?: (key: ShelfKey) => void;
   onMove?: (book: BookSummary, to: ShelfKey, index: number) => void;
+  width?: number;
+  minRows?: number;
 };
 
 const FADE = 24;
@@ -47,7 +49,15 @@ function revealInRow(spine: HTMLElement, smooth: boolean) {
   if (left) row.scrollBy({ left, behavior: smooth ? "smooth" : "auto" });
 }
 
-export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
+export function Bookcase({
+  shelves,
+  matches,
+  onOpen,
+  onMore,
+  onMove,
+  width,
+  minRows = 0,
+}: Props) {
   const { t, i18n } = useTranslation();
   const lng = i18n.language;
   const hover = !useMediaQuery("(pointer: coarse)");
@@ -66,7 +76,16 @@ export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const capacity = caseWidth ? caseWidth - ROW_PADDING - DROP_ROOM : Infinity;
+  const measured = width ?? caseWidth;
+  const capacity = measured ? measured - ROW_PADDING - DROP_ROOM : Infinity;
+  const rowCounts = shelves.map(
+    (shelf) =>
+      splitRows(
+        shelf.books.map((b) => spineSize(b).width),
+        capacity,
+      ).length,
+  );
+  const spareRows = Math.max(0, minRows - rowCounts.reduce((a, b) => a + b, 0));
   const spines = useRef(new Map<string, HTMLButtonElement>());
   const sections = useRef(new Map<string, HTMLElement>());
   const { drag, onPointerDown, takeDrop } = useShelfDrag(onMove);
@@ -302,6 +321,16 @@ export function Bookcase({ shelves, matches, onOpen, onMore, onMove }: Props) {
           </section>
         );
       })}
+      {spareRows > 0 && (
+        <div className="bs-shelf" aria-hidden="true">
+          {Array.from({ length: spareRows }, (_, i) => (
+            <Fragment key={i}>
+              <div className="bs-shelf__row" />
+              <div className="bs-shelf__plank" />
+            </Fragment>
+          ))}
+        </div>
+      )}
       {drag && (
         <span
           className={`bs-spine bs-spine--ghost bs-cloth--${drag.item.cloth}`}
