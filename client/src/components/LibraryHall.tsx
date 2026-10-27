@@ -58,6 +58,7 @@ const ROW_TOPS = [58, 146, 234, 322, 410];
 const BOARD_TOPS = [50, 138, 226, 314, 402, 490];
 const ROW_WIDTH = 264;
 const APPROACH_MS = 650;
+const LEAVE_MS = 300;
 const CLOTHS: Cloth[] = [
   "oxblood",
   "bottle",
@@ -183,6 +184,7 @@ export function LibraryHall({
   const [picked, setPicked] = useState<string | null>(null);
   const [nearing, setNearing] = useState<number | null>(null);
   const [openedKey, setOpenedKey] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
   const [atDesk, setAtDesk] = useState(false);
   const [tip, setTip] = useState<Tip | null>(null);
   const timer = useRef(0);
@@ -244,27 +246,53 @@ export function LibraryHall({
     }, APPROACH_MS);
   };
 
+  const leave = () => {
+    if (reduced) return setOpenedKey(null);
+    setClosing(true);
+    timer.current = window.setTimeout(() => {
+      setOpenedKey(null);
+      setClosing(false);
+    }, LEAVE_MS);
+  };
+
+  const go = (index: number) => {
+    window.clearTimeout(timer.current);
+    setClosing(false);
+    setOpenedKey(cases[index].key);
+    setPage(Math.floor(index / SLOTS.length));
+  };
+
   const turn = (next: number) => {
     setPage(next);
     setPicked(null);
   };
 
-  if (opened >= 0) {
-    const open = cases[opened];
-    const go = (index: number) => {
-      setOpenedKey(cases[index].key);
-      setPage(Math.floor(index / SLOTS.length));
-    };
-    const earlier = cases[opened + 1];
-    const later = opened > 0 ? cases[opened - 1] : undefined;
-    return (
-      <div className="bs-hall bs-hall--open">
+  const tool = (name: Tip, action: () => void) => ({
+    tabIndex: atDesk ? 0 : -1,
+    onClick: () => (atDesk ? action() : setAtDesk(true)),
+    onMouseEnter: () => atDesk && setTip(name),
+    onMouseLeave: () => setTip(null),
+    onFocus: () => setTip(name),
+    onBlur: () => setTip(null),
+  });
+
+  const open = opened >= 0 ? cases[opened] : undefined;
+  const earlier = open && cases[opened + 1];
+  const later = open && opened > 0 ? cases[opened - 1] : undefined;
+  const state = [
+    nearing !== null && "is-nearing",
+    open && !closing && "is-open",
+    closing && "is-closing",
+    atDesk && "is-desk",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div className={`bs-hall ${state}`}>
+      {open && (
         <div className="bs-hall__bar">
-          <button
-            type="button"
-            className="bs-btn bs-btn--quiet"
-            onClick={() => setOpenedKey(null)}
-          >
+          <button type="button" className="bs-btn bs-btn--quiet" onClick={leave}>
             <Chevron back />
             {t("hall.back")}
           </button>
@@ -291,47 +319,26 @@ export function LibraryHall({
             )}
           </span>
         </div>
-        <Bookcase
-          key={open.key}
-          shelves={open.shelves}
-          matches={matches}
-          onOpen={onOpen}
-          onMore={onMore}
-          onMove={onMove}
-        />
-      </div>
-    );
-  }
-
-  const tool = (name: Tip, action: () => void) => ({
-    tabIndex: atDesk ? 0 : -1,
-    onClick: () => (atDesk ? action() : setAtDesk(true)),
-    onMouseEnter: () => atDesk && setTip(name),
-    onMouseLeave: () => setTip(null),
-    onFocus: () => setTip(name),
-    onBlur: () => setTip(null),
-  });
-
-  const state = [nearing !== null && "is-nearing", atDesk && "is-desk"]
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <div className={`bs-hall ${state}`}>
-      <div ref={ref} className="bs-hall__frame">
+      )}
+      <div
+        ref={ref}
+        className="bs-hall__frame"
+        style={{ backgroundImage: `url(${hallImage})` }}
+      >
+        <div className="bs-hall__dim" />
         <div
           className="bs-hall__scene"
           style={{ "--k": scale } as CSSProperties}
+          aria-hidden={open ? true : undefined}
+          inert={!!open}
         >
-          <img className="bs-hall__backdrop" src={hallImage} alt="" />
-          <div className="bs-hall__dim" />
           <div className="bs-hall__world" key={current}>
             {current === 0 && (
               <div className="bs-hall__window" aria-hidden="true" />
             )}
             {slots.map(({ slot, index }) => {
               const c = cases[index];
-              const near = nearing === index;
+              const near = nearing === index || opened === index;
               const far = slot.z < -500;
               const minis = c ? c.minis : decorMinis(index);
               const className = [
@@ -395,7 +402,7 @@ export function LibraryHall({
                       type="button"
                       className="bs-hall__face"
                       aria-label={c.label}
-                      tabIndex={nearing === null && !atDesk ? 0 : -1}
+                      tabIndex={nearing === null && !atDesk && !open ? 0 : -1}
                       onClick={() => approach(index)}
                     >
                       <Fronts plaque={c.plaque} minis={minis} />
@@ -491,8 +498,20 @@ export function LibraryHall({
             </div>
           )}
         </div>
+        {open && (
+          <div className="bs-hall__stage">
+            <Bookcase
+              key={open.key}
+              shelves={open.shelves}
+              matches={matches}
+              onOpen={onOpen}
+              onMore={onMore}
+              onMove={onMove}
+            />
+          </div>
+        )}
       </div>
-      {atDesk ? (
+      {open ? null : atDesk ? (
         <div className="bs-hall__bar">
           <button
             type="button"
