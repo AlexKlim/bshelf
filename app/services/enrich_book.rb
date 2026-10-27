@@ -33,7 +33,7 @@ class EnrichBook
   private
 
   def rename_from_file
-    return unless book.title.match?(/\A[\p{Latin}\d\s.,'-]+\z/) && book.editions.all? { it.format == "personal_doc" }
+    return unless book.title.match?(/\A[\p{Latin}\d\s.,'-]+\z/) && book.author.blank? && book.editions.any? && book.editions.all? { it.store == "amazon" }
 
     query = Translit.to_cyrillic(book.title)
     wanted = Translit.words(query).select { it.size > 2 }
@@ -99,6 +99,7 @@ class EnrichBook
     book.year ||= candidate["year"]
     book.language ||= candidate["language"]
     book.page_count ||= candidate["page_count"]
+    book.author = Array(candidate["authors"]).join(", ").presence if book.author.blank? && exact
     if book.isbn.blank? && candidate["isbn"].present? && exact && confidence >= TITLE_AUTHOR_CONFIDENCE
       book.isbn = candidate["isbn"]
       book.isbn_source = "catalog"
