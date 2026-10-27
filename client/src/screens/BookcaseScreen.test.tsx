@@ -52,6 +52,7 @@ describe("BookcaseScreen opening a book", () => {
   beforeEach(async () => {
     await i18n.changeLanguage("en")
     prefer(false)
+    localStorage.setItem("bs:view", "case")
     mockFetch((url) => {
       if (url.startsWith("/api/v1/shelf")) return [200, { shelves: [{ key: "2024", count: 2, books: [solaris, dune] }] }]
       if (url.startsWith("/api/v1/sources")) return [200, { sources: [], banner: null }]

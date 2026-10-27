@@ -27,6 +27,7 @@
     "empty": "Nothing here yet",
     "addBook": "Add book",
     "view": "View",
+    "viewHall": "Hall",
     "viewCase": "Bookcase",
     "viewList": "List",
     "loadError": "Could not load the bookcase."
@@ -505,5 +506,22 @@
     "nothing": "Everything is in place, nothing to look for.",
     "error": "That did not work. Try again a little later.",
     "duplicates": "Covers are in place. Looking for one book in two languages, any pairs will show up among duplicates."
+  },
+  "hall": {
+    "case": "{{label}}, books: {{count}}",
+    "back": "Back to the hall",
+    "earlier": "Earlier",
+    "later": "Later",
+    "year": "Year",
+    "pick": "Choose",
+    "deskHint": "Click to step up to it",
+    "catalog": "Catalog",
+    "catalogHint": "Every book as a list",
+    "add": "Write a book down",
+    "addHint": "Pen on a card",
+    "card": "New book",
+    "tidyHint": "Covers, titles, duplicates",
+    "find": "Find",
+    "findHint": "Have I read…"
   }
 }
