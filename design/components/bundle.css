@@ -387,7 +387,7 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
 
 .bs-hall__box { --lift: 0px; --near: 0px; --haze: 0; left: 0; top: 0; transform-style: preserve-3d; transform: translate3d(calc(var(--x) * 1px), calc(var(--y) * 1px - var(--lift)), calc(var(--z) * 1px + var(--near))) rotateY(calc(var(--phi) * 1deg)) translate(-50%, -100%); transition: transform .9s cubic-bezier(.45, 0, .2, 1); animation: bs-hall-arrive 1s cubic-bezier(.2, .7, .2, 1); }
 .bs-hall__box:has(> .bs-hall__face:hover, > .bs-hall__face:focus-visible) { --lift: 12px; --near: 60px; }
-.bs-hall__box.is-near { --lift: 0px; --near: 0px; }
+.bs-hall__box.is-near, .bs-hall__box.is-near:has(> .bs-hall__face:hover, > .bs-hall__face:focus-visible) { --lift: 0px; --near: 0px; }
 .bs-hall__box > * { transition: opacity .6s; }
 .bs-hall__box.is-snap, .bs-hall__box.is-snap > * { transition: none; }
 .bs-hall.is-nearing .bs-hall__box:not(.is-near) > *, .bs-hall.is-desk .bs-hall__box > *, .bs-hall.is-open .bs-hall__box > * { opacity: 0; }
