@@ -31,7 +31,6 @@
     "viewCase": "Bookcase",
     "viewList": "List",
     "loadError": "Could not load the bookcase.",
-    "trash": "Throw away",
     "discarded": "“{{title}}” thrown away",
     "undo": "Undo"
   },

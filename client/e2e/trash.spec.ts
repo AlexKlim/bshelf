@@ -8,9 +8,9 @@ async function throwAway(page: Page, title: string) {
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
   await page.mouse.down()
   await page.mouse.move(from.x + 40, from.y + 40, { steps: 5 })
-  const bin = (await page.locator(".bs-trash").boundingBox())!
+  const bin = (await page.locator(".bs-bin").boundingBox())!
   await page.mouse.move(bin.x + bin.width / 2, bin.y + bin.height / 2, { steps: 10 })
-  await expect(page.locator(".bs-trash")).toHaveClass(/is-over/)
+  await expect(page.locator(".bs-bin")).toHaveClass(/is-over/)
   await page.mouse.up()
 }
 

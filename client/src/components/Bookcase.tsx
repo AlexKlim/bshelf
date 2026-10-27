@@ -343,13 +343,14 @@ export function Bookcase({
           ))}
         </div>
       )}
-      {drag && onDiscard && (
+      {onDiscard && onMove && (
         <div
-          className={drag.over === "trash" ? "bs-trash is-over" : "bs-trash"}
+          className={drag?.over === "trash" ? "bs-bin is-over" : "bs-bin"}
           data-shelf="trash"
+          aria-hidden="true"
         >
-          <Ico name="trash" />
-          {t("shelf.trash")}
+          <span className="bs-bin__body" />
+          <span className="bs-bin__rim" />
         </div>
       )}
       {drag && (
