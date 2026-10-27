@@ -90,8 +90,8 @@ export function BookcaseScreen() {
     if (!throwing) return
     pending.current = null
     window.clearTimeout(throwing.timer)
-    deleteBook(throwing.id).catch(reload)
-  }, [reload])
+    deleteBook(throwing.id).then(() => remove(throwing.id), reload)
+  }, [reload, remove])
   const discard = useCallback(
     (book: BookSummary) => {
       commit()

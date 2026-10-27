@@ -106,9 +106,10 @@ export function Bookcase({
   const { drag, onPointerDown, takeDrop } = useShelfDrag(
     onMove ? drop : undefined,
   );
-  const latest = useRef({ shelves, pulled, hover, onOpen, takeDrop });
+  const discard = onDiscard && onMove ? drop : undefined;
+  const latest = useRef({ shelves, pulled, hover, onOpen, takeDrop, discard });
   useLayoutEffect(() => {
-    latest.current = { shelves, pulled, hover, onOpen, takeDrop };
+    latest.current = { shelves, pulled, hover, onOpen, takeDrop, discard };
   });
 
   const labels = useMemo(() => {
@@ -178,7 +179,7 @@ export function Bookcase({
 
   const onSpineKey = useCallback(
     (e: KeyboardEvent, si: number, bi: number) => {
-      const { shelves, pulled, onOpen } = latest.current;
+      const { shelves, pulled, onOpen, discard } = latest.current;
       const vertical = (step: 1 | -1) => {
         for (let i = si + step; i >= 0 && i < shelves.length; i += step) {
           if (shelves[i].books.length)
@@ -194,6 +195,14 @@ export function Bookcase({
         End: () => move(si, shelves[si].books.length - 1),
         Enter: () => onOpen(shelves[si].books[bi]),
         Escape: pulled ? () => setPulled(null) : null,
+        Delete: discard
+          ? () => {
+              const book = shelves[si].books[bi];
+              const next = shelves[si].books[bi + 1] ? bi + 1 : bi - 1;
+              if (next >= 0) move(si, next);
+              discard(book, "trash", 0);
+            }
+          : null,
       };
       const action = actions[e.key];
       if (!action) return;

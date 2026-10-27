@@ -30,9 +30,10 @@ test("a book dragged into the trash can be brought back, or goes for good", asyn
   await page.getByRole("button", { name: "Undo" }).click()
   await expect(page.locator(".bs-spine", { hasText: "Solaris" })).toBeVisible()
 
+  const deleted = page.waitForResponse((r) => r.request().method() === "DELETE", { timeout: 10_000 })
   await throwAway(page, "Solaris")
   await expect(page.getByRole("status")).toContainText("Solaris")
-  await expect(page.getByRole("status")).toBeHidden({ timeout: 10_000 })
+  expect((await deleted).status()).toBe(204)
   await page.reload()
   await expect(page.locator(".bs-spine", { hasText: "Dune" })).toBeVisible()
   await expect(page.locator(".bs-spine", { hasText: "Solaris" })).toHaveCount(0)

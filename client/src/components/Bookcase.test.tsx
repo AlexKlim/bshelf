@@ -84,6 +84,17 @@ describe("Bookcase keyboard", () => {
     expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: "y1" }))
   })
 
+  it("throws the focused book away with Delete and moves on to its neighbour", async () => {
+    const onDiscard = vi.fn()
+    render(<Bookcase shelves={shelves} onOpen={() => {}} onMove={() => {}} onDiscard={onDiscard} />)
+    spine("Year Two").focus()
+
+    await userEvent.keyboard("{Delete}")
+
+    expect(onDiscard).toHaveBeenCalledWith(expect.objectContaining({ id: "y2" }))
+    expect(spine("Year Three")).toHaveFocus()
+  })
+
   it("opens on click with a mouse", async () => {
     const onOpen = vi.fn()
     render(<Bookcase shelves={shelves} onOpen={onOpen} />)
