@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { seedLibrary, signUpAndIn } from "./helpers"
 
-test("a full shelf splits into rows instead of widening the bookcase", async ({ browser, baseURL }) => {
+test("a full shelf splits into rows, and a row that runs over does not push the walls", async ({ browser, baseURL }) => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, isMobile: false, hasTouch: false, baseURL })
   const page = await context.newPage()
   await signUpAndIn(page)
@@ -12,4 +12,13 @@ test("a full shelf splits into rows instead of widening the bookcase", async ({ 
   await expect(page.locator(".bs-shelf__row").nth(3)).toBeVisible()
   const column = await page.locator(".bs-shelfscreen").evaluate((el) => el.clientWidth)
   expect(await page.locator(".bs-case").evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(column)
+
+  const shelfWidth = () => page.locator(".bs-shelf").first().evaluate((el) => el.getBoundingClientRect().width)
+  const before = await shelfWidth()
+  await page.locator(".bs-shelf__row").nth(2).evaluate((row) => {
+    const extra = document.createElement("li")
+    extra.style.cssText = "flex: none; inline-size: 100px"
+    row.append(extra)
+  })
+  expect(await shelfWidth()).toBe(before)
 })
