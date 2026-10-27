@@ -33,7 +33,6 @@ type Props = {
 
 const FADE = 24;
 const ROW_PADDING = 36;
-const DROP_ROOM = 48;
 
 function revealInRow(spine: HTMLElement, smooth: boolean) {
   const row = spine.closest<HTMLElement>(".bs-shelf__row");
@@ -77,7 +76,7 @@ export function Bookcase({
     return () => observer.disconnect();
   }, []);
   const measured = width ?? caseWidth;
-  const capacity = measured ? measured - ROW_PADDING - DROP_ROOM : Infinity;
+  const capacity = measured ? measured - ROW_PADDING : Infinity;
   const rowCounts = shelves.map(
     (shelf) =>
       splitRows(
@@ -207,16 +206,14 @@ export function Bookcase({
     [onPointerDown],
   );
 
+  const dropGap = drag ? spineSize(drag.item).width + 2 : 0;
+
   return (
     <div
       ref={caseRef}
       className={drag ? "bs-case is-dragging" : "bs-case"}
       style={
-        drag
-          ? ({
-              "--drop-gap": `${spineSize(drag.item).width + 2}px`,
-            } as CSSProperties)
-          : undefined
+        drag ? ({ "--drop-gap": `${dropGap}px` } as CSSProperties) : undefined
       }
     >
       {shelves.map((shelf, si) => {
@@ -224,9 +221,15 @@ export function Bookcase({
         const headingId = `shelf-${shelf.key}`;
         const gapAt = drag?.over === shelf.key ? drag.index : -1;
         const staying = shelf.books.filter((b) => b.id !== drag?.id);
-        const rows = splitRows(
-          shelf.books.map((b) => spineSize(b).width),
-          capacity,
+        const gapBefore = gapAt >= 0 ? staying[gapAt]?.id : undefined;
+        const widths = shelf.books.map((b) =>
+          b.id === drag?.id
+            ? 0
+            : spineSize(b).width + (b.id === gapBefore ? dropGap : 0),
+        );
+        if (gapAt >= 0 && !gapBefore) widths.push(dropGap);
+        const rows = splitRows(widths, capacity).map((row) =>
+          row.filter((bi) => bi < shelf.books.length),
         );
         return (
           <section
