@@ -90,7 +90,7 @@ RSpec.describe KindleImport do
       expect(edition("A2")).to have_attributes(format: "ebook")
       expect(edition("A2").reading.status).to eq("done")
       expect(edition("A2").book.author).to eq("Tom DeMarco")
-      expect(edition("P1")).to have_attributes(format: "personal_doc")
+      expect(edition("P1")).to have_attributes(format: "ebook")
       expect(edition("P1").reading.status).to eq("owned")
       expect(edition("U1")).to have_attributes(format: "audio")
       expect(edition("D1")).to be_nil

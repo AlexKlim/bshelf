@@ -1,6 +1,6 @@
 class KindleImport
   SOURCE = "kindle_browser".freeze
-  FORMATS = { "Ebook" => "ebook", "KindlePDoc" => "personal_doc", "Audible" => "audio" }.freeze
+  FORMATS = { "Ebook" => "ebook", "KindlePDoc" => "ebook", "Audible" => "audio" }.freeze
 
   def self.call(user, items, highlights, owned = {}) = new(user).call(items, highlights, owned)
 

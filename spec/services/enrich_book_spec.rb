@@ -22,6 +22,17 @@ RSpec.describe EnrichBook do
     expect(book.enriched_at).to be_present
   end
 
+  it "takes the author from a catalog entry with the same title when the book has none" do
+    stub_open_library("open_library_solaris.json", title: "Solaris")
+    stub_google("google_429.json", status: 429)
+    stub_cover
+    book = create(:book, title: "Solaris", author: nil)
+
+    described_class.call(book)
+
+    expect(book.reload.author).to be_present
+  end
+
   it "saves the catalog data with a hashed cloth when libvips is missing" do
     stub_open_library("open_library_solaris.json", title: "Solaris")
     stub_google("google_429.json", status: 429)
@@ -58,12 +69,13 @@ RSpec.describe EnrichBook do
     expect(CatalogEntry.where("key LIKE 'litres:%'")).to be_empty
   end
 
-  it "names a Kindle document from its transliterated file name through Litres, skipping a summary of it" do
+  it "names a Kindle book from its transliterated file name through Litres, skipping a summary of it" do
     stub_litres("litres_meetings.json")
     stub_request(:get, %r{\Ahttps://openlibrary\.org/search\.json}).to_return(status: 200, body: { docs: [] }.to_json)
     stub_google("google_429.json", status: 429)
     stub_request(:get, %r{\Ahttps://www\.litres\.ru/pub/c/cover}).to_return(status: 404)
-    book = create(:book, title: "Lensioni Smert ot soveshchaniy", author: nil, status: "owned", format: "personal_doc")
+    book = create(:book, title: "Lensioni Smert ot soveshchaniy", author: nil)
+    create(:edition, book:, store: "amazon")
 
     suppress(CatalogClient::RateLimited) { described_class.call(book) }
 
@@ -80,7 +92,8 @@ RSpec.describe EnrichBook do
     stub_request(:get, %r{\Ahttps://api\.litres\.ru/foundation/api/search}).to_return(status: 200, body: { payload: { data: hits } }.to_json)
     stub_request(:get, %r{\Ahttps://openlibrary\.org/search\.json}).to_return(status: 200, body: { docs: [] }.to_json)
     stub_google("google_429.json", status: 429)
-    book = create(:book, title: "Lensioni Smert ot soveshchaniy", author: nil, status: "owned", format: "personal_doc")
+    book = create(:book, title: "Lensioni Smert ot soveshchaniy", author: nil)
+    create(:edition, book:, store: "amazon")
 
     suppress(CatalogClient::RateLimited) { described_class.call(book) }
 
