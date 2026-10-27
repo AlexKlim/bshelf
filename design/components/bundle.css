@@ -398,7 +398,7 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
 .bs-hall__row { left: -136px; top: calc(var(--top) * 1px); width: 272px; height: 80px; transform: translateZ(-34px); display: flex; align-items: flex-end; gap: 1px; padding: 0 4px; overflow: hidden; }
 .bs-hall__spine { flex: none; width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); border-radius: 1px 1px 0 0; box-shadow: 2px 0 3px -1px rgba(0, 0, 0, .6), inset 0 6px 0 -4px var(--spine-band); }
 .bs-hall__face { left: -150px; top: 0; width: 300px; height: 540px; margin: 0; padding: 0; border: solid var(--wood-frame); border-width: 50px 14px; background: rgba(61, 40, 26, var(--haze)); box-shadow: inset 0 0 0 2px var(--wood-edge), 0 0 0 2px var(--wood-edge); color: var(--ink); font: inherit; cursor: pointer; pointer-events: auto; transition: opacity .6s, box-shadow .2s; }
-span.bs-hall__face { cursor: default; pointer-events: none; }
+span.bs-hall__face, .bs-hall.is-nearing .bs-hall__face, .bs-hall.is-desk .bs-hall__face { cursor: default; pointer-events: none; }
 .bs-hall__face:hover, .bs-hall__face:focus-visible, .bs-hall__box.is-picked .bs-hall__face { outline: none; box-shadow: inset 0 0 0 2px var(--wood-edge), 0 0 0 2px var(--wood-edge), 0 0 0 8px var(--brass); }
 .bs-hall__plaque, .bs-hall__label { background: linear-gradient(var(--brass-light), var(--brass) 40%, var(--brass-dark)); border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, .5); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 .bs-hall__plaque { position: absolute; top: -38px; left: 50%; translate: -50% 0; padding: 2px 12px; font-size: 20px; line-height: 1.25; }
@@ -412,7 +412,8 @@ span.bs-hall__face { cursor: default; pointer-events: none; }
 .bs-hall.is-nearing .bs-hall__desk > * { opacity: 0; }
 .bs-hall__desk-front { left: -190px; top: 0; width: 380px; height: 120px; margin: 0; padding: 0; border: 0; transform: translateZ(90px); background: linear-gradient(var(--wood-edge), var(--wood-plinth)); box-shadow: inset 0 0 0 6px var(--wood-edge); cursor: pointer; pointer-events: auto; transition: background .3s, opacity .6s; }
 .bs-hall__desk-front::before { content: ""; position: absolute; left: 20px; right: 20px; top: 24px; height: 30px; border: 2px solid var(--wood-frame); border-radius: 2px; }
-.bs-hall__desk-front:hover, .bs-hall__desk-front:focus-visible { outline: none; background: linear-gradient(var(--wood-oak), var(--wood-plinth)); }
+.bs-hall__desk-front:hover, .bs-hall__desk-front:focus-visible { background: linear-gradient(var(--wood-oak), var(--wood-plinth)); }
+.bs-hall__desk-front:focus-visible { outline: 3px solid var(--brass); outline-offset: 3px; }
 .bs-hall.is-desk .bs-hall__desk-front { cursor: default; background: linear-gradient(var(--wood-edge), var(--wood-plinth)); }
 .bs-hall__desk-top { left: -190px; top: -180px; width: 380px; height: 180px; transform-origin: bottom center; transform: translateZ(90px) rotateX(90deg); background: radial-gradient(ellipse at 70% 20%, rgba(236, 208, 141, .45), rgba(236, 208, 141, 0) 60%), repeating-linear-gradient(90deg, var(--wood-oak) 0 60px, #ad7d4e 60px 62px); box-shadow: inset 0 0 0 5px var(--wood-shelf-top); pointer-events: auto; }
 .bs-hall__tool { position: absolute; margin: 0; padding: 0; border: 0; cursor: pointer; }

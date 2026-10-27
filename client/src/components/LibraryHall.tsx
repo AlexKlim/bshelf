@@ -182,7 +182,7 @@ export function LibraryHall({
   const [page, setPage] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [nearing, setNearing] = useState<number | null>(null);
-  const [opened, setOpened] = useState<number | null>(null);
+  const [openedKey, setOpenedKey] = useState<string | null>(null);
   const [atDesk, setAtDesk] = useState(false);
   const [tip, setTip] = useState<Tip | null>(null);
   const timer = useRef(0);
@@ -230,12 +230,16 @@ export function LibraryHall({
         .join("-")
     : "";
 
+  const opened = openedKey === null ? -1 : cases.findIndex((c) => c.key === openedKey);
+
   const approach = (index: number) => {
+    if (nearing !== null || atDesk) return;
+    const key = cases[index].key;
     setTip(null);
-    if (reduced) return setOpened(index);
+    if (reduced) return setOpenedKey(key);
     setNearing(index);
     timer.current = window.setTimeout(() => {
-      setOpened(index);
+      setOpenedKey(key);
       setNearing(null);
     }, APPROACH_MS);
   };
@@ -245,10 +249,10 @@ export function LibraryHall({
     setPicked(null);
   };
 
-  if (opened !== null) {
+  if (opened >= 0) {
     const open = cases[opened];
     const go = (index: number) => {
-      setOpened(index);
+      setOpenedKey(cases[index].key);
       setPage(Math.floor(index / SLOTS.length));
     };
     const earlier = cases[opened + 1];
@@ -259,7 +263,7 @@ export function LibraryHall({
           <button
             type="button"
             className="bs-btn bs-btn--quiet"
-            onClick={() => setOpened(null)}
+            onClick={() => setOpenedKey(null)}
           >
             <Chevron back />
             {t("hall.back")}
