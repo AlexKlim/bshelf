@@ -285,6 +285,7 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
 .bs-dialog:focus { outline: none; }
 .bs-dialog__body { inline-size: 100%; max-inline-size: 960px; display: grid; justify-items: center; }
 .bs-dialog__body > .bs-book, .bs-dialog__body > .bs-entry { inline-size: 100%; }
+.bs-dialog--book > .bs-dialog__body { margin-block: auto; }
 .bs-dialog__close { position: fixed; top: var(--space-2); right: var(--space-2); z-index: 22; background: var(--paper); color: var(--ink); border-radius: var(--radius-pill); box-shadow: var(--shadow-sheet); }
 .bs-dialog__close:focus-visible { outline: none; box-shadow: var(--ring); }
 
