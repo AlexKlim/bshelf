@@ -42,6 +42,19 @@ for (const lng of ["en", "ru"]) {
       await apiCall(page.request, "POST", `/books/${picnic.id}/editions`, { edition: { format: "ebook", store: "amazon", status: "done", finished_at: "2019-06-01" } })
 
       await page.goto("/")
+      await expect(page.locator(".bs-hall__face").first()).toBeVisible()
+      await page.waitForTimeout(1200)
+      await shoot(page, `${lng}-hall`, false)
+      await page.locator(".bs-hall__desk-front").click()
+      await page.waitForTimeout(1300)
+      await shoot(page, `${lng}-hall-desk`, false)
+      await page.locator(".bs-hall__bar .bs-btn").first().click()
+      await page.locator(".bs-hall__face").first().click()
+      await expect(page.locator(".bs-hall--open .bs-spine").first()).toBeVisible()
+      await shoot(page, `${lng}-hall-case`, false)
+      await page.evaluate(() => localStorage.setItem("bs:view", "case"))
+
+      await page.goto("/")
       // Full-page screenshots reset Chromium's touch emulation, so the tap flow goes first.
       const spine = page.locator(".bs-spine", { hasText: "Пикник на обочине" })
       await spine.scrollIntoViewIfNeeded()

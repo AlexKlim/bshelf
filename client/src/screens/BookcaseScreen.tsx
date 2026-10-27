@@ -7,6 +7,7 @@ import { BookView } from "@/components/BookView"
 import { EmptyCase } from "@/components/EmptyCase"
 import { EntryForm, type EntryDraft } from "@/components/EntryForm"
 import { LibrarianDesk } from "@/components/LibrarianDesk"
+import { LibraryHall } from "@/components/LibraryHall"
 import { Overlay } from "@/components/Overlay"
 import { SearchField } from "@/components/SearchField"
 import { ShelfList } from "@/components/ShelfList"
@@ -20,7 +21,7 @@ import { useShelf } from "@/lib/shelf"
 import type { Banner, BookSummary, ShelfKey } from "@/lib/types"
 import { useOnline } from "@/lib/useOnline"
 
-type View = "case" | "list"
+type View = "hall" | "case" | "list"
 
 const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
 
@@ -47,7 +48,10 @@ export function BookcaseScreen() {
   const [params] = useSearchParams()
   const openId = params.get("book")
 
-  const [view, setView] = useState<View>(() => (readPref("view") === "list" ? "list" : "case"))
+  const [view, setView] = useState<View>(() => {
+    const saved = readPref("view")
+    return saved === "list" || saved === "case" ? saved : "hall"
+  })
   const [matches, setMatches] = useState<Set<string>>(new Set())
   const [entry, setEntry] = useState<EntryDraft | null>(null)
   const [serverBanner, setServerBanner] = useState<Banner | null>(null)
@@ -144,6 +148,21 @@ export function BookcaseScreen() {
     )
   } else if (view === "list") {
     body = <ShelfList shelves={shelves} onOpen={open} onMore={shelf.loadMore} />
+  } else if (view === "hall") {
+    body = (
+      <LibraryHall
+        shelves={shelves}
+        matches={matches}
+        onOpen={open}
+        onMore={shelf.loadMore}
+        onMove={offline ? undefined : move}
+        disabled={offline}
+        onTidied={shelf.reload}
+        onAdd={() => setEntry({})}
+        onList={() => changeView("list")}
+        onFind={() => document.querySelector<HTMLInputElement>(".bs-search__input")?.focus()}
+      />
+    )
   } else {
     body = <Bookcase shelves={shelves} matches={matches} onOpen={open} onMore={shelf.loadMore} onMove={offline ? undefined : move} />
   }
@@ -164,6 +183,7 @@ export function BookcaseScreen() {
               value={view}
               onChange={changeView}
               options={[
+                { value: "hall", label: t("shelf.viewHall") },
                 { value: "case", label: t("shelf.viewCase") },
                 { value: "list", label: t("shelf.viewList") },
               ]}
@@ -175,7 +195,7 @@ export function BookcaseScreen() {
           </div>
         )}
         {body}
-        {hasBooks && <LibrarianDesk disabled={offline} onTidied={shelf.reload} />}
+        {hasBooks && view !== "hall" && <LibrarianDesk disabled={offline} onTidied={shelf.reload} />}
       </div>
       <Overlay
         open={!!openId}
