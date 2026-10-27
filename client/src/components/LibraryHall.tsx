@@ -256,6 +256,8 @@ export function LibraryHall({
   };
 
   const go = (index: number) => {
+    window.clearTimeout(timer.current);
+    setClosing(false);
     setOpenedKey(cases[index].key);
     setPage(Math.floor(index / SLOTS.length));
   };
