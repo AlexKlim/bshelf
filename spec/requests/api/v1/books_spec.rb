@@ -113,6 +113,14 @@ RSpec.describe "Books, editions, notes and highlights" do
       expect(Edition.where(book_id: book.id)).to be_empty
     end
 
+    it "remembers the store copies of a deleted book so a sync does not bring it back" do
+      create(:edition, book:, store: "amazon", external_id: "B01")
+
+      delete "/api/v1/books/#{book.uuid}"
+
+      expect(user.discarded_editions.pluck(:store, :external_id)).to eq([ [ "amazon", "B01" ] ])
+    end
+
     it "returns 404 for another user's book on every action" do
       get "/api/v1/books/#{stranger.uuid}"
       expect(response).to have_http_status(:not_found)

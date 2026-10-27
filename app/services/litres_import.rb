@@ -26,6 +26,8 @@ class LitresImport
       return false
     end
 
+    return false if @user.discarded_editions.exists?(store: "litres", external_id: id.to_s)
+
     attrs = { format: FORMATS.fetch(art["art_type"], "unknown"), status:, source: SOURCE,
       store: "litres", external_id: id.to_s, status_source: SOURCE }
     cover(AddBook.call(user: @user, title:, author: author(art), **attrs), art)

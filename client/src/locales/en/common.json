@@ -30,7 +30,10 @@
     "viewHall": "Hall",
     "viewCase": "Bookcase",
     "viewList": "List",
-    "loadError": "Could not load the bookcase."
+    "loadError": "Could not load the bookcase.",
+    "trash": "Throw away",
+    "discarded": "“{{title}}” thrown away",
+    "undo": "Undo"
   },
   "status": {
     "want": "Want",

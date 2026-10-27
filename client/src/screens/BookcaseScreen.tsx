@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
-import { getSources, moveBook } from "@/api"
+import { deleteBook, getSources, moveBook } from "@/api"
 import { Bookcase, BookcaseSkeleton } from "@/components/Bookcase"
 import { BookView } from "@/components/BookView"
 import { EmptyCase } from "@/components/EmptyCase"
@@ -22,6 +22,8 @@ import type { Banner, BookSummary, ShelfKey } from "@/lib/types"
 import { useOnline } from "@/lib/useOnline"
 
 type View = "case" | "list"
+
+const UNDO_MS = 6000
 
 const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
 
@@ -80,7 +82,35 @@ export function BookcaseScreen() {
     else navigate({ search: "" }, { replace: true })
   }, [location.state, navigate])
 
-  const { reload, place, swap } = shelf
+  const { reload, place, swap, remove } = shelf
+  const [thrown, setThrown] = useState<BookSummary | null>(null)
+  const pending = useRef<{ id: string; timer: number } | null>(null)
+  const commit = useCallback(() => {
+    const throwing = pending.current
+    if (!throwing) return
+    pending.current = null
+    window.clearTimeout(throwing.timer)
+    deleteBook(throwing.id).catch(reload)
+  }, [reload])
+  const discard = useCallback(
+    (book: BookSummary) => {
+      commit()
+      remove(book.id)
+      setThrown(book)
+      const timer = window.setTimeout(() => {
+        commit()
+        setThrown(null)
+      }, UNDO_MS)
+      pending.current = { id: book.id, timer }
+    },
+    [commit, remove],
+  )
+  const undo = () => {
+    if (pending.current) window.clearTimeout(pending.current.timer)
+    pending.current = null
+    setThrown(null)
+    reload()
+  }
   const saving = useRef(new Map<string, Promise<void>>())
   const shelves = useMemo(() => (shelf.shelves ? arrangeShelves(shelf.shelves) : null), [shelf.shelves])
   const move = useCallback(
@@ -164,7 +194,16 @@ export function BookcaseScreen() {
   //     />
   //   )
   } else {
-    body = <Bookcase shelves={shelves} matches={matches} onOpen={open} onMore={shelf.loadMore} onMove={offline ? undefined : move} />
+    body = (
+      <Bookcase
+        shelves={shelves}
+        matches={matches}
+        onOpen={open}
+        onMore={shelf.loadMore}
+        onMove={offline ? undefined : move}
+        onDiscard={discard}
+      />
+    )
   }
 
   const hasBooks = shelves && !isEmptyCase(shelves)
@@ -195,6 +234,14 @@ export function BookcaseScreen() {
           </div>
         )}
         {body}
+        {thrown && (
+          <div className="bs-toast" role="status">
+            <span className="bs-toast__text">{t("shelf.discarded", { title: thrown.title })}</span>
+            <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" onClick={undo}>
+              {t("shelf.undo")}
+            </button>
+          </div>
+        )}
         {hasBooks && <LibrarianDesk disabled={offline} onTidied={shelf.reload} />}
       </div>
       <Overlay

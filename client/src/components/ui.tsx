@@ -25,7 +25,7 @@ export function ShelfEnd({
   return <li ref={ref} className="bs-shelf__end" aria-hidden="true" />
 }
 
-export type IconName = "audio" | "ebook" | "want" | "owned" | "progress" | "done" | "search" | "close" | "pen"
+export type IconName = "audio" | "ebook" | "want" | "owned" | "progress" | "done" | "search" | "close" | "pen" | "trash"
 
 export const Ico = ({ name }: { name: IconName }) => <i className={`bs-ico bs-ico-${name}`} aria-hidden="true" />
 

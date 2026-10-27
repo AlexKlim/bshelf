@@ -23,7 +23,7 @@ module Api
       end
 
       def destroy
-        book.destroy!
+        book.discard!
         head :no_content
       end
 

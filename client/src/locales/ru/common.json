@@ -34,7 +34,10 @@
     "viewHall": "Зал",
     "viewCase": "Шкаф",
     "viewList": "Список",
-    "loadError": "Не удалось загрузить шкаф."
+    "loadError": "Не удалось загрузить шкаф.",
+    "trash": "Выбросить",
+    "discarded": "«{{title}}» выброшена",
+    "undo": "Вернуть"
   },
   "status": {
     "want": "Хочу",

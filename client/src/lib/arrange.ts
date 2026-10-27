@@ -61,5 +61,8 @@ export function placeBook(shelves: Shelf[], book: BookSummary, before?: string, 
   return placed.some((s) => s.key === book.shelf) ? placed : [...placed, { key: book.shelf, count: 1, books: [book] }]
 }
 
+export const removeBook = (shelves: Shelf[], id: string): Shelf[] =>
+  shelves.map((s) => (s.books.some((b) => b.id === id) ? { ...s, count: s.count - 1, books: s.books.filter((b) => b.id !== id) } : s))
+
 export const swapBook = (shelves: Shelf[], book: BookSummary): Shelf[] =>
   shelves.map((s) => (s.books.some((b) => b.id === book.id) ? { ...s, books: s.books.map((b) => (b.id === book.id ? book : b)) } : s))

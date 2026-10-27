@@ -35,6 +35,23 @@ RSpec.describe KindleImport do
     expect(described_class.decode("Learn <C++> &mdash; fast & well")).to eq("Learn <C++> — fast & well")
   end
 
+  it "does not bring back a book the person threw away" do
+    described_class.call(user, [ item("A1", "Roadside Picnic") ], {})
+    edition("A1").book.discard!
+
+    result = described_class.call(user, [ item("A1", "Roadside Picnic") ], { "A1" => [ { "text" => "quote" } ] })
+
+    expect(result).to eq(books: 0, highlights: 0)
+    expect(Book.where(user:)).to be_empty
+  end
+
+  it "skips Amazon's Kindle user guides" do
+    result = described_class.call(user, [ item("G1", "Kindle-Benutzerhandbuch 3. Ausgabe (German Edition)", authors: [ "Amazon" ]),
+      item("G2", "Kindle User's Guide", authors: [ "Amazon" ]) ], {})
+
+    expect(result[:books]).to eq(0)
+  end
+
   it "moves an existing Kindle edition forward on the next sync without adding it again" do
     described_class.call(user, [ item("A1", "Roadside Picnic", percent: 10) ], {})
 

@@ -27,6 +27,7 @@ type Props = {
   onOpen: (book: BookSummary) => void;
   onMore?: (key: ShelfKey) => void;
   onMove?: (book: BookSummary, to: ShelfKey, index: number) => void;
+  onDiscard?: (book: BookSummary) => void;
   width?: number;
   minRows?: number;
 };
@@ -54,6 +55,7 @@ export function Bookcase({
   onOpen,
   onMore,
   onMove,
+  onDiscard,
   width,
   minRows = 0,
 }: Props) {
@@ -87,7 +89,14 @@ export function Bookcase({
   const spareRows = Math.max(0, minRows - rowCounts.reduce((a, b) => a + b, 0));
   const spines = useRef(new Map<string, HTMLButtonElement>());
   const sections = useRef(new Map<string, HTMLElement>());
-  const { drag, onPointerDown, takeDrop } = useShelfDrag(onMove);
+  const drop = useCallback(
+    (book: BookSummary, to: ShelfKey | "trash", index: number) =>
+      to === "trash" ? onDiscard?.(book) : onMove?.(book, to, index),
+    [onMove, onDiscard],
+  );
+  const { drag, onPointerDown, takeDrop } = useShelfDrag(
+    onMove ? drop : undefined,
+  );
   const latest = useRef({ shelves, pulled, hover, onOpen, takeDrop });
   useLayoutEffect(() => {
     latest.current = { shelves, pulled, hover, onOpen, takeDrop };
@@ -332,6 +341,15 @@ export function Bookcase({
               <div className="bs-shelf__plank" />
             </Fragment>
           ))}
+        </div>
+      )}
+      {drag && onDiscard && (
+        <div
+          className={drag.over === "trash" ? "bs-trash is-over" : "bs-trash"}
+          data-shelf="trash"
+        >
+          <Ico name="trash" />
+          {t("shelf.trash")}
         </div>
       )}
       {drag && (
