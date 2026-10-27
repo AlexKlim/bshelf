@@ -7,7 +7,7 @@ import { BookView } from "@/components/BookView"
 import { EmptyCase } from "@/components/EmptyCase"
 import { EntryForm, type EntryDraft } from "@/components/EntryForm"
 import { LibrarianDesk } from "@/components/LibrarianDesk"
-import { LibraryHall } from "@/components/LibraryHall"
+// import { LibraryHall } from "@/components/LibraryHall"
 import { Overlay } from "@/components/Overlay"
 import { SearchField } from "@/components/SearchField"
 import { ShelfList } from "@/components/ShelfList"
@@ -21,7 +21,7 @@ import { useShelf } from "@/lib/shelf"
 import type { Banner, BookSummary, ShelfKey } from "@/lib/types"
 import { useOnline } from "@/lib/useOnline"
 
-type View = "hall" | "case" | "list"
+type View = "case" | "list"
 
 const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
 
@@ -50,7 +50,7 @@ export function BookcaseScreen() {
 
   const [view, setView] = useState<View>(() => {
     const saved = readPref("view")
-    return saved === "list" || saved === "case" ? saved : "hall"
+    return saved === "list" ? "list" : "case"
   })
   const [matches, setMatches] = useState<Set<string>>(new Set())
   const [entry, setEntry] = useState<EntryDraft | null>(null)
@@ -148,21 +148,21 @@ export function BookcaseScreen() {
     )
   } else if (view === "list") {
     body = <ShelfList shelves={shelves} onOpen={open} onMore={shelf.loadMore} />
-  } else if (view === "hall") {
-    body = (
-      <LibraryHall
-        shelves={shelves}
-        matches={matches}
-        onOpen={open}
-        onMore={shelf.loadMore}
-        onMove={offline ? undefined : move}
-        disabled={offline}
-        onTidied={shelf.reload}
-        onAdd={() => setEntry({})}
-        onList={() => changeView("list")}
-        onFind={() => document.querySelector<HTMLInputElement>(".bs-search__input")?.focus()}
-      />
-    )
+  // } else if (view === "hall") {
+  //   body = (
+  //     <LibraryHall
+  //       shelves={shelves}
+  //       matches={matches}
+  //       onOpen={open}
+  //       onMore={shelf.loadMore}
+  //       onMove={offline ? undefined : move}
+  //       disabled={offline}
+  //       onTidied={shelf.reload}
+  //       onAdd={() => setEntry({})}
+  //       onList={() => changeView("list")}
+  //       onFind={() => document.querySelector<HTMLInputElement>(".bs-search__input")?.focus()}
+  //     />
+  //   )
   } else {
     body = <Bookcase shelves={shelves} matches={matches} onOpen={open} onMore={shelf.loadMore} onMove={offline ? undefined : move} />
   }
@@ -183,7 +183,7 @@ export function BookcaseScreen() {
               value={view}
               onChange={changeView}
               options={[
-                { value: "hall", label: t("shelf.viewHall") },
+                // { value: "hall", label: t("shelf.viewHall") },
                 { value: "case", label: t("shelf.viewCase") },
                 { value: "list", label: t("shelf.viewList") },
               ]}
@@ -195,7 +195,7 @@ export function BookcaseScreen() {
           </div>
         )}
         {body}
-        {hasBooks && view !== "hall" && <LibrarianDesk disabled={offline} onTidied={shelf.reload} />}
+        {hasBooks && <LibrarianDesk disabled={offline} onTidied={shelf.reload} />}
       </div>
       <Overlay
         open={!!openId}
