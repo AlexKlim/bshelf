@@ -24,6 +24,8 @@ test("a book dragged into the trash can be brought back, or goes for good", asyn
     { title: "Dune", author: "Frank Herbert", format: "ebook", status: "done", finished: "2025-04-01" },
   ] as never)
   await page.goto("/")
+  await expect(page.locator(".bs-spine", { hasText: "Solaris" })).toBeVisible()
+  await expect(page.locator(".bs-bin")).toBeHidden()
 
   await throwAway(page, "Solaris")
   await expect(page.locator(".bs-spine", { hasText: "Solaris" })).toHaveCount(0)
