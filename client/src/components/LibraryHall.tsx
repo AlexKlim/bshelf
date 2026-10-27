@@ -188,6 +188,7 @@ export function LibraryHall({
   const [atDesk, setAtDesk] = useState(false);
   const [tip, setTip] = useState<Tip | null>(null);
   const timer = useRef(0);
+  const downOnStage = useRef(false);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const cases = useMemo<HallCase[]>(() => {
@@ -232,7 +233,8 @@ export function LibraryHall({
         .join("-")
     : "";
 
-  const opened = openedKey === null ? -1 : cases.findIndex((c) => c.key === openedKey);
+  const opened =
+    openedKey === null ? -1 : cases.findIndex((c) => c.key === openedKey);
 
   const approach = (index: number) => {
     if (nearing !== null || atDesk) return;
@@ -247,6 +249,7 @@ export function LibraryHall({
   };
 
   const leave = () => {
+    if (closing) return;
     if (reduced) return setOpenedKey(null);
     setClosing(true);
     timer.current = window.setTimeout(() => {
@@ -254,6 +257,24 @@ export function LibraryHall({
       setClosing(false);
     }, LEAVE_MS);
   };
+
+  const hall = useRef<HTMLDivElement>(null);
+  const leaveRef = useRef(leave);
+  useLayoutEffect(() => {
+    leaveRef.current = leave;
+  });
+  const isOpen = opened >= 0;
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as Node;
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (target !== document.body && !hall.current?.contains(target)) return;
+      leaveRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen]);
 
   const go = (index: number) => {
     window.clearTimeout(timer.current);
@@ -289,10 +310,14 @@ export function LibraryHall({
     .join(" ");
 
   return (
-    <div className={`bs-hall ${state}`}>
+    <div ref={hall} className={`bs-hall ${state}`}>
       {open && (
         <div className="bs-hall__bar">
-          <button type="button" className="bs-btn bs-btn--quiet" onClick={leave}>
+          <button
+            type="button"
+            className="bs-btn bs-btn--quiet"
+            onClick={leave}
+          >
             <Chevron back />
             {t("hall.back")}
           </button>
@@ -320,186 +345,197 @@ export function LibraryHall({
           </span>
         </div>
       )}
-      <div
-        ref={ref}
-        className="bs-hall__frame"
-        style={{ backgroundImage: `url(${hallImage})` }}
-      >
-        <div className="bs-hall__dim" />
+      <div ref={ref} className="bs-hall__frame">
         <div
-          className="bs-hall__scene"
-          style={{ "--k": scale } as CSSProperties}
+          className="bs-hall__room"
           aria-hidden={open ? true : undefined}
           inert={!!open}
         >
-          <div className="bs-hall__world" key={current}>
-            {current === 0 && (
-              <div className="bs-hall__window" aria-hidden="true" />
-            )}
-            {slots.map(({ slot, index }) => {
-              const c = cases[index];
-              const near = nearing === index || opened === index;
-              const far = slot.z < -500;
-              const minis = c ? c.minis : decorMinis(index);
-              const className = [
-                "bs-hall__box",
-                near && "is-near",
-                far && "is-far",
-                c && (picked === c.key || matched(c)) && "is-picked",
-              ]
-                .filter(Boolean)
-                .join(" ");
-              return (
-                <div
-                  key={index}
-                  className={className}
-                  style={
-                    {
-                      "--x": slot.x,
-                      "--z": slot.z,
-                      "--phi": slot.phi,
-                      "--haze": Math.min(
-                        0.5,
-                        Math.max(0, (-slot.z - 1000) / 3000),
-                      ),
-                    } as CSSProperties
-                  }
-                >
-                  <div className="bs-hall__back" />
-                  <div className="bs-hall__side bs-hall__side--l" />
-                  <div className="bs-hall__side bs-hall__side--r" />
-                  <div className="bs-hall__roof" />
-                  {BOARD_TOPS.map((top) => (
-                    <div
-                      key={top}
-                      className="bs-hall__board"
-                      style={{ "--top": top - 90 } as CSSProperties}
-                    />
-                  ))}
-                  {minis.map((row, r) => (
-                    <div
-                      key={r}
-                      className="bs-hall__row"
-                      style={{ "--top": ROW_TOPS[r] } as CSSProperties}
-                    >
-                      {row.spines.map((s) => (
-                        <span
-                          key={s.id}
-                          className={`bs-hall__spine bs-cloth--${s.cloth}`}
-                          style={
-                            {
-                              "--w": s.w,
-                              "--h": s.h,
-                              ...clothStyle({ cloth_color: s.color }),
-                            } as CSSProperties
-                          }
-                        />
-                      ))}
-                    </div>
-                  ))}
-                  {c ? (
+          <div
+            className="bs-hall__scene"
+            style={{ "--k": scale } as CSSProperties}
+          >
+            <img className="bs-hall__backdrop" src={hallImage} alt="" />
+            <div className="bs-hall__dim" />
+            <div className="bs-hall__world" key={current}>
+              {current === 0 && (
+                <div className="bs-hall__window" aria-hidden="true" />
+              )}
+              {slots.map(({ slot, index }) => {
+                const c = cases[index];
+                const near = nearing === index || opened === index;
+                const far = slot.z < -500;
+                const minis = c ? c.minis : decorMinis(index);
+                const className = [
+                  "bs-hall__box",
+                  near && "is-near",
+                  far && "is-far",
+                  c && (picked === c.key || matched(c)) && "is-picked",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                return (
+                  <div
+                    key={index}
+                    className={className}
+                    style={
+                      {
+                        "--x": slot.x,
+                        "--z": slot.z,
+                        "--phi": slot.phi,
+                        "--haze": Math.min(
+                          0.5,
+                          Math.max(0, (-slot.z - 1000) / 3000),
+                        ),
+                      } as CSSProperties
+                    }
+                  >
+                    <div className="bs-hall__back" />
+                    <div className="bs-hall__side bs-hall__side--l" />
+                    <div className="bs-hall__side bs-hall__side--r" />
+                    <div className="bs-hall__roof" />
+                    {BOARD_TOPS.map((top) => (
+                      <div
+                        key={top}
+                        className="bs-hall__board"
+                        style={{ "--top": top - 90 } as CSSProperties}
+                      />
+                    ))}
+                    {minis.map((row, r) => (
+                      <div
+                        key={r}
+                        className="bs-hall__row"
+                        style={{ "--top": ROW_TOPS[r] } as CSSProperties}
+                      >
+                        {row.spines.map((s) => (
+                          <span
+                            key={s.id}
+                            className={`bs-hall__spine bs-cloth--${s.cloth}`}
+                            style={
+                              {
+                                "--w": s.w,
+                                "--h": s.h,
+                                ...clothStyle({ cloth_color: s.color }),
+                              } as CSSProperties
+                            }
+                          />
+                        ))}
+                      </div>
+                    ))}
+                    {c ? (
+                      <button
+                        type="button"
+                        className="bs-hall__face"
+                        aria-label={c.label}
+                        tabIndex={nearing === null && !atDesk && !open ? 0 : -1}
+                        onClick={() => approach(index)}
+                      >
+                        <Fronts plaque={c.plaque} minis={minis} />
+                      </button>
+                    ) : (
+                      <span className="bs-hall__face" aria-hidden="true">
+                        <Fronts plaque="" minis={minis} />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+              {current === 0 && (
+                <div className="bs-hall__desk">
+                  <button
+                    type="button"
+                    className="bs-hall__desk-front"
+                    aria-label={t("desk.title")}
+                    tabIndex={atDesk ? -1 : 0}
+                    onClick={() => setAtDesk(true)}
+                    onMouseEnter={() => !atDesk && setTip("desk")}
+                    onMouseLeave={() => setTip(null)}
+                    onFocus={() => !atDesk && setTip("desk")}
+                    onBlur={() => setTip(null)}
+                  />
+                  <div className="bs-hall__desk-top">
                     <button
                       type="button"
-                      className="bs-hall__face"
-                      aria-label={c.label}
-                      tabIndex={nearing === null && !atDesk && !open ? 0 : -1}
-                      onClick={() => approach(index)}
+                      className="bs-hall__tool bs-hall__tool--catalog"
+                      aria-label={t("hall.catalog")}
+                      {...tool("catalog", onList)}
                     >
-                      <Fronts plaque={c.plaque} minis={minis} />
+                      <span className="bs-hall__cards" />
+                      <span className="bs-hall__pull" />
                     </button>
-                  ) : (
-                    <span className="bs-hall__face" aria-hidden="true">
-                      <Fronts plaque="" minis={minis} />
-                    </span>
-                  )}
+                    <button
+                      type="button"
+                      className="bs-hall__tool bs-hall__tool--card"
+                      aria-label={t("hall.add")}
+                      {...tool("add", onAdd)}
+                    >
+                      {t("hall.card")}
+                      <span className="bs-hall__pen" />
+                    </button>
+                    <button
+                      type="button"
+                      className="bs-hall__tool bs-hall__tool--stamp"
+                      aria-label={t("desk.tidy")}
+                      disabled={atDesk && (disabled || busy)}
+                      {...tool("tidy", tidy)}
+                    >
+                      <span className="bs-hall__knob" />
+                    </button>
+                    <span className="bs-hall__ink" aria-hidden="true" />
+                    <button
+                      type="button"
+                      className="bs-hall__tool bs-hall__tool--glass"
+                      aria-label={t("hall.find")}
+                      {...tool("find", onFind)}
+                    >
+                      <span className="bs-hall__lens" />
+                      <span className="bs-hall__handle" />
+                    </button>
+                  </div>
+                  <div className="bs-hall__lamp" aria-hidden="true">
+                    <span className="bs-hall__glow" />
+                    <span className="bs-hall__shade" />
+                    <span className="bs-hall__stem" />
+                    <span className="bs-hall__foot" />
+                  </div>
                 </div>
-              );
-            })}
-            {current === 0 && (
-              <div className="bs-hall__desk">
-                <button
-                  type="button"
-                  className="bs-hall__desk-front"
-                  aria-label={t("desk.title")}
-                  tabIndex={atDesk ? -1 : 0}
-                  onClick={() => setAtDesk(true)}
-                  onMouseEnter={() => !atDesk && setTip("desk")}
-                  onMouseLeave={() => setTip(null)}
-                  onFocus={() => !atDesk && setTip("desk")}
-                  onBlur={() => setTip(null)}
-                />
-                <div className="bs-hall__desk-top">
-                  <button
-                    type="button"
-                    className="bs-hall__tool bs-hall__tool--catalog"
-                    aria-label={t("hall.catalog")}
-                    {...tool("catalog", onList)}
-                  >
-                    <span className="bs-hall__cards" />
-                    <span className="bs-hall__pull" />
-                  </button>
-                  <button
-                    type="button"
-                    className="bs-hall__tool bs-hall__tool--card"
-                    aria-label={t("hall.add")}
-                    {...tool("add", onAdd)}
-                  >
-                    {t("hall.card")}
-                    <span className="bs-hall__pen" />
-                  </button>
-                  <button
-                    type="button"
-                    className="bs-hall__tool bs-hall__tool--stamp"
-                    aria-label={t("desk.tidy")}
-                    disabled={atDesk && (disabled || busy)}
-                    {...tool("tidy", tidy)}
-                  >
-                    <span className="bs-hall__knob" />
-                  </button>
-                  <span className="bs-hall__ink" aria-hidden="true" />
-                  <button
-                    type="button"
-                    className="bs-hall__tool bs-hall__tool--glass"
-                    aria-label={t("hall.find")}
-                    {...tool("find", onFind)}
-                  >
-                    <span className="bs-hall__lens" />
-                    <span className="bs-hall__handle" />
-                  </button>
-                </div>
-                <div className="bs-hall__lamp" aria-hidden="true">
-                  <span className="bs-hall__glow" />
-                  <span className="bs-hall__shade" />
-                  <span className="bs-hall__stem" />
-                  <span className="bs-hall__foot" />
-                </div>
+              )}
+            </div>
+            {tip && (
+              <div
+                className="bs-hall__tip"
+                role="tooltip"
+                style={
+                  {
+                    "--x": TOOL_TIPS[tip].x,
+                    "--y": TOOL_TIPS[tip].y,
+                  } as CSSProperties
+                }
+              >
+                <span className="bs-hall__tip-title">
+                  {tip === "desk"
+                    ? t("desk.title")
+                    : tip === "tidy"
+                      ? t("desk.tidy")
+                      : t(`hall.${tip}`)}
+                </span>
+                <span className="bs-hall__tip-hint">
+                  {t(`hall.${tip}Hint`)}
+                </span>
               </div>
             )}
           </div>
-          {tip && (
-            <div
-              className="bs-hall__tip"
-              role="tooltip"
-              style={
-                {
-                  "--x": TOOL_TIPS[tip].x,
-                  "--y": TOOL_TIPS[tip].y,
-                } as CSSProperties
-              }
-            >
-              <span className="bs-hall__tip-title">
-                {tip === "desk"
-                  ? t("desk.title")
-                  : tip === "tidy"
-                    ? t("desk.tidy")
-                    : t(`hall.${tip}`)}
-              </span>
-              <span className="bs-hall__tip-hint">{t(`hall.${tip}Hint`)}</span>
-            </div>
-          )}
         </div>
         {open && (
-          <div className="bs-hall__stage">
+          <div
+            className="bs-hall__stage"
+            onPointerDown={(e) =>
+              (downOnStage.current = e.target === e.currentTarget)
+            }
+            onClick={(e) =>
+              e.target === e.currentTarget && downOnStage.current && leave()
+            }
+          >
             <Bookcase
               key={open.key}
               shelves={open.shelves}

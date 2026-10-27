@@ -58,6 +58,17 @@ describe("LibraryHall", () => {
     expect(screen.getByRole("button", { name: "Now, Want" })).toBeInTheDocument()
   })
 
+  it("puts the case back on Escape or a click beside it", async () => {
+    const { container } = hall()
+    await userEvent.click(screen.getByRole("button", { name: "2026, books: 1" }))
+    await userEvent.keyboard("{Escape}")
+    expect(screen.queryByRole("region", { name: "2026 · 1" })).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: "2026, books: 1" }))
+    await userEvent.click(container.querySelector(".bs-hall__stage")!)
+    expect(screen.queryByRole("region", { name: "2026 · 1" })).not.toBeInTheDocument()
+  })
+
   it("jumps to the page of the year picked in the filter", async () => {
     hall()
     await userEvent.selectOptions(screen.getByRole("combobox", { name: "Year" }), "2017")
