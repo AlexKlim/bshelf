@@ -199,7 +199,10 @@ export function Bookcase({
           ? () => {
               const book = shelves[si].books[bi];
               const next = shelves[si].books[bi + 1] ? bi + 1 : bi - 1;
-              if (next >= 0) move(si, next);
+              if (next >= 0) {
+                move(si, next);
+                setFocus([si, Math.min(next, bi)]);
+              }
               discard(book, "trash", 0);
             }
           : null,
