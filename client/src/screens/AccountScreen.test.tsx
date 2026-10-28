@@ -120,7 +120,7 @@ describe("Account", () => {
 
       await userEvent.click(await screen.findByRole("radio", { name: "ChatGPT" }))
       expect(screen.getByRole("heading", { name: "How to connect ChatGPT" })).toBeInTheDocument()
-      expect(screen.getByText("Turn on developer mode")).toBeInTheDocument()
+      expect(screen.getByText("Open plugins")).toBeInTheDocument()
 
       await userEvent.click(screen.getByRole("radio", { name: "Gemini" }))
       expect(screen.getByText("For Gemini Enterprise and Gemini Business.")).toBeInTheDocument()

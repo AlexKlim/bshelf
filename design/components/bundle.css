@@ -285,7 +285,7 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
 .bs-btn.is-disabled { opacity: .45; cursor: not-allowed; }
 .bs-btn:has(> input:focus-visible) { box-shadow: var(--ring); }
 
-.bs-header { position: sticky; top: 0; z-index: 10; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); block-size: var(--header-h); padding: 0 var(--space-4); background: var(--surface); border-bottom: 1px solid var(--hairline); }
+.bs-header { position: sticky; top: 0; z-index: 10; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-4); block-size: var(--header-h); padding: 0 max(var(--space-4), calc((100% - var(--content-w)) / 2)); background: var(--surface); border-bottom: 1px solid var(--hairline); }
 .bs-header > .bs-tabs { flex: 1; align-self: stretch; border-bottom: 0; }
 .bs-header > .bs-tabs .bs-tab { flex: none; min-block-size: 0; padding: 0 var(--space-4); }
 .bs-wordmark { margin: 0; display: inline-flex; align-items: center; gap: .4em; font: 600 18px/24px var(--font-page); color: var(--ink); }
