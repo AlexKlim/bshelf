@@ -42,7 +42,7 @@
 .bs-btn--sm { font-size: 13px; line-height: 18px; padding: 0 var(--space-3); }
 .bs-btn[disabled], .bs-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 .bs-btn[aria-busy="true"] { cursor: progress; }
-.bs-btn:focus-visible, .bs-iconbtn:focus-visible, .bs-tab:focus-visible, .bs-spine:focus-visible, .bs-stack:focus-visible { outline: none; box-shadow: var(--ring); }
+.bs-btn:focus-visible, .bs-iconbtn:focus-visible, .bs-tab:focus-visible, .bs-spine:focus-visible { outline: none; box-shadow: var(--ring); }
 .bs-iconbtn { display: grid; place-items: center; inline-size: var(--touch-min); block-size: var(--touch-min); flex: none; border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; cursor: pointer; }
 
 .bs-status { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/18px var(--font-ui); color: var(--ink-muted); }
@@ -209,7 +209,7 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
 .bs-year { display: grid; gap: var(--space-4); min-inline-size: 0; }
 .bs-year__sum { margin: 0; font: 600 20px/26px var(--font-page); }
 .bs-year__months { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--space-1); align-items: end; min-block-size: 132px; padding: 0 var(--space-2); background: var(--wood-back); border-radius: var(--radius-xs) var(--radius-xs) 0 0; border-bottom: 10px solid var(--wood-oak); padding-top: var(--space-3); }
-.bs-stack { display: flex; flex-direction: column-reverse; gap: 1px; min-block-size: var(--touch-min); justify-content: flex-start; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: var(--radius-xs); }
+.bs-stack { display: flex; flex-direction: column-reverse; gap: 1px; min-block-size: var(--touch-min); justify-content: flex-start; padding: 0; border: 0; background: transparent; border-radius: var(--radius-xs); }
 .bs-stack__book { display: flex; align-items: center; justify-content: flex-end; block-size: 14px; padding: 0 3px; border-radius: 1px; font-size: 8px; }
 .bs-stack__book:nth-child(odd) { margin-inline: 2px 0; }
 .bs-stack__book:nth-child(even) { margin-inline: 0 2px; }
@@ -358,9 +358,6 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
   .bs-year__scroll:not(.is-empty) { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
   .bs-year__scroll:not(.is-empty) > * { grid-template-columns: repeat(12, minmax(var(--touch-min), 1fr)); min-inline-size: min-content; padding-inline-end: var(--space-6); }
 }
-.bs-year__caption { position: absolute; z-index: 5; bottom: calc(100% + var(--space-2)); left: clamp(0px, var(--x, 0px), calc(100% - 240px)); max-inline-size: 240px; cursor: default; }
-.bs-year__books { display: grid; margin: 0; padding: 0; list-style: none; }
-.bs-year__books .bs-btn { justify-content: flex-start; padding: 0; text-align: start; }
 .bs-year__empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font: 400 15px/22px var(--font-ui); color: var(--spine-text-light); }
 
 .bs-session--full { min-block-size: 100dvh; }
