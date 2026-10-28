@@ -83,7 +83,7 @@ C keeps us off our own OAuth code but adds a vendor, a second token format and r
 
 ## Gemini Enterprise: per-user pre-registered clients (added 2026-10-26)
 
-Gemini Enterprise and Gemini Business add a custom MCP server only with a pre-registered OAuth client: the admin pastes a client id, a client secret, the authorization and token URLs, and Google redirects to `https://vertexaisearch.cloud.google.com/oauth-redirect`. It has no CIMD, so the allowlisted CIMD path cannot serve it. Nothing here covers the consumer Gemini app.
+Gemini Enterprise and Gemini Business add a custom MCP server only with a pre-registered OAuth client: the admin pastes a client id, a client secret, the authorization and token URLs, and Google redirects to `https://vertexaisearch.cloud.google.com/oauth-redirect`. It has no CIMD, so the allowlisted CIMD path cannot serve it. The consumer Gemini app (custom connected app, Cloud MCP) takes the same key in Advanced Settings and returns to `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-<google id>-<host>`. That address carries the Google account id, so the authorization endpoint adds it to an owned key on first use (checked 2026-10-28).
 
 - `POST /api/v1/assistants/gemini_client` (cookie session) creates one confidential Doorkeeper application per user (`oauth_applications.user_id`), replacing the previous one and its tokens. The secret is returned once and stored hashed (`hash_application_secrets`); the CIMD apps have no secret, so the setting does not touch them.
 - The redirect URI is locked to the vertexaisearch URL above (`AssistantsController::GEMINI_REDIRECT_URI`); scopes are `books:read books:write`.

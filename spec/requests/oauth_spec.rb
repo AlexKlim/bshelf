@@ -325,6 +325,35 @@ RSpec.describe "OAuth for MCP clients" do
       expect(Doorkeeper::AccessGrant.count).to eq(0)
     end
 
+    it "accepts the Gemini app return address, which carries the Google account id" do
+      key = gemini_key(user)
+      app_redirect = "https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-106894092201860177031-bshelf_org"
+
+      get "/oauth/authorize", params: gemini_params(key[:client_id], redirect_uri: app_redirect)
+      expect(response).to have_http_status(:ok)
+      post "/oauth/authorize", params: gemini_params(key[:client_id], redirect_uri: app_redirect)
+      expect(response.location).to start_with(app_redirect)
+      code = Rack::Utils.parse_query(URI.parse(response.location).query)["code"]
+
+      post "/oauth/token", params: { grant_type: "authorization_code", code:, redirect_uri: app_redirect, **key }
+      expect(response).to have_http_status(:ok)
+      expect(Doorkeeper::Application.find_by(uid: key[:client_id]).redirect_uri.split).to eq([ redirect, app_redirect ])
+    end
+
+    it "adds the Gemini app return address only for the signed-in owner" do
+      key = gemini_key(user)
+      app_redirect = "https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-1-bshelf_org"
+      delete "/api/v1/session"
+
+      get "/oauth/authorize", params: gemini_params(key[:client_id], redirect_uri: app_redirect)
+      expect(response.location).to include("/login?return_to=")
+
+      sign_in_as(create(:user))
+      get "/oauth/authorize", params: gemini_params(key[:client_id], redirect_uri: app_redirect)
+      expect(response).to have_http_status(:bad_request)
+      expect(Doorkeeper::Application.find_by(uid: key[:client_id]).redirect_uri).to eq(redirect)
+    end
+
     it "refuses any other redirect_uri" do
       key = gemini_key(user)
 
