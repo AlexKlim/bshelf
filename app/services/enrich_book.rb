@@ -33,25 +33,44 @@ class EnrichBook
   private
 
   def rename_from_file
-    return unless book.title.match?(/\A[\p{Latin}\d\s.,'-]+\z/) && book.author.blank? && book.editions.any? && book.editions.all? { it.store == "amazon" }
+    file = FileTitle.parse(book.title)
+    return unless file || (book.title.match?(/\A[\p{Latin}\d\s.,'-]+\z/) && book.author.blank? && book.editions.any? && book.editions.all? { it.store == "amazon" })
 
-    query = Translit.to_cyrillic(book.title)
-    wanted = Translit.words(query).select { it.size > 2 }
+    file ||= { title: book.title, author: nil }
+    named = book_name(file)
+    hit = litres_hit([ named["author"], named["title"] ].compact.join(" ")) ||
+      litres_hit(Translit.to_cyrillic([ file[:author], file[:title] ].compact.join(" ")))
+    hit = nil if hit && book.author.present? && TextKey.authors(book.author, Array(hit["authors"]).join(" ")) == :different
+    book.title = hit ? hit["title"] : named["title"]
+    book.author = (hit && Array(hit["authors"]).join(", ").presence) || book.author.presence || named["author"]
+  end
+
+  def book_name(file)
+    fallback = { "title" => FileTitle.readable(file[:title]), "author" => file[:author] }
+    return fallback unless BookNamer.configured?
+
+    CatalogEntry.fetch(BookNamer.cache_key(file[:title], file[:author])) { BookNamer.new.name(file[:title], file[:author]) }
+  rescue BookNamer::Error => e
+    Rails.logger.info("namer: #{e.message}")
+    fallback
+  end
+
+  def litres_hit(query)
+    wanted = Translit.words(query).select { it.size > 2 && !it.match?(/\A\d+\z/) }
     return if wanted.empty?
 
-    hit = client.search(:litres, title: query, author: nil, isbn: nil)
+    client.search(:litres, title: query, author: nil, isbn: nil)
       .map { [ it, Translit.words([ it["title"], *it["authors"] ].join(" ")) ] }
-      .select { |hit, known| wanted.all? { known.include?(it) } && Translit.words(hit["title"].to_s).intersect?(wanted) }
-      .min_by { |_, known| (known - wanted).size }&.first
-    return unless hit
-
-    book.title = hit["title"]
-    book.author = Array(hit["authors"]).join(", ").presence || book.author
+      .select { |hit, known| wanted.all? { close?(it, known) } && Translit.words(hit["title"].to_s).any? { close?(it, wanted) } }
+      .min_by { |_, known| known.count { !close?(it, wanted) } }&.first
   rescue CatalogClient::RateLimited
     raise
   rescue CatalogClient::Error => e
     Rails.logger.info("litres search: #{e.message}")
+    nil
   end
+
+  def close?(word, words) = words.any? { DidYouMean::Levenshtein.distance(word, it) <= (word.size > 5 ? 2 : 1) }
 
   def trusted? = book.match_source == "catalog" || CatalogBook.store_ids(book).any?
 
