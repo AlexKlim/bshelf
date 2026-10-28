@@ -146,7 +146,7 @@ export function StatsScreen() {
             )}
           </dl>
         )}
-        {stats && !loading && stats.by_genre && <GenreStar counts={stats.by_genre} />}
+        {stats && !loading && stats.by_genre && <GenreStar counts={stats.by_genre} total={stats.total} />}
       </section>
     </div>
   )

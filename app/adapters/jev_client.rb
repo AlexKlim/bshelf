@@ -51,7 +51,8 @@ class JevClient
       "Content-Type" => "application/json")
     raise Error, "openrouter answered #{res.code}" unless res.is_a?(Net::HTTPSuccess)
 
-    JSON.parse(res.body).fetch("answers", {})
+    answers = JSON.parse(res.body)["answers"]
+    answers.is_a?(Hash) ? answers : {}
   rescue Timeout::Error, SocketError, SystemCallError, JSON::ParserError => e
     raise Error, e.class.name
   end

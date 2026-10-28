@@ -3,10 +3,9 @@ import { GENRES, type Genre } from "@/lib/types"
 
 const R = 80
 
-export function GenreStar({ counts }: { counts: Partial<Record<Genre, number>> }) {
+export function GenreStar({ counts, total }: { counts: Partial<Record<Genre, number>>; total: number }) {
   const { t } = useTranslation()
-  const total = GENRES.reduce((sum, g) => sum + (counts[g] ?? 0), 0)
-  if (!total) return null
+  if (!GENRES.some((g) => counts[g])) return null
 
   const max = Math.max(...GENRES.map((g) => counts[g] ?? 0))
   const axes = GENRES.map((genre, i) => {

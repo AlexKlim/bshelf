@@ -71,10 +71,10 @@ describe("StatsScreen", () => {
   })
 
   it("draws the genre star with each genre's share of the year", async () => {
-    mockFetch(() => [200, stats(thisYear, { total: 4, by_genre: { psychology: 3, fantasy: 1 } })])
+    mockFetch(() => [200, stats(thisYear, { total: 8, by_genre: { psychology: 3, fantasy: 1 } })])
     renderStats()
 
-    const star = await screen.findByRole("img", { name: /^0% Fiction, 25% Sci-fi & fantasy, 0% Crime, 75% Psychology/ })
+    const star = await screen.findByRole("img", { name: /^0% Fiction, 13% Sci-fi & fantasy, 0% Crime, 38% Psychology/ })
     expect(star).toBeInTheDocument()
   })
 
