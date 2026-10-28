@@ -30,20 +30,22 @@ class JevClient
 
   def same_book(a, b)
     describe = ->(label, book) { "Book #{label}, a book: «#{book.title}», #{book.author}" }
-    noul = ask([ describe.("A", a), describe.("B", b) ], same_book: SAME_BOOK).dig("same_book", "noul")
+    noul = answer(ask([ describe.("A", a), describe.("B", b) ], same_book: SAME_BOOK), "same_book", "noul")
     raise Error, "openrouter answered without a probability" unless noul.is_a?(Numeric)
 
     noul
   end
 
   def genre(book)
-    choice = ask([ "A book: «#{book.title}», #{book.author}" ], genre: GENRE).dig("genre", "choice")
+    choice = answer(ask([ "A book: «#{book.title}», #{book.author}" ], genre: GENRE), "genre", "choice")
     raise Error, "openrouter answered without a genre" unless Book::GENRES.key?(choice)
 
     choice
   end
 
   private
+
+  def answer(answers, question, field) = answers[question].then { it.is_a?(Hash) ? it[field] : nil }
 
   def ask(state, questions)
     body = { model: MODEL, state:, questions: }

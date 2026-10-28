@@ -31,6 +31,13 @@ RSpec.describe JevClient do
     expect(described_class.new.genre(build(:book, title: "Гибкое сознание", author: "Кэрол Дуэк"))).to eq("psychology")
   end
 
+  it "refuses a malformed genre answer" do
+    stub_request(:post, "https://openrouter.ai/api/alpha/decisions")
+      .to_return(status: 200, body: { answers: { genre: "psychology" } }.to_json)
+
+    expect { described_class.new.genre(build(:book)) }.to raise_error(JevClient::Error)
+  end
+
   it "refuses a genre outside the list" do
     stub_request(:post, "https://openrouter.ai/api/alpha/decisions")
       .to_return(status: 200, body: { answers: { genre: { type: "choice", choice: "poetry" } } }.to_json)
