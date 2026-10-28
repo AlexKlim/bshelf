@@ -81,7 +81,9 @@ function Shell() {
             {t("account.back")}
           </Link>
         ) : (
-          <span className="bs-wordmark">{t("app.name")}</span>
+          <Link to="/" className="bs-wordmark">
+            {t("app.name")}
+          </Link>
         )}
         {desktop && <TabBar top />}
         <Link to="/account" className="bs-avatar" aria-label={t("account.title")} aria-current={inAccount ? "page" : undefined}>

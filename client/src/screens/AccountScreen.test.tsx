@@ -123,7 +123,7 @@ describe("Account", () => {
       expect(screen.getByText("Open plugins")).toBeInTheDocument()
 
       await userEvent.click(screen.getByRole("radio", { name: "Gemini" }))
-      expect(screen.getByText("For Gemini Enterprise and Gemini Business.")).toBeInTheDocument()
+      expect(screen.getByText("For the Gemini app, Gemini Enterprise and Gemini Business.")).toBeInTheDocument()
       expect(screen.getByText(`${window.location.origin}/oauth/authorize`)).toBeInTheDocument()
       expect(screen.getByText(`${window.location.origin}/oauth/token`)).toBeInTheDocument()
 

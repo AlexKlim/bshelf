@@ -35,7 +35,9 @@ function AuthPage({ title, lead, children }: { title: string; lead?: ReactNode; 
   const { t } = useTranslation()
   return (
     <main className="bs-auth">
-      <p className="bs-wordmark bs-auth__mark">{t("app.name")}</p>
+      <Link to="/" className="bs-wordmark bs-auth__mark">
+        {t("app.name")}
+      </Link>
       <section className="bs-entry bs-auth__sheet" aria-labelledby="auth-title">
         <h1 className="bs-entry__title" id="auth-title">
           {title}

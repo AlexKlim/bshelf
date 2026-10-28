@@ -346,7 +346,7 @@
         "text": "Выберите Book Shelf в списке инструментов чата."
       }
     ],
-    "geminiFor": "Для Gemini Enterprise и Gemini Business.",
+    "geminiFor": "Для приложения Gemini, Gemini Enterprise и Gemini Business.",
     "geminiSteps": [
       {
         "title": "Создайте ключ",
@@ -354,11 +354,11 @@
       },
       {
         "title": "Добавьте свой MCP-сервер",
-        "text": "В Gemini: Коннекторы → Свой MCP-сервер. Вставьте адрес выше, URL авторизации и токена, Client ID и секрет."
+        "text": "В Gemini добавьте своё подключённое приложение (Set up a custom connected app) и выберите Cloud MCP. В поле ссылки вставьте адрес для подключения, он заканчивается на /mcp. В Advanced Settings вставьте Client ID и секрет. Gemini Enterprise попросит ещё URL авторизации и токена."
       },
       {
         "title": "Разрешите доступ",
-        "text": "Gemini откроет страницу Book Shelf, нажмите «Разрешить»."
+        "text": "Gemini попросит войти в Google, затем откроет страницу Book Shelf. Нажмите «Разрешить»."
       }
     ],
     "createKey": "Создать ключ для Gemini",
@@ -368,8 +368,8 @@
     "secretOnce": "Скопируйте сейчас: секрет показывается один раз.",
     "clientId": "Client ID",
     "clientSecret": "Client secret",
-    "authUrl": "URL авторизации",
-    "tokenUrl": "URL токена",
+    "authUrl": "URL авторизации, только для Gemini Enterprise",
+    "tokenUrl": "URL токена, только для Gemini Enterprise",
     "askTitle": "Что можно спросить",
     "ask": [
       "Читал ли я «Солярис»?",
@@ -516,7 +516,7 @@
   "desk": {
     "title": "Стол библиотекаря",
     "tidy": "Навести порядок",
-    "idle": "Найду недостающие обложки, названия и авторов, а ещё одну книгу на разных языках.",
+    "idle": "Найду недостающие обложки, названия, авторов и жанры. Ещё проверю, не стоит ли одна книга дважды на разных языках.",
     "busy": "Смотрю, что нужно…",
     "queued_one": "Взял в работу {{count}} книгу. Шкаф обновится сам.",
     "queued_few": "Взял в работу {{count}} книги. Шкаф обновится сам.",
