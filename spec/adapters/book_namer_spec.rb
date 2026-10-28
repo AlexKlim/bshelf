@@ -24,6 +24,13 @@ RSpec.describe BookNamer do
     expect(described_class.new.name("Verber Bernar Nashi druzya lyudi", nil)).to eq("title" => "Наши друзья люди", "author" => nil)
   end
 
+  it "joins several authors" do
+    stub_request(:post, "https://openrouter.ai/api/v1/chat/completions")
+      .to_return(status: 200, body: reply({ title: "Пикник на обочине", author: [ "Аркадий Стругацкий", " ", "Борис Стругацкий" ] }.to_json))
+
+    expect(described_class.new.name("Piknik na obochine", nil)["author"]).to eq("Аркадий Стругацкий, Борис Стругацкий")
+  end
+
   it "refuses an answer without a title" do
     stub_request(:post, "https://openrouter.ai/api/v1/chat/completions").to_return(status: 200, body: reply("not json"))
 

@@ -27,8 +27,8 @@ class BookNamer
     named = JSON.parse(JSON.parse(res.body).dig("choices", 0, "message", "content").to_s)
     raise Error, "openrouter answered without a title" unless named.is_a?(Hash) && named["title"].is_a?(String) && named["title"].strip.size.between?(1, 500)
 
-    author = named["author"].is_a?(String) ? named["author"].strip : ""
-    { "title" => named["title"].strip, "author" => (author unless author.match?(/\A(null|none|unknown)?\z/i)) }
+    authors = Array(named["author"]).grep(String).map(&:strip).reject { it.match?(/\A(null|none|unknown)?\z/i) }
+    { "title" => named["title"].strip, "author" => authors.join(", ").presence }
   rescue Timeout::Error, SocketError, SystemCallError, JSON::ParserError, TypeError => e
     raise Error, e.class.name
   end
