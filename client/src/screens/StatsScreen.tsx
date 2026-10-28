@@ -93,7 +93,7 @@ export function StatsScreen() {
           </div>
         </div>
         <div className="bs-year__case">
-          <div className={`bs-year__scroll${!loading && stats.total === 0 ? " is-empty" : ""}`}>
+          <div className={`bs-year__scroll${!loading && stats.total === 0 ? " is-empty" : ""}`} tabIndex={0} role="group" aria-label={t("stats.title")}>
             <div className="bs-year__months">
               {(loading ? Array.from({ length: 12 }, (_, i) => ({ month: i + 1, books: [] })) : stats.months).map((m) => {
                 const count = m.books.length
