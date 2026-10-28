@@ -14,7 +14,7 @@ RSpec.describe "Stats and sources" do
       both = done("Dune", "Herbert", "audio", "2025-03-10")
       create(:reading, edition: create(:edition, book: both, format: "ebook"), status: "done",
         status_source: "manual", finished_at: Time.zone.parse("2025-05-02"))
-      done("Solaris", "Lem", "ebook", "2025-05-20")
+      done("Solaris", "Lem", "ebook", "2025-05-20").update!(genre: "fantasy")
       done("Eden", "Lem", "audio", "2024-01-01")
       done("Undated", "Lem", "audio", nil)
       create(:book, user:, title: "Bought", status: "owned")
@@ -24,7 +24,7 @@ RSpec.describe "Stats and sources" do
 
       expect(response).to have_http_status(:ok)
       expect(json).to include("year" => 2025, "years" => [ 2025, 2024 ], "total" => 2, "no_date_count" => 1,
-        "by_format" => { "audio" => 1, "ebook" => 2 })
+        "by_format" => { "audio" => 1, "ebook" => 2 }, "by_genre" => { "fantasy" => 1 })
       may = json["months"].find { it["month"] == 5 }["books"]
       expect(may.map { it["title"] }).to eq(%w[Dune Solaris])
       expect(may.first).to include("id" => both.uuid, "formats" => %w[audio ebook])

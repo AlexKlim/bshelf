@@ -70,6 +70,22 @@ describe("StatsScreen", () => {
     expect(screen.queryByRole("button", { name: /^Previous year/ })).toBeNull()
   })
 
+  it("draws the genre star with each genre's share of the year", async () => {
+    mockFetch(() => [200, stats(thisYear, { total: 4, by_genre: { psychology: 3, fantasy: 1 } })])
+    renderStats()
+
+    const star = await screen.findByRole("img", { name: /^0% Fiction, 25% Sci-fi & fantasy, 0% Crime, 75% Psychology/ })
+    expect(star).toBeInTheDocument()
+  })
+
+  it("leaves the star out until a genre is known", async () => {
+    mockFetch(() => [200, stats(thisYear, { total: 4, by_genre: {} })])
+    renderStats()
+
+    await screen.findByRole("button", { name: /^Previous year/ })
+    expect(screen.queryByText("Genres")).toBeNull()
+  })
+
   it("labels the year buttons in Russian", async () => {
     await i18n.changeLanguage("ru")
     mockFetch(() => [200, stats(thisYear)])

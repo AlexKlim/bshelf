@@ -11,6 +11,12 @@ class JevClient
     }
   }.freeze
 
+  GENRE = {
+    type: "choice",
+    instructions: "Which section of a bookshop shelves this book? Judge by the title and the author.",
+    criteria: Book::GENRES
+  }.freeze
+
   class Error < StandardError; end
 
   def self.configured? = ENV["OPENROUTER_API_KEY"].present?
@@ -20,17 +26,32 @@ class JevClient
     "jev:#{Digest::SHA256.hexdigest([ MODEL, SAME_BOOK, books ].to_json)}"
   end
 
+  def self.genre_key(book) = "jev:#{Digest::SHA256.hexdigest([ MODEL, GENRE, book.title, book.author ].to_json)}"
+
   def same_book(a, b)
     describe = ->(label, book) { "Book #{label}, a book: «#{book.title}», #{book.author}" }
-    body = { model: MODEL, state: [ describe.("A", a), describe.("B", b) ], questions: { same_book: SAME_BOOK } }
+    noul = ask([ describe.("A", a), describe.("B", b) ], same_book: SAME_BOOK).dig("same_book", "noul")
+    raise Error, "openrouter answered without a probability" unless noul.is_a?(Numeric)
+
+    noul
+  end
+
+  def genre(book)
+    choice = ask([ "A book: «#{book.title}», #{book.author}" ], genre: GENRE).dig("genre", "choice")
+    raise Error, "openrouter answered without a genre" unless Book::GENRES.key?(choice)
+
+    choice
+  end
+
+  private
+
+  def ask(state, questions)
+    body = { model: MODEL, state:, questions: }
     res = Net::HTTP.post(ENDPOINT, body.to_json, "Authorization" => "Bearer #{ENV.fetch("OPENROUTER_API_KEY")}",
       "Content-Type" => "application/json")
     raise Error, "openrouter answered #{res.code}" unless res.is_a?(Net::HTTPSuccess)
 
-    noul = JSON.parse(res.body).dig("answers", "same_book", "noul")
-    raise Error, "openrouter answered without a probability" unless noul.is_a?(Numeric)
-
-    noul
+    JSON.parse(res.body).fetch("answers", {})
   rescue Timeout::Error, SocketError, SystemCallError, JSON::ParserError => e
     raise Error, e.class.name
   end

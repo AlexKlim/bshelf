@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_150001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -62,6 +62,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_150001) do
     t.string "shelved_key"
     t.datetime "shelved_at"
     t.string "cloth_color"
+    t.string "genre"
     t.index ["author"], name: "index_books_on_author", opclass: :gin_trgm_ops, using: :gin
     t.index ["id"], name: "index_books_not_enriched", where: "(enriched_at IS NULL)"
     t.index ["original_title"], name: "index_books_on_original_title", opclass: :gin_trgm_ops, using: :gin
@@ -69,6 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_150001) do
     t.index ["user_id", "title_key"], name: "index_books_on_user_id_and_title_key"
     t.index ["user_id"], name: "index_books_on_user_id"
     t.index ["uuid"], name: "index_books_on_uuid", unique: true
+    t.check_constraint "genre::text = ANY (ARRAY['fiction'::character varying, 'fantasy'::character varying, 'crime'::character varying, 'psychology'::character varying, 'business'::character varying, 'science'::character varying, 'history'::character varying, 'other'::character varying]::text[])", name: "books_genre"
   end
 
   create_table "catalog_books", force: :cascade do |t|

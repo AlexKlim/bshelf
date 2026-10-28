@@ -22,4 +22,19 @@ RSpec.describe JevClient do
 
     expect { described_class.new.same_book(build(:book), build(:book)) }.to raise_error(JevClient::Error)
   end
+
+  it "asks which bookshop section a book belongs to and returns the chosen genre" do
+    stub_request(:post, "https://openrouter.ai/api/alpha/decisions")
+      .with { |r| JSON.parse(r.body).dig("questions", "genre", "criteria").keys == Book::GENRES.keys }
+      .to_return(status: 200, body: { answers: { genre: { type: "choice", choice: "psychology", probabilities: { psychology: 0.9 } } } }.to_json)
+
+    expect(described_class.new.genre(build(:book, title: "Гибкое сознание", author: "Кэрол Дуэк"))).to eq("psychology")
+  end
+
+  it "refuses a genre outside the list" do
+    stub_request(:post, "https://openrouter.ai/api/alpha/decisions")
+      .to_return(status: 200, body: { answers: { genre: { type: "choice", choice: "poetry" } } }.to_json)
+
+    expect { described_class.new.genre(build(:book)) }.to raise_error(JevClient::Error)
+  end
 end

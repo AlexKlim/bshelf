@@ -217,6 +217,13 @@ img.bs-cover { aspect-ratio: auto; block-size: auto; }
 .bs-year__foot { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-6); font: 400 15px/22px var(--font-ui); }
 .bs-year__foot dt { color: var(--ink-muted); }
 .bs-year__foot dd { margin: 0; }
+.bs-genres { margin: 0; display: grid; gap: var(--space-2); }
+.bs-genres__title { font: 400 15px/22px var(--font-ui); color: var(--ink-muted); }
+.bs-genres svg { inline-size: 100%; max-inline-size: 440px; justify-self: center; overflow: visible; }
+.bs-genres__axis { stroke: var(--accent); stroke-width: 2; }
+.bs-genres__area { fill: var(--accent); fill-opacity: .3; stroke: var(--accent); stroke-width: 1.5; }
+.bs-genres__dot { fill: var(--surface); stroke: var(--accent-press); stroke-width: 2; }
+.bs-genres__label { font: 400 13px/1 var(--font-ui); fill: var(--ink-muted); }
 
 .bs-source { display: flex; align-items: center; gap: var(--space-4); padding-block: var(--space-4); border-bottom: 1px solid var(--hairline); }
 .bs-source__body { flex: 1; min-inline-size: 0; display: grid; gap: 2px; }
