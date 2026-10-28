@@ -354,7 +354,7 @@
       },
       {
         "title": "Добавьте свой MCP-сервер",
-        "text": "В Gemini добавьте своё подключённое приложение (Set up a custom connected app) и выберите Cloud MCP. В поле ссылки вставьте адрес для подключения, он заканчивается на /mcp. В Advanced Settings вставьте Client ID и секрет. Gemini Enterprise попросит ещё URL авторизации и токена."
+        "text": "В веб-версии Gemini (gemini.google.com): Настройки → Connected Apps → Set up a custom connected app, выберите Cloud MCP. В поле ссылки вставьте адрес для подключения, он заканчивается на /mcp. В Advanced Settings вставьте Client ID и секрет. Gemini Enterprise попросит ещё URL авторизации и токена."
       },
       {
         "title": "Разрешите доступ",

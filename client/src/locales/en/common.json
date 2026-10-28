@@ -340,7 +340,7 @@
       },
       {
         "title": "Add a custom MCP server",
-        "text": "In Gemini, set up a custom connected app and choose Cloud MCP. Paste the connection URL into the link field, it ends in /mcp. Paste the Client ID and the secret under Advanced Settings. Gemini Enterprise also asks for the authorization and token URLs."
+        "text": "In Gemini on the web (gemini.google.com): Settings → Connected Apps → Set up a custom connected app, then choose Cloud MCP. Paste the connection URL into the link field, it ends in /mcp. Paste the Client ID and the secret under Advanced Settings. Gemini Enterprise also asks for the authorization and token URLs."
       },
       {
         "title": "Allow access",

@@ -2,7 +2,7 @@ import { useEffect, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { GenreStar } from "@/components/GenreStar"
-import { FormatIcons, Ico, LangSwitch } from "@/components/ui"
+import { FormatIcons, Ico, LangSwitch, SourceLink } from "@/components/ui"
 import "./LandingScreen.css"
 
 type Format = "audio" | "ebook"
@@ -302,7 +302,10 @@ export function LandingScreen() {
       <div className="lp-wrap">
         <footer className="bs-footer lp-footer">
           <span>{t("footer.tagline")}</span>
-          <LangSwitch />
+          <span className="bs-footer__end">
+            <SourceLink />
+            <LangSwitch />
+          </span>
         </footer>
       </div>
     </div>
