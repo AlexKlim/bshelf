@@ -17,6 +17,7 @@ class Book < ApplicationRecord
   has_many :notes
   has_many :merge_events
 
+  normalizes :title, :author, :original_title, with: -> { it.delete("\u0301") }
   validates :title, presence: true, length: { maximum: 500 }
   validates :author, length: { maximum: 500 }
   validates :genre, inclusion: { in: GENRES.keys }, allow_nil: true
