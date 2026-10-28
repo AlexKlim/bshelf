@@ -16,10 +16,11 @@ RSpec.describe FileTitle do
   it "drops the number in front of a slug when a document is imported" do
     expect(described_class.clean("51318-doch-dyima-i-kostey")).to eq("doch dyima i kostey")
     expect(described_class.clean("51318-doch-dyima-i-kostey.epub")).to eq("doch dyima i kostey")
+    expect(described_class.clean("51318-solyaris.epub")).to eq("solyaris")
   end
 
   it "leaves ordinary titles alone" do
-    expect([ "Catch-22", "Project Hail Mary", "Война и мир", "Spider-Man", "X-Men-Gold" ].map { described_class.parse(it) }).to all(be_nil)
+    expect([ "Catch-22", "Project Hail Mary", "Война и мир", "Spider-Man", "X-Men-Gold", "1984-Orwell", "2001-2010" ].map { described_class.parse(it) }).to all(be_nil)
   end
 
   it "capitalizes a cleaned file name" do

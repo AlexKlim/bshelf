@@ -1,7 +1,7 @@
 module FileTitle
   EXTENSIONS = /(\.(fb2|epub|pdf|mobi|azw3?|docx?|txt|rtf|djvu))+(\.zip)?\z/i
   SERIES = /\A(?<author>[^\[\]]+?)\s*\[[^\]]*#\d+\]\s*(?<title>.+)\z/
-  SLUG = /\A(?:\d+[-_][\p{Latin}\d]+(?:[-_][\p{Latin}\d]+)+|[a-z\d]+(?:[-_][a-z\d]+){2,})\z/
+  SLUG = /\A(?:\d+[-_][\p{Latin}\d]+(?:[-_][\p{Latin}\d]+)+|\d+[-_][a-z][a-z\d]*|[a-z\d]+(?:[-_][a-z\d]+){2,})\z/
 
   def self.clean(title)
     name = title.sub(/\s*\(\d+\)\z/, "")
