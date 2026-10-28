@@ -33,7 +33,10 @@ module Oauth
       return unless uri.match?(GEMINI_APP_REDIRECT)
 
       app = Doorkeeper::Application.where.not(user_id: nil).find_by(uid: params[:client_id].to_s)
-      app.update!(redirect_uri: "#{app.redirect_uri}\n#{uri}") if app && app.redirect_uri.split.exclude?(uri)
+      return unless app && app.redirect_uri.split.exclude?(uri)
+
+      owner = current_resource_owner
+      app.update!(redirect_uri: "#{app.redirect_uri}\n#{uri}") if !performed? && owner&.id == app.user_id
     end
 
     def after_successful_authorization(context)
