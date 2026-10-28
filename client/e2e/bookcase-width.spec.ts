@@ -13,6 +13,9 @@ test("a full shelf splits into rows, and a row that runs over does not push the 
   const column = await page.locator(".bs-shelfscreen").evaluate((el) => el.clientWidth)
   expect(await page.locator(".bs-case").evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(column)
 
+  const left = (selector: string) => page.locator(selector).first().evaluate((el) => Math.round(el.getBoundingClientRect().left))
+  expect(await left(".bs-header .bs-wordmark")).toBe(await left(".bs-shelfscreen"))
+
   const shelfWidth = () => page.locator(".bs-shelf").first().evaluate((el) => el.getBoundingClientRect().width)
   const before = await shelfWidth()
   await page.locator(".bs-shelf__row").nth(2).evaluate((row) => {

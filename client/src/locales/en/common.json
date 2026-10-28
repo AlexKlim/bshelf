@@ -315,12 +315,12 @@
     ],
     "chatgptSteps": [
       {
-        "title": "Turn on developer mode",
-        "text": "In ChatGPT: Settings → Apps and connectors → Advanced → Developer mode. A paid plan is needed."
+        "title": "Open plugins",
+        "text": "In ChatGPT on the web, open Plugins in the sidebar."
       },
       {
-        "title": "Create a connector",
-        "text": "Click \"Create\", name it Book Shelf, paste the URL above and choose OAuth sign in."
+        "title": "Add an MCP server",
+        "text": "Click Add → Add custom MCP server, name it Book Shelf, paste the URL above and choose OAuth sign in."
       },
       {
         "title": "Sign in and allow access",
