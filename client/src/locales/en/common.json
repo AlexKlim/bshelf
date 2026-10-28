@@ -316,7 +316,7 @@
     "chatgptSteps": [
       {
         "title": "Open plugins",
-        "text": "In ChatGPT on the web, open Plugins in the sidebar."
+        "text": "In ChatGPT on the web, open Plugins in the sidebar. If the Add menu has no Add custom MCP server item, turn on Developer mode in Settings → Security and login."
       },
       {
         "title": "Add an MCP server",

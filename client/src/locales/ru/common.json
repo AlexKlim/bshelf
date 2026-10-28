@@ -330,7 +330,7 @@
     "chatgptSteps": [
       {
         "title": "Откройте плагины",
-        "text": "В веб-версии ChatGPT откройте Plugins в боковой панели."
+        "text": "В веб-версии ChatGPT откройте Plugins в боковой панели. Если в меню Add нет пункта Add custom MCP server, включите Developer mode в Settings → Security and login."
       },
       {
         "title": "Добавьте MCP-сервер",
