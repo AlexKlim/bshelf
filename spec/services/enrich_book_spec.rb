@@ -83,6 +83,32 @@ RSpec.describe EnrichBook do
     expect(book.cover_url).to start_with("https://www.litres.ru/pub/c/cover")
   end
 
+  it "names a book from a numbered file name through Litres even when the spelling is off" do
+    person = ->(name) { { full_name: name, role: "author" } }
+    hits = [ { instance: { title: "Ловцы книг. Замечательный предел", persons: [ person.("Макс Фрай") ] } } ]
+    stub_request(:get, %r{\Ahttps://api\.litres\.ru/foundation/api/search}).to_return(status: 200, body: { payload: { data: hits } }.to_json)
+    stub_request(:get, %r{\Ahttps://openlibrary\.org/search\.json}).to_return(status: 200, body: { docs: [] }.to_json)
+    stub_google("google_429.json", status: 429)
+    book = create(:book, title: "417979-lovcy-knig-zamecatelnyj-predel", author: nil)
+
+    suppress(CatalogClient::RateLimited) { described_class.call(book) }
+
+    expect(book.reload).to have_attributes(title: "Ловцы книг. Замечательный предел", author: "Макс Фрай")
+  end
+
+  it "spells a file name Litres does not know in Cyrillic when Jev reads it as Russian" do
+    allow(JevClient).to receive(:configured?).and_return(true)
+    allow_any_instance_of(JevClient).to receive(:russian_in_latin).and_return(0.94)
+    stub_request(:get, %r{\Ahttps://api\.litres\.ru/foundation/api/search}).to_return(status: 200, body: { payload: { data: [] } }.to_json)
+    stub_request(:get, %r{\Ahttps://openlibrary\.org/search\.json}).to_return(status: 200, body: { docs: [] }.to_json)
+    stub_google("google_429.json", status: 429)
+    book = create(:book, title: "51318-doch-dyima-i-kostey", author: nil)
+
+    suppress(CatalogClient::RateLimited) { described_class.call(book) }
+
+    expect(book.reload.title).to eq("Доч дыма и костей")
+  end
+
   it "prefers the book itself over a summary that repeats its title and author" do
     person = ->(name) { { full_name: name, role: "author" } }
     hits = [

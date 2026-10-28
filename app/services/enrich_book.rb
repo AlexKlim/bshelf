@@ -33,24 +33,45 @@ class EnrichBook
   private
 
   def rename_from_file
-    return unless book.title.match?(/\A[\p{Latin}\d\s.,'-]+\z/) && book.author.blank? && book.editions.any? && book.editions.all? { it.store == "amazon" }
+    file = FileTitle.parse(book.title)
+    return unless file || (book.title.match?(/\A[\p{Latin}\d\s.,'-]+\z/) && book.author.blank? && book.editions.any? && book.editions.all? { it.store == "amazon" })
 
-    query = Translit.to_cyrillic(book.title)
-    wanted = Translit.words(query).select { it.size > 2 }
+    file ||= { title: book.title, author: nil }
+    hit = litres_hit(Translit.to_cyrillic([ file[:author], file[:title] ].compact.join(" ")))
+    if hit
+      book.title = hit["title"]
+      book.author = Array(hit["authors"]).join(", ").presence || book.author
+    else
+      russian = russian_file_name?(file[:title])
+      book.title = FileTitle.readable(file[:title], russian:)
+      book.author = file[:author].split.map { FileTitle.readable(it, russian:) }.join(" ") if file[:author] && book.author.blank?
+    end
+  end
+
+  def litres_hit(query)
+    wanted = Translit.words(query).select { it.size > 2 && !it.match?(/\A\d+\z/) }
     return if wanted.empty?
 
-    hit = client.search(:litres, title: query, author: nil, isbn: nil)
+    client.search(:litres, title: query, author: nil, isbn: nil)
       .map { [ it, Translit.words([ it["title"], *it["authors"] ].join(" ")) ] }
-      .select { |hit, known| wanted.all? { known.include?(it) } && Translit.words(hit["title"].to_s).intersect?(wanted) }
-      .min_by { |_, known| (known - wanted).size }&.first
-    return unless hit
-
-    book.title = hit["title"]
-    book.author = Array(hit["authors"]).join(", ").presence || book.author
+      .select { |hit, known| wanted.all? { close?(it, known) } && Translit.words(hit["title"].to_s).any? { close?(it, wanted) } }
+      .min_by { |_, known| known.count { !close?(it, wanted) } }&.first
   rescue CatalogClient::RateLimited
     raise
   rescue CatalogClient::Error => e
     Rails.logger.info("litres search: #{e.message}")
+    nil
+  end
+
+  def close?(word, words) = words.any? { DidYouMean::Levenshtein.distance(word, it) <= (word.size > 5 ? 2 : 1) }
+
+  def russian_file_name?(text)
+    return false unless JevClient.configured?
+
+    CatalogEntry.fetch(JevClient.russian_key(text)) { { "noul" => JevClient.new.russian_in_latin(text) } }["noul"].to_f >= 0.5
+  rescue JevClient::Error => e
+    Rails.logger.info("jev: #{e.message}")
+    false
   end
 
   def trusted? = book.match_source == "catalog" || CatalogBook.store_ids(book).any?

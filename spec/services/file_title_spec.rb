@@ -7,4 +7,22 @@ RSpec.describe FileTitle do
     expect(described_class.clean("Смерть от совещаний")).to eq("Смерть от совещаний")
     expect(described_class.clean("Sapiens: A Brief History (2)")).to eq("Sapiens: A Brief History (2)")
   end
+  it "reads a numbered slug and an author with a series in brackets" do
+    expect(described_class.parse("210777-lovtsyi-knig-volna-veroyatnosti")).to eq(title: "lovtsyi knig volna veroyatnosti", author: nil)
+    expect(described_class.parse("Gibson Uilyam [Periferiynyie ustroystva#2] Periferiynyie ustroystva"))
+      .to eq(title: "Periferiynyie ustroystva", author: "Gibson Uilyam")
+  end
+
+  it "drops the number in front of a slug when a document is imported" do
+    expect(described_class.clean("51318-doch-dyima-i-kostey")).to eq("doch dyima i kostey")
+  end
+
+  it "leaves ordinary titles alone" do
+    expect([ "Catch-22", "Project Hail Mary", "Война и мир", "Spider-Man" ].map { described_class.parse(it) }).to all(be_nil)
+  end
+
+  it "spells a Russian file name in Cyrillic" do
+    expect(described_class.readable("doch dyima i kostey", russian: true)).to eq("Доч дыма и костей")
+    expect(described_class.readable("the martian", russian: false)).to eq("The martian")
+  end
 end
