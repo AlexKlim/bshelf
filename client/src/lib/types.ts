@@ -86,6 +86,9 @@ export type StatsBook = {
   minutes: number | null
 }
 
+export const GENRES = ["fiction", "fantasy", "crime", "psychology", "business", "science", "history", "other"] as const
+export type Genre = (typeof GENRES)[number]
+
 export type Stats = {
   year: number
   years: number[]
@@ -93,6 +96,7 @@ export type Stats = {
   listened?: number
   read?: number
   by_format: Partial<Record<Format, number>>
+  by_genre?: Partial<Record<Genre, number>>
   total_minutes: number | null
   months: { month: number; books: StatsBook[] }[]
   no_date_count: number

@@ -189,7 +189,8 @@
     "topAuthors": "Most often",
     "prevYear": "Previous year {{year}}",
     "nextYear": "Next year {{year}}",
-    "loadError": "Could not load the stats."
+    "loadError": "Could not load the stats.",
+    "genres": "Genres"
   },
   "remote": {
     "kindle": {
@@ -525,5 +526,15 @@
     "tidyHint": "Covers, titles, duplicates",
     "find": "Find",
     "findHint": "Have I read…"
+  },
+  "genre": {
+    "fiction": "Fiction",
+    "fantasy": "Sci-fi & fantasy",
+    "crime": "Crime",
+    "psychology": "Psychology",
+    "business": "Business",
+    "science": "Science",
+    "history": "History",
+    "other": "Other"
   }
 }

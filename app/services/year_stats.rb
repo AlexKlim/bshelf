@@ -20,6 +20,7 @@ class YearStats
       total: books.size,
       **self.class.counts(books),
       by_format: books.flat_map { it[:formats] }.tally,
+      by_genre: books.filter_map { it[:genre] }.tally,
       total_minutes: books.filter_map { it[:minutes] }.sum.nonzero?,
       months: (1..12).map { |month| { month:, books: books.select { it[:finished_at].month == month } } },
       no_date_count: finished_by_book.count { |_id, rows| rows.none? { it[:finished_at] } },
@@ -38,6 +39,7 @@ class YearStats
       first = rows.first
       {
         id: first[:uuid], title: first[:title], author: first[:author], cloth: first[:cloth] || Cloth.for_uuid(first[:uuid]), cloth_color: first[:cloth_color],
+        genre: first[:genre],
         formats: rows.map { it[:format] }.uniq.sort,
         finished_at: rows.map { it[:finished_at] }.max,
         minutes: rows.filter_map { it[:minutes] }.sum.nonzero?
@@ -47,10 +49,10 @@ class YearStats
 
   def finished_by_book
     @finished_by_book ||= user.readings.where(status: "done").joins(edition: :book)
-      .pluck("books.id", "books.uuid", "books.title", "books.author", "books.cloth", "books.cloth_color", "editions.format",
+      .pluck("books.id", "books.uuid", "books.title", "books.author", "books.cloth", "books.cloth_color", "books.genre", "editions.format",
         "readings.finished_at", "readings.total_minutes")
-      .map do |id, uuid, title, author, cloth, cloth_color, format, finished_at, minutes|
-        { id:, uuid:, title:, author:, cloth:, cloth_color:, format:, finished_at:, minutes: }
+      .map do |id, uuid, title, author, cloth, cloth_color, genre, format, finished_at, minutes|
+        { id:, uuid:, title:, author:, cloth:, cloth_color:, genre:, format:, finished_at:, minutes: }
       end
       .group_by { it[:id] }
   end

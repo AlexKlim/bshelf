@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { getStats } from "@/api"
+import { GenreStar } from "@/components/GenreStar"
 import { Ico } from "@/components/ui"
 import type { Stats } from "@/lib/types"
 import { clothStyle } from "@/lib/cloth"
@@ -145,6 +146,7 @@ export function StatsScreen() {
             )}
           </dl>
         )}
+        {stats && !loading && stats.by_genre && <GenreStar counts={stats.by_genre} total={stats.total} />}
       </section>
     </div>
   )

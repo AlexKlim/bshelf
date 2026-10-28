@@ -1,4 +1,15 @@
 class Book < ApplicationRecord
+  GENRES = {
+    "fiction" => "Literary and general fiction, classics, romance, poetry",
+    "fantasy" => "Science fiction and fantasy",
+    "crime" => "Mystery, crime, detective stories and thrillers",
+    "psychology" => "Psychology, self-help, personal growth, relationships, health",
+    "business" => "Business, management, economics, money, careers",
+    "science" => "Popular science, technology, programming, philosophy",
+    "history" => "History, biographies, memoirs, politics",
+    "other" => "Anything else: children's books, religion, travel, cooking, hobbies"
+  }.freeze
+
   belongs_to :user
   has_many :editions
   has_many :readings, through: :editions
@@ -8,6 +19,7 @@ class Book < ApplicationRecord
 
   validates :title, presence: true, length: { maximum: 500 }
   validates :author, length: { maximum: 500 }
+  validates :genre, inclusion: { in: GENRES.keys }, allow_nil: true
 
   before_save do
     if cover_url_changed?
