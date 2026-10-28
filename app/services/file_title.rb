@@ -1,15 +1,15 @@
 module FileTitle
   EXTENSIONS = /(\.(fb2|epub|pdf|mobi|azw3?|docx?|txt|rtf|djvu))+(\.zip)?\z/i
   SERIES = /\A(?<author>[^\[\]]+?)\s*\[[^\]]*#\d+\]\s*(?<title>.+)\z/
-  SLUG = /\A(?:\d+[-_])?[\p{Latin}\d]+(?:[-_][\p{Latin}\d]+){2,}\z/
+  SLUG = /\A(?:\d+[-_][\p{Latin}\d]+(?:[-_][\p{Latin}\d]+)+|[a-z\d]+(?:[-_][a-z\d]+){2,})\z/
 
   def self.clean(title)
     name = title.sub(/\s*\(\d+\)\z/, "")
-    return parse(name)[:title] if name.match?(SLUG)
+    bare = name.sub(EXTENSIONS, "").sub(/\.\d+\z/, "")
+    return parse(bare)[:title] if bare.match?(SLUG)
     return title unless name.match?(EXTENSIONS) || (name.include?("_") && !name.include?(" "))
 
-    name = name.sub(EXTENSIONS, "").sub(/\.\d+\z/, "")
-    name.tr("_", " ").gsub(/(?<=\p{L})-(?=\p{L})/, " ").squish.presence || title
+    bare.tr("_", " ").gsub(/(?<=\p{L})-(?=\p{L})/, " ").squish.presence || title
   end
 
   def self.parse(title)
@@ -20,8 +20,5 @@ module FileTitle
     end
   end
 
-  def self.readable(text, russian:)
-    text = Translit.to_cyrillic(text) if russian
-    text.sub(/\p{L}/, &:upcase)
-  end
+  def self.readable(text) = text.sub(/\p{L}/, &:upcase)
 end

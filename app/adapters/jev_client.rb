@@ -17,15 +17,6 @@ class JevClient
     criteria: Book::GENRES
   }.freeze
 
-  RUSSIAN_IN_LATIN = {
-    type: "noul",
-    instructions: "This is a book title taken from a file name. Is it a Russian title written in Latin letters?",
-    criteria: {
-      true: "Russian words spelled in Latin letters, like \"Voyna i mir\" or \"doch dyma i kostey\"",
-      false: "English or another language written in its own Latin spelling"
-    }
-  }.freeze
-
   class Error < StandardError; end
 
   def self.configured? = ENV["OPENROUTER_API_KEY"].present?
@@ -35,20 +26,11 @@ class JevClient
     "jev:#{Digest::SHA256.hexdigest([ MODEL, SAME_BOOK, books ].to_json)}"
   end
 
-  def self.russian_key(text) = "jev:#{Digest::SHA256.hexdigest([ MODEL, RUSSIAN_IN_LATIN, text ].to_json)}"
-
   def self.genre_key(book) = "jev:#{Digest::SHA256.hexdigest([ MODEL, GENRE, book.title, book.author ].to_json)}"
 
   def same_book(a, b)
     describe = ->(label, book) { "Book #{label}, a book: «#{book.title}», #{book.author}" }
     noul = answer(ask([ describe.("A", a), describe.("B", b) ], same_book: SAME_BOOK), "same_book", "noul")
-    raise Error, "openrouter answered without a probability" unless noul.is_a?(Numeric)
-
-    noul
-  end
-
-  def russian_in_latin(text)
-    noul = answer(ask([ "A book title: «#{text}»" ], russian: RUSSIAN_IN_LATIN), "russian", "noul")
     raise Error, "openrouter answered without a probability" unless noul.is_a?(Numeric)
 
     noul

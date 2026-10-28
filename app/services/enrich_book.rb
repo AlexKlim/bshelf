@@ -37,15 +37,22 @@ class EnrichBook
     return unless file || (book.title.match?(/\A[\p{Latin}\d\s.,'-]+\z/) && book.author.blank? && book.editions.any? && book.editions.all? { it.store == "amazon" })
 
     file ||= { title: book.title, author: nil }
-    hit = litres_hit(Translit.to_cyrillic([ file[:author], file[:title] ].compact.join(" ")))
-    if hit
-      book.title = hit["title"]
-      book.author = Array(hit["authors"]).join(", ").presence || book.author
-    else
-      russian = russian_file_name?(file[:title])
-      book.title = FileTitle.readable(file[:title], russian:)
-      book.author = file[:author].split.map { FileTitle.readable(it, russian:) }.join(" ") if file[:author] && book.author.blank?
-    end
+    named = book_name(file)
+    hit = litres_hit([ named["author"], named["title"] ].compact.join(" ")) ||
+      litres_hit(Translit.to_cyrillic([ file[:author], file[:title] ].compact.join(" ")))
+    hit = nil if hit && book.author.present? && TextKey.authors(book.author, Array(hit["authors"]).join(" ")) == :different
+    book.title = hit ? hit["title"] : named["title"]
+    book.author = (hit && Array(hit["authors"]).join(", ").presence) || book.author.presence || named["author"]
+  end
+
+  def book_name(file)
+    fallback = { "title" => FileTitle.readable(file[:title]), "author" => file[:author] }
+    return fallback unless BookNamer.configured?
+
+    CatalogEntry.fetch(BookNamer.cache_key(file[:title], file[:author])) { BookNamer.new.name(file[:title], file[:author]) }
+  rescue BookNamer::Error => e
+    Rails.logger.info("namer: #{e.message}")
+    fallback
   end
 
   def litres_hit(query)
@@ -64,15 +71,6 @@ class EnrichBook
   end
 
   def close?(word, words) = words.any? { DidYouMean::Levenshtein.distance(word, it) <= (word.size > 5 ? 2 : 1) }
-
-  def russian_file_name?(text)
-    return false unless JevClient.configured?
-
-    CatalogEntry.fetch(JevClient.russian_key(text)) { { "noul" => JevClient.new.russian_in_latin(text) } }["noul"].to_f >= 0.5
-  rescue JevClient::Error => e
-    Rails.logger.info("jev: #{e.message}")
-    false
-  end
 
   def trusted? = book.match_source == "catalog" || CatalogBook.store_ids(book).any?
 

@@ -96,9 +96,22 @@ RSpec.describe EnrichBook do
     expect(book.reload).to have_attributes(title: "Ловцы книг. Замечательный предел", author: "Макс Фрай")
   end
 
-  it "spells a file name Litres does not know in Cyrillic when Jev reads it as Russian" do
-    allow(JevClient).to receive(:configured?).and_return(true)
-    allow_any_instance_of(JevClient).to receive(:russian_in_latin).and_return(0.94)
+  it "keeps a known author instead of a Litres hit by someone else" do
+    person = ->(name) { { full_name: name, role: "author" } }
+    hits = [ { instance: { title: "Ловцы книг. Замечательный предел", persons: [ person.("Макс Фрай") ] } } ]
+    stub_request(:get, %r{\Ahttps://api\.litres\.ru/foundation/api/search}).to_return(status: 200, body: { payload: { data: hits } }.to_json)
+    stub_request(:get, %r{\Ahttps://openlibrary\.org/search\.json}).to_return(status: 200, body: { docs: [] }.to_json)
+    stub_google("google_429.json", status: 429)
+    book = create(:book, title: "417979-lovcy-knig-zamecatelnyj-predel", author: "Иван Петров")
+
+    suppress(CatalogClient::RateLimited) { described_class.call(book) }
+
+    expect(book.reload).to have_attributes(title: "Lovcy knig zamecatelnyj predel", author: "Иван Петров")
+  end
+
+  it "takes the small model's spelling for a file name Litres does not know" do
+    allow(BookNamer).to receive(:configured?).and_return(true)
+    allow_any_instance_of(BookNamer).to receive(:name).and_return("title" => "Дочь дыма и костей", "author" => "Лэйни Тейлор")
     stub_request(:get, %r{\Ahttps://api\.litres\.ru/foundation/api/search}).to_return(status: 200, body: { payload: { data: [] } }.to_json)
     stub_request(:get, %r{\Ahttps://openlibrary\.org/search\.json}).to_return(status: 200, body: { docs: [] }.to_json)
     stub_google("google_429.json", status: 429)
@@ -106,7 +119,7 @@ RSpec.describe EnrichBook do
 
     suppress(CatalogClient::RateLimited) { described_class.call(book) }
 
-    expect(book.reload.title).to eq("Доч дыма и костей")
+    expect(book.reload).to have_attributes(title: "Дочь дыма и костей", author: "Лэйни Тейлор")
   end
 
   it "prefers the book itself over a summary that repeats its title and author" do
