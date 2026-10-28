@@ -344,7 +344,7 @@
       },
       {
         "title": "Allow access",
-        "text": "Gemini asks you to sign in to Google, then opens a Book Shelf page. Click \"Allow\"."
+        "text": "Gemini asks you to sign in to Google, then opens a Book Shelf page. Click \"Allow\". If an empty localhost page opens afterwards, close it."
       }
     ],
     "createKey": "Create a key for Gemini",
