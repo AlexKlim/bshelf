@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, type ComponentType } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import { RouteBoundary } from "@/components/RouteBoundary"
-import { LangSwitch } from "@/components/ui"
+import { LangSwitch, SourceLink } from "@/components/ui"
 import { TabBar } from "@/components/TabBar"
 import { oauthReturnTo, rememberReturnTo, takeReturnTo } from "@/lib/returnTo"
 import { ShelfProvider } from "@/lib/shelf"
@@ -81,7 +81,9 @@ function Shell() {
             {t("account.back")}
           </Link>
         ) : (
-          <span className="bs-wordmark">{t("app.name")}</span>
+          <Link to="/" className="bs-wordmark">
+            {t("app.name")}
+          </Link>
         )}
         {desktop && <TabBar top />}
         <Link to="/account" className="bs-avatar" aria-label={t("account.title")} aria-current={inAccount ? "page" : undefined}>
@@ -98,7 +100,10 @@ function Shell() {
       <div className="app__foot">
         <footer className="bs-footer">
           <span>{t("footer.tagline")}</span>
-          <LangSwitch />
+          <span className="bs-footer__end">
+            <SourceLink />
+            <LangSwitch />
+          </span>
         </footer>
       </div>
       {!desktop && (

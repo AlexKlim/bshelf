@@ -1,29 +1,30 @@
 import { useEffect, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
-import { FormatIcons, Ico, LangSwitch } from "@/components/ui"
+import { GenreStar } from "@/components/GenreStar"
+import { FormatIcons, Ico, LangSwitch, SourceLink } from "@/components/ui"
 import "./LandingScreen.css"
 
 type Format = "audio" | "ebook"
-type SampleSpine = [cloth: string, lang: string, width: number, height: number, title: string, author: string, formats: Format[]]
+type SampleSpine = [cloth: string, lang: string, width: number, height: number, title: string, author: string, formats: Format[], english?: [title: string, author: string]]
 
 const NOW: SampleSpine[] = [
-  ["slate", "ru", 34, 160, "Дюна", "Фрэнк Герберт", ["audio"]],
-  ["ochre", "ru", 32, 168, "Пикник на обочине", "Стругацкие", ["audio", "ebook"]],
+  ["slate", "ru", 34, 160, "Дюна", "Фрэнк Герберт", ["audio"], ["Dune", "Frank Herbert"]],
+  ["ochre", "ru", 32, 168, "Пикник на обочине", "Стругацкие", ["audio", "ebook"], ["Roadside Picnic", "Strugatsky"]],
   ["navy", "en", 40, 176, "Project Hail Mary", "Andy Weir", ["ebook"]],
-  ["linen", "ru", 30, 144, "Generation «П»", "Пелевин", ["audio"]],
-  ["oxblood", "ru", 36, 172, "Мастер и Маргарита", "Булгаков", ["audio"]],
+  ["linen", "ru", 30, 144, "Generation «П»", "Пелевин", ["audio"], ["Generation P", "Pelevin"]],
+  ["oxblood", "ru", 36, 172, "Мастер и Маргарита", "Булгаков", ["audio"], ["The Master and Margarita", "Bulgakov"]],
   ["bottle", "en", 34, 160, "Sapiens", "Yuval Noah Harari", ["ebook"]],
 ]
 
 const YEAR: SampleSpine[] = [
-  ["plum", "ru", 44, 184, "Война и мир", "Лев Толстой", ["audio"]],
+  ["plum", "ru", 44, 184, "Война и мир", "Лев Толстой", ["audio"], ["War and Peace", "Leo Tolstoy"]],
   ["navy", "en", 36, 168, "Thinking, Fast and Slow", "Daniel Kahneman", ["audio"]],
-  ["sage", "ru", 32, 148, "Солярис", "Станислав Лем", ["audio"]],
-  ["slate", "ru", 38, 176, "Мессия Дюны", "Фрэнк Герберт", ["audio"]],
+  ["sage", "ru", 32, 148, "Солярис", "Станислав Лем", ["audio"], ["Solaris", "Stanisław Lem"]],
+  ["slate", "ru", 38, 176, "Мессия Дюны", "Фрэнк Герберт", ["audio"], ["Dune Messiah", "Frank Herbert"]],
   ["linen", "en", 32, 160, "Educated", "Tara Westover", ["ebook"]],
-  ["oxblood", "ru", 36, 168, "Анна Каренина", "Лев Толстой", ["audio"]],
-  ["ochre", "ru", 30, 152, "Улитка на склоне", "Стругацкие", ["audio"]],
+  ["oxblood", "ru", 36, 168, "Анна Каренина", "Лев Толстой", ["audio"], ["Anna Karenina", "Leo Tolstoy"]],
+  ["ochre", "ru", 30, 152, "Улитка на склоне", "Стругацкие", ["audio"], ["The Snail on the Slope", "Strugatsky"]],
 ]
 
 const MONTHS: [string, Format][][] = [
@@ -41,16 +42,21 @@ const MONTHS: [string, Format][][] = [
   [["plum", "ebook"]],
 ]
 
+const GENRE_SAMPLE = { psychology: 5, business: 3, science: 3, fantasy: 3, fiction: 2, history: 2 }
+
 const PULLED = "Пикник на обочине"
 
 const monthLabel = (lng: string, month: number) =>
   new Intl.DateTimeFormat(lng, { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2000, month, 1))).slice(0, 3)
 
-function Spines({ books }: { books: SampleSpine[] }) {
-  return books.map(([cloth, lang, w, h, title, author, formats]) => (
-    <li key={title}>
+const sample = (english: boolean, [, lang, , , title, author, , translated]: SampleSpine) =>
+  english && translated ? { lang: "en", title: translated[0], author: translated[1] } : { lang, title, author }
+
+function Spines({ books, english }: { books: SampleSpine[]; english: boolean }) {
+  return books.map((book) => ({ book, ...sample(english, book) })).map(({ book: [cloth, , w, h, original, , formats], lang, title, author }) => (
+    <li key={original}>
       <span
-        className={`bs-spine bs-cloth--${cloth}${title === PULLED ? " is-pulled" : ""}`}
+        className={`bs-spine bs-cloth--${cloth}${original === PULLED ? " is-pulled" : ""}`}
         lang={lang}
         style={{ "--spine-w": `${w}px`, "--spine-h": `${h}px` } as CSSProperties}
       >
@@ -71,6 +77,7 @@ function Spines({ books }: { books: SampleSpine[] }) {
 export function LandingScreen() {
   const { t, i18n } = useTranslation()
   const lng = i18n.language
+  const english = !lng.startsWith("ru")
   const list = <T,>(key: string) => t(key, { returnObjects: true }) as T[]
 
   useEffect(() => {
@@ -123,22 +130,22 @@ export function LandingScreen() {
                 <section className="bs-shelf">
                   <p className="bs-shelf__plaque">{t("shelf.now")} · 3</p>
                   <div className="bs-caption lp-caption">
-                    <span className="bs-caption__title">{PULLED}</span>
-                    <span className="bs-caption__author">Аркадий и Борис Стругацкие</span>
+                    <span className="bs-caption__title">{english ? "Roadside Picnic" : PULLED}</span>
+                    <span className="bs-caption__author">{english ? "Arkady and Boris Strugatsky" : "Аркадий и Борис Стругацкие"}</span>
                     <span className="bs-status">
                       <FormatIcons formats={["audio", "ebook"]} />
                       {t("answer.read_and_listened")} · 2019, 2024
                     </span>
                   </div>
                   <ul className="bs-shelf__row lp-row--captioned">
-                    <Spines books={NOW} />
+                    <Spines books={NOW} english={english} />
                   </ul>
                   <div className="bs-shelf__plank" />
                 </section>
                 <section className="bs-shelf">
                   <p className="bs-shelf__plaque">2025 · 18</p>
                   <ul className="bs-shelf__row">
-                    <Spines books={YEAR} />
+                    <Spines books={YEAR} english={english} />
                   </ul>
                   <div className="bs-shelf__plank" />
                 </section>
@@ -231,6 +238,9 @@ export function LandingScreen() {
                     ))}
                   </div>
                 </div>
+                <div aria-hidden="true">
+                  <GenreStar counts={GENRE_SAMPLE} total={18} />
+                </div>
               </div>
             </div>
           </div>
@@ -292,7 +302,10 @@ export function LandingScreen() {
       <div className="lp-wrap">
         <footer className="bs-footer lp-footer">
           <span>{t("footer.tagline")}</span>
-          <LangSwitch />
+          <span className="bs-footer__end">
+            <SourceLink />
+            <LangSwitch />
+          </span>
         </footer>
       </div>
     </div>

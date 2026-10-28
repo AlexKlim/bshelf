@@ -332,7 +332,7 @@
         "text": "Choose Book Shelf in the chat's list of tools."
       }
     ],
-    "geminiFor": "For Gemini Enterprise and Gemini Business.",
+    "geminiFor": "For the Gemini app, Gemini Enterprise and Gemini Business.",
     "geminiSteps": [
       {
         "title": "Create a key",
@@ -340,11 +340,11 @@
       },
       {
         "title": "Add a custom MCP server",
-        "text": "In Gemini: Connectors → Custom MCP server. Paste the URL above, the authorization and token URLs, the Client ID and the secret."
+        "text": "In Gemini on the web (gemini.google.com): Settings → Connected Apps → Set up a custom connected app, then choose Cloud MCP. Paste the connection URL into the link field, it ends in /mcp. Paste the Client ID and the secret under Advanced Settings. Gemini Enterprise also asks for the authorization and token URLs."
       },
       {
         "title": "Allow access",
-        "text": "Gemini opens a Book Shelf page, click \"Allow\"."
+        "text": "Gemini asks you to sign in to Google, then opens a Book Shelf page. Click \"Allow\". If an empty localhost page opens afterwards, close it."
       }
     ],
     "createKey": "Create a key for Gemini",
@@ -354,8 +354,8 @@
     "secretOnce": "Copy it now: the secret is shown only once.",
     "clientId": "Client ID",
     "clientSecret": "Client secret",
-    "authUrl": "Authorization URL",
-    "tokenUrl": "Token URL",
+    "authUrl": "Authorization URL, Gemini Enterprise only",
+    "tokenUrl": "Token URL, Gemini Enterprise only",
     "askTitle": "What you can ask",
     "ask": [
       "Have I read Solaris?",
@@ -455,7 +455,7 @@
     "fromLitres": "From Litres",
     "fromAmazon": "From Amazon",
     "listenedOn": "Listened · March 2024",
-    "yearLead": "In December, see how much you have read and listened to. Twelve stacks, one per month, and your favorite authors.",
+    "yearLead": "In December, see how much you have read and listened to. Twelve stacks, one per month, your favorite authors and a star of genres.",
     "assistantTitle": "Ask your assistant",
     "assistantLead": "Connect Book Shelf to Claude, and it answers from your shelf: what you have read, what you wanted to read, how much you listened to this year.",
     "chat": [
@@ -502,7 +502,7 @@
   "desk": {
     "title": "Librarian's desk",
     "tidy": "Tidy up",
-    "idle": "I will look for missing covers, titles and authors, and for one book shelved in two languages.",
+    "idle": "I will look for missing covers, titles, authors and genres, and check whether one book is shelved twice in two languages.",
     "busy": "Looking at what is needed…",
     "queued_one": "Working on {{count}} book. The bookcase will refresh by itself.",
     "queued_other": "Working on {{count}} books. The bookcase will refresh by itself.",
