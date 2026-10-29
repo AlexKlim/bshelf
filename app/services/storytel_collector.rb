@@ -8,7 +8,7 @@ class StorytelCollector
   # An empty body asks the bookshelf for everything, a JSON one is refused.
   PAGE_JS = <<~JS.freeze
     (async () => {
-      const token = (await indexedDB.databases()).some((d) => d.name === "firebaseLocalStorageDb") && await new Promise((resolve) => {
+      const token = (await indexedDB.databases().catch(() => [])).some((d) => d.name === "firebaseLocalStorageDb") && await new Promise((resolve) => {
         setTimeout(() => resolve(null), 5000)
         const open = indexedDB.open("firebaseLocalStorageDb")
         open.onerror = open.onblocked = () => resolve(null)
