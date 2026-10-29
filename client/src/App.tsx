@@ -133,6 +133,7 @@ export default function App({ initialUser }: { initialUser?: User | null }) {
             <Route element={<RequireUser />}>
               <Route path="/sources/kindle" element={<RemoteBrowserScreen purpose="kindle" />} />
               <Route path="/sources/litres" element={<RemoteBrowserScreen purpose="litres" />} />
+              <Route path="/sources/storytel" element={<RemoteBrowserScreen purpose="storytel" />} />
               <Route element={<Shell />}>
                 <Route path="/" element={<BookcaseScreen />} />
                 <Route path="/stats" element={<StatsScreen />} />

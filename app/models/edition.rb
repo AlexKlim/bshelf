@@ -1,7 +1,7 @@
 class Edition < ApplicationRecord
   FORMATS = %w[audio ebook personal_doc unknown].freeze
-  STORES = %w[litres amazon].freeze
-  SOURCES = %w[manual share mcp litres kindle_export kindle_browser].freeze
+  STORES = %w[litres amazon storytel].freeze
+  SOURCES = %w[manual share mcp litres kindle_export kindle_browser storytel].freeze
 
   belongs_to :user
   belongs_to :book

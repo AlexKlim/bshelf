@@ -1,5 +1,5 @@
 class RemoteBrowserSession < ApplicationRecord
-  PURPOSES = { "kindle" => "kindle_browser", "litres" => "litres" }.freeze
+  PURPOSES = { "kindle" => "kindle_browser", "litres" => "litres", "storytel" => "storytel" }.freeze
   ACTIVE = %w[queued connecting live collecting].freeze
   RUNNING = %w[connecting live collecting].freeze
   INTERRUPTIONS = %w[aborted timeout provider_refused deploy_interrupted browser_failed].freeze

@@ -64,6 +64,8 @@ RSpec.describe "Stats and sources" do
       expect(json["sources"]).to eq([
         { "kind" => "litres", "status" => "error", "last_sync_at" => "2026-10-01T00:00:00.000Z", "error" => "needs_login",
           "books_count" => 0, "session" => nil },
+        { "kind" => "storytel", "status" => "never", "last_sync_at" => nil, "error" => nil,
+          "books_count" => 0, "session" => nil },
         { "kind" => "kindle_browser", "status" => "never", "last_sync_at" => nil, "error" => nil,
           "books_count" => 0, "session" => nil }
       ])

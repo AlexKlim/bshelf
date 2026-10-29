@@ -19,11 +19,11 @@ export type Duplicate = { id: string; reason: "title_author" | "title" | "transl
 export type Edition = {
   id: string
   format: Format
-  store: "litres" | "amazon" | null
-  source: "manual" | "share" | "mcp" | "litres" | "kindle_export" | "kindle_browser"
+  store: "litres" | "amazon" | "storytel" | null
+  source: "manual" | "share" | "mcp" | "litres" | "kindle_export" | "kindle_browser" | "storytel"
   purchased_at: string | null
   status: Status | null
-  status_source: "manual" | "litres" | "kindle_browser" | "kindle_export" | "purchase" | null
+  status_source: "manual" | "litres" | "kindle_browser" | "kindle_export" | "purchase" | "storytel" | null
   status_updated_at: string | null
   started_at: string | null
   finished_at: string | null
@@ -109,7 +109,7 @@ export type RemoteResult = { books: number; highlights: number }
 
 export type RemoteSession = {
   id: string
-  purpose: "kindle" | "litres"
+  purpose: "kindle" | "litres" | "storytel"
   status: RemoteStatus
   queue_position?: number | null
   expires_at?: string | null
@@ -122,7 +122,7 @@ export type RemoteSession = {
 }
 
 export type Source = {
-  kind: "litres" | "kindle_browser"
+  kind: "litres" | "storytel" | "kindle_browser"
   status: "never" | "ok" | "error" | "needs_login"
   last_sync_at: string | null
   error: string | null

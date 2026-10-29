@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -265,7 +265,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
     t.index ["edition_id"], name: "index_readings_on_edition_id", unique: true
     t.index ["user_id", "status"], name: "index_readings_on_user_id_and_status"
     t.check_constraint "status::text = ANY (ARRAY['want'::character varying::text, 'owned'::character varying::text, 'in_progress'::character varying::text, 'done'::character varying::text])", name: "readings_status"
-    t.check_constraint "status_source::text = ANY (ARRAY['manual'::character varying::text, 'litres'::character varying::text, 'kindle_browser'::character varying::text, 'kindle_export'::character varying::text, 'purchase'::character varying::text])", name: "readings_status_source"
+    t.check_constraint "status_source::text = ANY (ARRAY['manual'::character varying::text, 'litres'::character varying::text, 'kindle_browser'::character varying::text, 'kindle_export'::character varying::text, 'purchase'::character varying::text, 'storytel'::character varying::text])", name: "readings_status_source"
   end
 
   create_table "remote_browser_sessions", force: :cascade do |t|
@@ -292,7 +292,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
     t.index ["user_id"], name: "index_remote_browser_sessions_one_active_per_user", unique: true, where: "((status)::text = ANY (ARRAY[('queued'::character varying)::text, ('connecting'::character varying)::text, ('live'::character varying)::text, ('collecting'::character varying)::text]))"
     t.index ["uuid"], name: "index_remote_browser_sessions_on_uuid", unique: true
     t.check_constraint "interruption::text = ANY (ARRAY['aborted'::character varying::text, 'timeout'::character varying::text, 'provider_refused'::character varying::text, 'deploy_interrupted'::character varying::text, 'browser_failed'::character varying::text])", name: "remote_browser_sessions_interruption"
-    t.check_constraint "purpose::text = ANY (ARRAY['kindle'::character varying::text, 'litres'::character varying::text])", name: "remote_browser_sessions_purpose"
+    t.check_constraint "purpose::text = ANY (ARRAY['kindle'::character varying::text, 'litres'::character varying::text, 'storytel'::character varying::text])", name: "remote_browser_sessions_purpose"
     t.check_constraint "status::text = ANY (ARRAY['queued'::character varying::text, 'connecting'::character varying::text, 'live'::character varying::text, 'collecting'::character varying::text, 'done'::character varying::text, 'interrupted'::character varying::text])", name: "remote_browser_sessions_status"
   end
 
@@ -455,7 +455,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id", "kind"], name: "index_source_connections_on_user_id_and_kind", unique: true
-    t.check_constraint "kind::text = ANY (ARRAY['litres'::character varying::text, 'kindle_export'::character varying::text, 'kindle_browser'::character varying::text])", name: "source_connections_kind"
+    t.check_constraint "kind::text = ANY (ARRAY['litres'::character varying::text, 'kindle_export'::character varying::text, 'kindle_browser'::character varying::text, 'storytel'::character varying::text])", name: "source_connections_kind"
     t.check_constraint "status::text = ANY (ARRAY['never'::character varying::text, 'ok'::character varying::text, 'error'::character varying::text, 'needs_login'::character varying::text])", name: "source_connections_status"
   end
 
