@@ -1,14 +1,17 @@
 class StorytelCollector
   LOGIN = "https://www.storytel.com/login".freeze
+  HOME = "https://www.storytel.com/".freeze
   TIMEOUT = 60
 
-  # The site keeps its Firebase sign-in in IndexedDB, and that ID token is the bearer api.storytel.net takes.
+  # www.storytel.com keeps its Firebase sign-in in IndexedDB, and that ID token is the bearer api.storytel.net
+  # takes. The database is only listed, never opened blind, so a page without it is not left with an empty one.
   # An empty body asks the bookshelf for everything, a JSON one is refused.
   PAGE_JS = <<~JS.freeze
     (async () => {
-      const token = await new Promise((resolve) => {
+      const token = (await indexedDB.databases().catch(() => [])).some((d) => d.name === "firebaseLocalStorageDb") && await new Promise((resolve) => {
+        setTimeout(() => resolve(null), 5000)
         const open = indexedDB.open("firebaseLocalStorageDb")
-        open.onerror = () => resolve(null)
+        open.onerror = open.onblocked = () => resolve(null)
         open.onsuccess = () => {
           const db = open.result
           if (!db.objectStoreNames.contains("firebaseLocalStorage")) return resolve(null)
@@ -35,9 +38,13 @@ class StorytelCollector
   def logged_in?(session)
     browse(session) do |page|
       url = URI(page.current_url)
-      next false unless storytel?(url.host) && !url.path.include?("login")
+      next false unless storytel?(url.host) && !url.path.include?("login") && page.cookies["storytel_session"]
 
-      bookshelf(page)["status"] == 200
+      # Some markets land on private.storytel.com after sign in, but the token lives on www.
+      page.go_to(HOME) unless url.host == URI(HOME).host
+      result = bookshelf(page)
+      Rails.logger.info("[storytel] signed in, bookshelf answered #{result["status"]}") unless result["status"] == 200
+      result["status"] == 200
     end
   end
 
