@@ -23,7 +23,8 @@ class StorytelCollector
       }).catch(() => null)
       if (!r?.ok) return { status: r?.status || 0 }
       const body = await r.json().catch(() => null)
-      return body ? { status: 200, items: Object.values(body.items || {}) } : { status: 0 }
+      if (!body?.items || typeof body.items !== "object") return { status: 0 }
+      return { status: 200, items: Object.values(body.items) }
     })().then(arguments[0])
   JS
 
