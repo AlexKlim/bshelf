@@ -57,7 +57,8 @@
   },
   "store": {
     "litres": "Litres",
-    "amazon": "Amazon"
+    "amazon": "Amazon",
+    "storytel": "Storytel"
   },
   "answer": {
     "listened": "Listened",
@@ -127,7 +128,8 @@
     "offline": "No network. The bookcase is shown from cache.",
     "error": {
       "litres": "Litres refused the sign in:",
-      "kindle_browser": "Amazon refused the sign in:"
+      "kindle_browser": "Amazon refused the sign in:",
+      "storytel": "Storytel refused the sign in:"
     },
     "signInAgain": "Sign in again",
     "litresReminder": "Time to refresh the shelf: sign in to Litres.",
@@ -156,6 +158,7 @@
   "sources": {
     "name": {
       "litres": "Litres",
+      "storytel": "Storytel",
       "kindle_browser": "Kindle"
     },
     "never": "Not connected",
@@ -206,6 +209,13 @@
       "disclosure": "You sign in to Litres in a browser on our server. Any way works: email, phone, Yandex, VK or Google.",
       "frame": "Litres sign-in page in a browser on the server",
       "store": "Litres"
+    },
+    "storytel": {
+      "title": "Storytel",
+      "heading": "Sign in to Storytel",
+      "disclosure": "You sign in to Storytel in a browser on our server. Email, Google or Apple all work.",
+      "frame": "Storytel sign-in page in a browser on the server",
+      "store": "Storytel"
     },
     "factPassword": "The password is not saved",
     "factSession": "The session is deleted after the sync",

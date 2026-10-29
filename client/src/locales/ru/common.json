@@ -61,7 +61,8 @@
   },
   "store": {
     "litres": "Литрес",
-    "amazon": "Amazon"
+    "amazon": "Amazon",
+    "storytel": "Storytel"
   },
   "answer": {
     "listened": "Слушали",
@@ -135,7 +136,8 @@
     "offline": "Нет сети. Шкаф показан из кэша.",
     "error": {
       "litres": "Литрес не пустил вход:",
-      "kindle_browser": "Amazon не пустил вход:"
+      "kindle_browser": "Amazon не пустил вход:",
+      "storytel": "Storytel не пустил вход:"
     },
     "signInAgain": "Войти снова",
     "litresReminder": "Пора обновить полку: войдите в Литрес.",
@@ -164,6 +166,7 @@
   "sources": {
     "name": {
       "litres": "Литрес",
+      "storytel": "Storytel",
       "kindle_browser": "Kindle"
     },
     "never": "Не подключено",
@@ -218,6 +221,13 @@
       "disclosure": "Вы входите в Литрес в браузере на нашем сервере. Подойдёт любой способ: почта, телефон, Яндекс, VK или Google.",
       "frame": "Страница входа Литрес в браузере на сервере",
       "store": "Литрес"
+    },
+    "storytel": {
+      "title": "Storytel",
+      "heading": "Вход в Storytel",
+      "disclosure": "Вы входите в Storytel в браузере на нашем сервере. Подойдёт почта, Google или Apple.",
+      "frame": "Страница входа Storytel в браузере на сервере",
+      "store": "Storytel"
     },
     "factPassword": "Пароль не сохраняется",
     "factSession": "Сессия удаляется после синка",

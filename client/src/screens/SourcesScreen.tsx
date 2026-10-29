@@ -65,6 +65,12 @@ function SourceRow({ source }: { source: Source }) {
         {t("sources.litresAction")}
       </button>
     )
+  } else if (source.kind === "storytel") {
+    action = (
+      <button type="button" className="bs-btn bs-btn--secondary" disabled={!online} onClick={() => navigate("/sources/storytel")}>
+        {t("sources.litresAction")}
+      </button>
+    )
   } else if (source.kind === "kindle_browser") {
     action = (
       <button type="button" className="bs-btn bs-btn--secondary" disabled={!online} onClick={() => navigate("/sources/kindle")}>

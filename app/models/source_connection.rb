@@ -1,5 +1,5 @@
 class SourceConnection < ApplicationRecord
-  KINDS = %w[litres kindle_export kindle_browser].freeze
+  KINDS = %w[litres kindle_export kindle_browser storytel].freeze
   STATUSES = %w[never ok error needs_login].freeze
   # Errors only the person can fix by signing in again; the Sources row asks for that instead of a retry.
   LOGIN_ERRORS = %w[needs_login invalid_credentials captcha_required].freeze

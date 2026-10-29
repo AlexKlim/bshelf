@@ -1,6 +1,6 @@
 class StatusResolver
   STATUS_RANK = { "want" => 0, "owned" => 1, "in_progress" => 2, "done" => 3 }.freeze
-  SOURCE_RANK = { "purchase" => 0, "kindle_export" => 1, "kindle_browser" => 2, "litres" => 3, "manual" => 4 }.freeze
+  SOURCE_RANK = { "purchase" => 0, "kindle_export" => 1, "kindle_browser" => 2, "litres" => 3, "storytel" => 3, "manual" => 4 }.freeze
   DATE_FIELDS = %i[started_at finished_at total_minutes].freeze
 
   # A person who marks a book finished (or started) without a date means today; a stored date or an

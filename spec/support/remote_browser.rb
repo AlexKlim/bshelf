@@ -14,7 +14,7 @@ RSpec.configure do |config|
   config.around do |example|
     saved = %i[steel collectors max_sessions disabled].to_h { [ it, RemoteBrowser.public_send(it) ] }
     RemoteBrowser.steel = FakeSteelSession.new
-    RemoteBrowser.collectors = { "kindle" => FakeCollector.new(login_delay: 0), "litres" => FakeCollector.new(login_delay: 0) }
+    RemoteBrowser.collectors = { "kindle" => FakeCollector.new(login_delay: 0), "litres" => FakeCollector.new(login_delay: 0), "storytel" => FakeCollector.new(login_delay: 0) }
     RemoteBrowser.max_sessions = 1
     RemoteBrowser.disabled = false
     example.run

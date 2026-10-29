@@ -3,7 +3,7 @@ module Api
     class SourcesController < BaseController
       LITRES_REMINDER_AFTER = 30.days
       RECENT_SESSION = 1.day
-      OFFERED = %w[litres kindle_browser].freeze
+      OFFERED = %w[litres storytel kindle_browser].freeze
 
       def index
         rows = current_user.source_connections.index_by(&:kind)

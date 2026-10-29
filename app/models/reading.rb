@@ -1,6 +1,6 @@
 class Reading < ApplicationRecord
   STATUSES = %w[want owned in_progress done].freeze
-  SOURCES = %w[manual litres kindle_browser kindle_export purchase].freeze
+  SOURCES = %w[manual litres kindle_browser kindle_export purchase storytel].freeze
 
   belongs_to :user
   belongs_to :edition
