@@ -1,6 +1,7 @@
 class McpController < ActionController::API
   INSTRUCTIONS = "Book Shelf is the user's reading and listening history plus a want-to-read list. " \
-    "Before answering whether the user has read or listened to a book, call search_shelf."
+    "Before answering whether the user has read or listened to a book, call search_shelf. " \
+    "To list what the user finished, listened to, read, is reading now or wants to read, call list_shelf."
 
   def handle
     access_token = authenticator.authenticate(request.env)
