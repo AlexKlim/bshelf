@@ -46,6 +46,8 @@ class Shelf
     { key:, count: ids.size, books: summaries(ids.drop(offset).first(limit)) }
   end
 
+  def ids(&keep) = grouped(placements).select { |key, _| keep.(key) }.values.flatten
+
   def summaries(ids)
     return [] if ids.empty?
 

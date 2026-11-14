@@ -93,10 +93,10 @@ RSpec.describe "MCP endpoint" do
     it "lists only the tools the token's scopes allow" do
       mcp_call(token, "tools/list")
       expect(json.dig("result", "tools").map { it["name"] })
-        .to match_array(%w[search_shelf get_book add_book reading_stats])
+        .to match_array(%w[search_shelf list_shelf get_book add_book reading_stats])
 
       mcp_call(mcp_token(user, scopes: "books:read"), "tools/list")
-      expect(json.dig("result", "tools").map { it["name"] }).to match_array(%w[search_shelf get_book reading_stats])
+      expect(json.dig("result", "tools").map { it["name"] }).to match_array(%w[search_shelf list_shelf get_book reading_stats])
     end
 
     it "answers have I read X with the same kinds as REST search" do
@@ -195,6 +195,31 @@ RSpec.describe "MCP endpoint" do
 
       result = tool_result(token, "reading_stats", year: 2025, author: "лем")
       expect(result["structuredContent"]).to include("author" => "лем", "total" => 2, "listened" => 1, "read" => 1)
+    end
+
+    it "lists a shelf by status, format and year, newest first, in pages" do
+      create(:book, user:, title: "A", format: "audio", status: "done", finished_at: Time.zone.parse("2025-03-01"))
+      create(:book, user:, title: "B", format: "ebook", status: "done", finished_at: Time.zone.parse("2025-04-01"))
+      create(:book, user:, title: "C", format: "ebook", status: "done", finished_at: Time.zone.parse("2024-05-01"))
+      create(:book, user:, title: "D", status: "want")
+      create(:book, user:, title: "E", format: "audio", status: "in_progress")
+      create(:book, title: "Чужая", status: "done", finished_at: Time.zone.parse("2025-01-01"))
+      titles = ->(result) { result.dig("structuredContent", "books").map { it["title"] } }
+
+      result = tool_result(token, "list_shelf", status: "done")
+      expect(result.dig("structuredContent", "total")).to eq(3)
+      expect(titles.(result)).to eq(%w[B A C])
+
+      expect(titles.(tool_result(token, "list_shelf", status: "done", format: "audio"))).to eq(%w[A])
+      expect(titles.(tool_result(token, "list_shelf", status: "done", format: "text", year: 2025))).to eq(%w[B])
+      expect(titles.(tool_result(token, "list_shelf", status: "want"))).to eq(%w[D])
+      expect(titles.(tool_result(token, "list_shelf", status: "in_progress", format: "audio"))).to eq(%w[E])
+
+      result = tool_result(token, "list_shelf", status: "done", offset: 1, limit: 1)
+      expect(result["structuredContent"]).to include("total" => 3, "offset" => 1)
+      expect(result.dig("content", 0, "text")).to start_with("done: 3 books, showing 2-2\nA - Author [audio done 2025-03-01]")
+
+      expect(tool_result(token, "list_shelf", status: "read")["isError"]).to be(true)
     end
   end
 end

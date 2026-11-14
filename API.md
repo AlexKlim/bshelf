@@ -222,13 +222,14 @@ Outside `/api/v1`. A remote MCP server over Streamable HTTP for Claude, ChatGPT 
 | POST | `/oauth/token` | Code and refresh token exchange; refresh tokens rotate; access tokens live 1 hour |
 | POST | `/oauth/revoke` | RFC 7009 |
 
-Without a valid token `/mcp` answers `401` with `WWW-Authenticate: Bearer scope="books:read books:write", resource_metadata=".../.well-known/oauth-protected-resource/mcp"`, plus `error="invalid_token"` for an unknown, expired, revoked or foreign-audience token. Scopes: `books:read` (search_shelf, get_book, reading_stats), `books:write` (add_book). Clients that can connect: a metadata document URL on `claude.ai` or `chatgpt.com` as `client_id` (public, PKCE required, no secret), or the account's own Gemini key from `POST /assistants/gemini_client` (confidential: secret by Basic or in the body, PKCE checked when sent, redirect only `https://vertexaisearch.cloud.google.com/oauth-redirect`, authorized only by its owner, tokens bound to `APP_URL/mcp` even without `resource`).
+Without a valid token `/mcp` answers `401` with `WWW-Authenticate: Bearer scope="books:read books:write", resource_metadata=".../.well-known/oauth-protected-resource/mcp"`, plus `error="invalid_token"` for an unknown, expired, revoked or foreign-audience token. Scopes: `books:read` (search_shelf, list_shelf, get_book, reading_stats), `books:write` (add_book). Clients that can connect: a metadata document URL on `claude.ai` or `chatgpt.com` as `client_id` (public, PKCE required, no secret), or the account's own Gemini key from `POST /assistants/gemini_client` (confidential: secret by Basic or in the body, PKCE checked when sent, redirect only `https://vertexaisearch.cloud.google.com/oauth-redirect`, authorized only by its owner, tokens bound to `APP_URL/mcp` even without `resource`).
 
 Tools return `structuredContent` with codes and data (the REST shapes: search answer kinds, BookSummary, BookDetail) and a one-line English text summary. Errors set `isError` with `{ "error": { "code", "field" } }`, codes from the list below; another user's book id is `not_found`.
 
 | Tool | Arguments | structuredContent |
 | --- | --- | --- |
 | `search_shelf` | `query` | same as `GET /search` |
+| `list_shelf` | `status` (`done`, `in_progress`, `want`, `owned`), `format` (`audio` or `text`), `year` (for `done`), `offset`, `limit` (default 50, max 100) | `{ status, format, year, total, offset, books: BookSummary[] }`, newest first like the shelves |
 | `get_book` | `book_id` | `{ book: BookDetail }` |
 | `add_book` | `title`, `author`, `status` (default `want`), `format` (default `unknown`), `finished_at` (`YYYY-MM-DD`) | `{ code: "added" or "duplicate", book: BookSummary }`; the edition `source` is `mcp` |
 | `reading_stats` | `year` (default current), `author` (substring) | `{ year, author, total, listened, read, top_authors, years, books }` |
