@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main, feat/v1 ]
 
-# ponytail: pinned to 24.04, setup-ruby has no Ruby 3.4.8 build for ubuntu-26.04 yet; back to ubuntu-latest once it does
+# ponytail: pinned to 24.04, setup-ruby had no Ruby 3.4 build for ubuntu-26.04; back to ubuntu-latest once it does
 jobs:
   scan_ruby:
     runs-on: ubuntu-24.04

@@ -167,6 +167,9 @@ RSpec.describe "MCP endpoint" do
 
       result = tool_result(token, "add_book", title: "Rework", status: "want", format: "audio")
       expect(result.dig("structuredContent", "code")).to eq("duplicate")
+      result = tool_result(token, "add_book", title: "Rework", status: "want", format: "personal_doc")
+      expect(result.dig("structuredContent", "code")).to eq("duplicate")
+      expect(existing.editions.count).to eq(2)
       expect(existing.editions.joins(:reading).where(format: "audio").pick("readings.status")).to eq("done")
     end
 

@@ -52,7 +52,7 @@
 
 ## Development
 
-Requirements: Ruby 3.4.8 (`.ruby-version`), Postgres 14+, Node 22.
+Requirements: Ruby 3.4.13 (`.ruby-version`), Postgres 14+, Node 22.
 
 ```sh
 bin/setup                  # gems, client packages, database

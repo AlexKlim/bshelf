@@ -16,9 +16,9 @@ module Api
 
       def destroy
         edition = current_user.editions.find_by!(uuid: params[:id])
-        return render_error(:last_edition, status: :unprocessable_content) if edition.book.editions.one?
+        removed = edition.book.with_lock { edition.book.editions.many? && edition.discard! }
+        return render_error(:last_edition, status: :unprocessable_content) unless removed
 
-        edition.discard!
         head :no_content
       end
 

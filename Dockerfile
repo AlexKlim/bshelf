@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-ARG RUBY_VERSION=3.4.8
+ARG RUBY_VERSION=3.4.13
 
 FROM docker.io/library/node:22-slim AS client
 WORKDIR /rails/client

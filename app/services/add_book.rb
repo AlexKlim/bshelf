@@ -33,18 +33,22 @@ class AddBook
   end
 
   def self.record(book, status:, format:, source:, finished_at: nil)
-    rank = StatusResolver::STATUS_RANK
-    editions = book.editions.includes(:reading).order(:id).to_a
-    edition = editions.find { it.format == format } || editions.find do
-      format == "unknown" || it.format == "unknown" || (it.store.nil? && it.reading&.status == "want")
-    end
-    return add_edition(book, status:, format:, source:, finished_at:) unless edition
-    return if rank[status] <= rank.fetch(edition.reading&.status, -1)
+    return if status == "want"
 
-    edition.update!(format:) unless format == "unknown"
-    reading = edition.reading || edition.create_reading!(user: book.user, status: "want", status_source: "manual")
-    StatusResolver.manual!(reading, status:, **ReadingDates.parse(finished_at:).compact)
-    edition
+    rank = StatusResolver::STATUS_RANK
+    book.with_lock do
+      editions = book.editions.includes(:reading).order(:id).to_a
+      edition = editions.find { it.format == format } || editions.find do
+        format == "unknown" || it.format == "unknown" || (it.store.nil? && it.reading&.status == "want")
+      end
+      next add_edition(book, status:, format:, source:, finished_at:) unless edition
+      next if rank[status] <= rank.fetch(edition.reading&.status, -1)
+
+      edition.update!(format:) unless format == "unknown"
+      reading = edition.reading || edition.create_reading!(user: book.user, status: "want", status_source: "manual")
+      StatusResolver.manual!(reading, status:, **ReadingDates.parse(finished_at:).compact)
+      edition
+    end
   end
 
   def self.find_duplicate(user, title, author)
