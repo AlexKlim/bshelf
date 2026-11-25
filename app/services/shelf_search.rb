@@ -25,7 +25,8 @@ class ShelfSearch
     by_text = user.books.where("title ILIKE :like OR author ILIKE :like OR original_title ILIKE :like", like:)
     by_id = user.books.where(isbn: query)
       .or(user.books.where(id: user.editions.where(external_id: query).select(:book_id)))
-    user.books.where(id: by_text.select(:id)).or(user.books.where(id: by_id.select(:id)))
+    by_title = user.books.pluck(:id, :title).filter_map { |id, title| id if TextKey.same_title?(query, title) }
+    user.books.where(id: by_text.select(:id)).or(user.books.where(id: by_id.select(:id))).or(user.books.where(id: by_title))
       .includes(editions: :reading).order(:title).limit(LIMIT).to_a
   end
 

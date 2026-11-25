@@ -93,7 +93,7 @@ RSpec.describe "MCP endpoint" do
     it "lists only the tools the token's scopes allow" do
       mcp_call(token, "tools/list")
       expect(json.dig("result", "tools").map { it["name"] })
-        .to match_array(%w[search_shelf list_shelf get_book add_book reading_stats])
+        .to match_array(%w[search_shelf list_shelf get_book add_book remove_book reading_stats])
 
       mcp_call(mcp_token(user, scopes: "books:read"), "tools/list")
       expect(json.dig("result", "tools").map { it["name"] }).to match_array(%w[search_shelf list_shelf get_book reading_stats])
@@ -148,6 +148,53 @@ RSpec.describe "MCP endpoint" do
       expect(result["structuredContent"]).to include("code" => "duplicate")
       expect(result.dig("structuredContent", "book", "id")).to eq(existing.uuid)
       expect(user.books.count).to eq(1)
+    end
+
+    it "records a listen on a book already on the shelf under a transliterated or shorter title" do
+      existing = create(:book, user:, title: "Rework (Бизнес без предрассудков)", author: "Джейсон Фрайд", status: "want")
+
+      result = tool_result(token, "add_book", title: "Реворк", status: "done", format: "audio", finished_at: "2026-11-21")
+
+      expect(result.dig("structuredContent", "code")).to eq("updated")
+      expect(user.books.sole).to eq(existing)
+      edition = existing.editions.sole.reload
+      expect([ edition.format, edition.reading.status, edition.reading.finished_at.to_date ])
+        .to eq([ "audio", "done", Date.new(2026, 11, 21) ])
+
+      result = tool_result(token, "add_book", title: "Rework", status: "done", format: "ebook")
+      expect(result.dig("structuredContent", "code")).to eq("updated")
+      expect(existing.editions.map(&:format)).to match_array(%w[audio ebook])
+
+      result = tool_result(token, "add_book", title: "Rework", status: "want", format: "audio")
+      expect(result.dig("structuredContent", "code")).to eq("duplicate")
+      result = tool_result(token, "add_book", title: "Rework", status: "want", format: "personal_doc")
+      expect(result.dig("structuredContent", "code")).to eq("duplicate")
+      expect(existing.editions.count).to eq(2)
+      expect(existing.editions.joins(:reading).where(format: "audio").pick("readings.status")).to eq("done")
+    end
+
+    it "finds a book by a title in the other script" do
+      book = create(:book, user:, title: "Реворк", format: "audio", status: "done")
+
+      result = tool_result(token, "search_shelf", query: "Rework")
+
+      expect(result.dig("structuredContent", "answer")).to eq("kind" => "listened", "book_id" => book.uuid)
+    end
+
+    it "removes a book, never another user's" do
+      book = create(:book, user:, title: "Реворк", format: "audio", status: "done")
+      create(:edition, book:, store: "litres", external_id: "L1")
+      stranger = create(:book, title: "Чужая", status: "want")
+
+      result = tool_result(token, "remove_book", book_id: book.uuid)
+
+      expect(result.dig("structuredContent", "code")).to eq("removed")
+      expect(user.books).to be_empty
+      expect(user.discarded_editions.pluck(:store, :external_id)).to eq([ [ "litres", "L1" ] ])
+
+      result = tool_result(token, "remove_book", book_id: stranger.uuid)
+      expect(result.dig("structuredContent", "error")).to eq("code" => "not_found", "field" => "book_id")
+      expect(stranger.reload).to be_persisted
     end
 
     it "returns codes for invalid input" do

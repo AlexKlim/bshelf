@@ -10,6 +10,7 @@ import {
   search,
   unmerge,
   updateEdition,
+  deleteEdition,
   updateNote,
 } from "@/api"
 import type { ApiError } from "@/lib/api"
@@ -204,6 +205,7 @@ export function BookSpread({ book, error, disabled, onBook, onReload }: SpreadPr
               edition={edition}
               disabled={disabled}
               editing={editor === edition.id}
+              removable={book.editions.length > 1}
               onEdit={(open) => setEditor((cur) => (open ? edition.id : cur === edition.id ? null : cur))}
               onSaved={onReload}
             />
@@ -238,14 +240,16 @@ type EditionLineProps = {
   edition: Edition
   disabled?: boolean
   editing: boolean
+  removable: boolean
   onEdit: (open: boolean) => void
   onSaved: () => void
 }
 
-function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLineProps) {
+function EditionLine({ edition, disabled, editing, removable, onEdit, onSaved }: EditionLineProps) {
   const { t, i18n } = useTranslation()
   const [status, setStatus] = useState<Status | null>(edition.status)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<"status" | "remove" | null>(null)
+  const [removing, setRemoving] = useState(false)
   const shown = { ...edition, status }
   const where = [t(`format.${edition.format}`), edition.store && t(`store.${edition.store}`)].filter(Boolean).join(", ")
   const dateField = status === "done" ? "finished_at" : status === "in_progress" ? "started_at" : null
@@ -255,7 +259,7 @@ function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLin
   const save = (next: Status, month?: string) => {
     const previous = status
     setStatus(next)
-    setError(false)
+    setError(null)
     const field = next === "done" ? "finished_at" : next === "in_progress" ? "started_at" : null
     const body = { status: next, ...(field && month !== undefined ? { [field]: month && `${month}-01` } : {}) }
     queue.current = queue.current
@@ -267,9 +271,18 @@ function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLin
         },
         () => {
           setStatus(previous)
-          setError(true)
+          setError("status")
         },
       )
+  }
+
+  const remove = () => {
+    if (!removing) return setRemoving(true)
+    setError(null)
+    deleteEdition(edition.id).then(onSaved, () => {
+      setRemoving(false)
+      setError("remove")
+    })
   }
 
   return (
@@ -279,7 +292,10 @@ function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLin
         className="bs-colophon__line"
         aria-expanded={editing}
         disabled={disabled}
-        onClick={() => onEdit(!editing)}
+        onClick={() => {
+          setRemoving(false)
+          onEdit(!editing)
+        }}
       >
         <Ico name={verbForm(edition.format)} />
         <span>
@@ -301,7 +317,14 @@ function EditionLine({ edition, disabled, editing, onEdit, onSaved }: EditionLin
       {editing && status && dateField && (
         <MonthField label={t("entry.when")} value={when} disabled={disabled} onChange={(month) => save(status, month)} />
       )}
-      {error && <span className="bs-field__error">{t("book.statusError")}</span>}
+      {editing && removable && (
+        <button type="button" className="bs-btn bs-btn--quiet bs-btn--sm" disabled={disabled} onClick={remove}>
+          {t(removing ? "book.removeEditionSure" : "book.removeEdition")}
+        </button>
+      )}
+      {error && (
+        <span className="bs-field__error">{t(error === "status" ? "book.statusError" : "book.removeEditionError")}</span>
+      )}
     </li>
   )
 }

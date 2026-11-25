@@ -32,7 +32,8 @@ RSpec.describe "Shelf" do
     book("Dune", status: "want")
     book("Dune Messiah", status: "want")
 
-    expect(book_queries { get "/api/v1/search", params: { q: "dune" } }).to eq(2)
+    # The third query reads every id and title once to match titles across scripts.
+    expect(book_queries { get "/api/v1/search", params: { q: "dune" } }).to eq(3)
     expect(json["books"].size).to eq(1)
   end
 

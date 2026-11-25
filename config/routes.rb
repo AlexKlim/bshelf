@@ -39,7 +39,7 @@ Rails.application.routes.draw do
         resources :notes, only: %i[index create update destroy], shallow: true
         resources :highlights, only: :index
       end
-      resources :editions, only: :update
+      resources :editions, only: %i[update destroy]
       resources :merges, only: :destroy
       resources :duplicates, only: %i[index destroy]
       resource :stats, only: :show
