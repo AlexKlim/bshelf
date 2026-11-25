@@ -10,4 +10,11 @@ class Edition < ApplicationRecord
   validates :format, inclusion: { in: FORMATS }
   validates :store, inclusion: { in: STORES }, allow_nil: true
   validates :source, inclusion: { in: SOURCES }
+
+  def discard!
+    transaction do
+      user.discarded_editions.find_or_create_by!(store:, external_id:) if store && external_id
+      destroy!
+    end
+  end
 end

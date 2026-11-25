@@ -14,6 +14,14 @@ module Api
         render json: { book: BookSerializer.summary(book, Shelf.new(current_user).key_for(book)) }
       end
 
+      def destroy
+        edition = current_user.editions.find_by!(uuid: params[:id])
+        return render_error(:last_edition, status: :unprocessable_content) if edition.book.editions.one?
+
+        edition.discard!
+        head :no_content
+      end
+
       private
 
       def dates = ReadingDates.parse(date_params)

@@ -132,6 +132,36 @@ RSpec.describe "Books, editions, notes and highlights" do
     end
   end
 
+  describe "DELETE /api/v1/editions/:id" do
+    let(:book) { create(:book, user:, status: "want") }
+
+    it "removes one edition, remembers a store copy and keeps the book" do
+      audio = create(:edition, book:, format: "audio", store: "litres", external_id: "L1")
+
+      delete "/api/v1/editions/#{audio.uuid}"
+
+      expect(response).to have_http_status(:no_content)
+      expect(book.editions.reload.map(&:format)).to eq([ "ebook" ])
+      expect(user.discarded_editions.pluck(:store, :external_id)).to eq([ [ "litres", "L1" ] ])
+    end
+
+    it "refuses to remove the last edition" do
+      delete "/api/v1/editions/#{book.editions.sole.uuid}"
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json["errors"]).to eq([ { "code" => "last_edition" } ])
+    end
+
+    it "returns 404 for another user's edition" do
+      other = create(:book, status: "want")
+      create(:edition, book: other)
+
+      delete "/api/v1/editions/#{other.editions.first.uuid}"
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "PATCH /api/v1/editions/:id" do
     let(:book) { create(:book, user:, status: "in_progress", status_source: "kindle_export") }
     let(:edition) { book.editions.first }

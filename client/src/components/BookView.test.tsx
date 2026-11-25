@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import i18n from "@/i18n"
 import type { BookDetail } from "@/lib/types"
-import { book, mockFetch } from "@/test/fixtures"
+import { book, edition, mockFetch } from "@/test/fixtures"
 import { BookSpread } from "./BookView"
 
 const highlight = (id: string) => ({ id, text: `Quote ${id}`, note: null, location: null, source: "kindle", highlighted_at: null })
@@ -67,5 +67,28 @@ describe("editing an edition", () => {
 
     await waitFor(() => expect(onReload).toHaveBeenCalled())
     expect(bodies.at(-1)).toEqual({ status: "done", finished_at: "2023-03-01" })
+  })
+
+  it("removes an edition after a second click, and only when the book has another one", async () => {
+    const deleted: string[] = []
+    mockFetch((url, init) => {
+      if (init.method === "DELETE") deleted.push(url)
+      return [204, null]
+    })
+    const onReload = vi.fn()
+    const editions = [edition({ id: "want", format: "ebook", status: "want" }), edition({ id: "listen", status: "in_progress" })]
+    const { rerender } = render(<BookSpread book={detail({ editions })} onBook={() => {}} onReload={onReload} />)
+
+    await userEvent.click(screen.getByRole("button", { expanded: false, name: /E-book/ }))
+    await userEvent.click(screen.getByRole("button", { name: "Remove this edition" }))
+    expect(deleted).toEqual([])
+    await userEvent.click(screen.getByRole("button", { name: "Remove it for good" }))
+
+    await waitFor(() => expect(onReload).toHaveBeenCalled())
+    expect(deleted).toEqual([expect.stringMatching(/\/editions\/want$/)])
+
+    rerender(<BookSpread book={detail({ editions: [editions[1]] })} onBook={() => {}} onReload={onReload} />)
+    await userEvent.click(screen.getByRole("button", { expanded: false, name: /Audio/ }))
+    expect(screen.queryByRole("button", { name: "Remove this edition" })).toBeNull()
   })
 })

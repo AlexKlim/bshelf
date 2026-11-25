@@ -150,6 +150,34 @@ RSpec.describe "MCP endpoint" do
       expect(user.books.count).to eq(1)
     end
 
+    it "records a listen on a book already on the shelf under a transliterated or shorter title" do
+      existing = create(:book, user:, title: "Rework (Бизнес без предрассудков)", author: "Джейсон Фрайд", status: "want")
+
+      result = tool_result(token, "add_book", title: "Реворк", status: "done", format: "audio", finished_at: "2026-11-21")
+
+      expect(result.dig("structuredContent", "code")).to eq("updated")
+      expect(user.books.sole).to eq(existing)
+      edition = existing.editions.sole.reload
+      expect([ edition.format, edition.reading.status, edition.reading.finished_at.to_date ])
+        .to eq([ "audio", "done", Date.new(2026, 11, 21) ])
+
+      result = tool_result(token, "add_book", title: "Rework", status: "done", format: "ebook")
+      expect(result.dig("structuredContent", "code")).to eq("updated")
+      expect(existing.editions.map(&:format)).to match_array(%w[audio ebook])
+
+      result = tool_result(token, "add_book", title: "Rework", status: "want", format: "audio")
+      expect(result.dig("structuredContent", "code")).to eq("duplicate")
+      expect(existing.editions.joins(:reading).where(format: "audio").pick("readings.status")).to eq("done")
+    end
+
+    it "finds a book by a title in the other script" do
+      book = create(:book, user:, title: "Реворк", format: "audio", status: "done")
+
+      result = tool_result(token, "search_shelf", query: "Rework")
+
+      expect(result.dig("structuredContent", "answer")).to eq("kind" => "listened", "book_id" => book.uuid)
+    end
+
     it "returns codes for invalid input" do
       result = tool_result(token, "add_book", title: "X", finished_at: "someday")
 

@@ -70,6 +70,7 @@ Every sign up, confirmation, sign in (and failed attempt for a known email), sig
 | PATCH | `/books/:id` | `title`, `author`, `original_title`, `language`, `year` | `200 { book: BookDetail }`, `422` field codes |
 | DELETE | `/books/:id` | | `204` |
 | PATCH | `/editions/:id` | `status`, optional `started_at`, `finished_at` | `200 { book: BookSummary }` with the new `shelf` |
+| DELETE | `/editions/:id` | | `204`; a store copy is remembered so a sync does not bring it back; the last edition of a book: `422 { code: "last_edition" }` |
 | GET | `/books/:id/notes` | | `200 { notes: [Note] }` |
 | POST | `/books/:id/notes` | `body` | `201 { note }` |
 | PATCH | `/notes/:id` | `body` | `200 { note }` |
@@ -231,7 +232,7 @@ Tools return `structuredContent` with codes and data (the REST shapes: search an
 | `search_shelf` | `query` | same as `GET /search` |
 | `list_shelf` | `status` (`done`, `in_progress`, `want`, `owned`), `format` (`audio` or `text`), `year` (for `done`), `offset`, `limit` (default 50, max 100) | `{ status, format, year, total, offset, books: BookSummary[] }`, newest first like the shelves |
 | `get_book` | `book_id` | `{ book: BookDetail }` |
-| `add_book` | `title`, `author`, `status` (default `want`), `format` (default `unknown`), `finished_at` (`YYYY-MM-DD`) | `{ code: "added" or "duplicate", book: BookSummary }`; the edition `source` is `mcp` |
+| `add_book` | `title`, `author`, `status` (default `want`), `format` (default `unknown`), `finished_at` (`YYYY-MM-DD`) | `{ code: "added", "updated" or "duplicate", book: BookSummary }`; the edition `source` is `mcp`. A book already on the shelf matches by title across scripts and by the title before brackets or a colon ("Реворк" finds "Rework (Бизнес без предрассудков)"); a status above the stored one is recorded on the edition of that format, else on a `want` edition with no store or an `unknown` format one, else as a new edition: `updated` |
 | `reading_stats` | `year` (default current), `author` (substring) | `{ year, author, total, listened, read, top_authors, years, books }` |
 
 ### SPA contract

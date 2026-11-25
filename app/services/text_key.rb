@@ -5,6 +5,16 @@ module TextKey
 
   def self.core_title(value) = title(value.to_s.split(/[:.(\[]| - /).first)
 
+  def self.folded(value) = Translit.words(Translit.to_cyrillic(title(value))).join(" ")
+
+  def self.same_title?(a, b)
+    x = folded(a)
+    y = folded(b)
+    return false if x.empty? || y.empty?
+
+    x == y || x == folded(core_title(b)) || folded(core_title(a)) == y
+  end
+
   def self.titles(*values) = values.flat_map { [ title(it), core_title(it) ] }.reject(&:empty?).uniq
 
   def self.author_tokens(value) = title(value).split.reject { it.size < 2 }.to_set

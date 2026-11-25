@@ -40,9 +40,7 @@ class Book < ApplicationRecord
 
   def discard!
     transaction do
-      editions.where.not(store: nil).where.not(external_id: nil).each do
-        user.discarded_editions.find_or_create_by!(store: it.store, external_id: it.external_id)
-      end
+      editions.each(&:discard!)
       destroy!
     end
   end

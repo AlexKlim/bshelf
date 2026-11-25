@@ -59,6 +59,7 @@ export const moveBook = (id: string, body: { shelf: ShelfKey; before?: string; a
   patch<{ book: BookSummary }>(`/books/${id}/shelf`, body)
 export const updateEdition = (id: string, body: { status: Status; started_at?: string; finished_at?: string }) =>
   patch<{ book: BookSummary }>(`/editions/${id}`, body)
+export const deleteEdition = (id: string) => del(`/editions/${id}`)
 
 export const addNote = (bookId: string, body: string) => post<{ note: Note }>(`/books/${bookId}/notes`, { body })
 export const updateNote = (id: string, body: string) => patch<{ note: Note }>(`/notes/${id}`, { body })
