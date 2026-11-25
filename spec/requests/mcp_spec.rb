@@ -93,7 +93,7 @@ RSpec.describe "MCP endpoint" do
     it "lists only the tools the token's scopes allow" do
       mcp_call(token, "tools/list")
       expect(json.dig("result", "tools").map { it["name"] })
-        .to match_array(%w[search_shelf list_shelf get_book add_book reading_stats])
+        .to match_array(%w[search_shelf list_shelf get_book add_book remove_book reading_stats])
 
       mcp_call(mcp_token(user, scopes: "books:read"), "tools/list")
       expect(json.dig("result", "tools").map { it["name"] }).to match_array(%w[search_shelf list_shelf get_book reading_stats])
@@ -176,6 +176,22 @@ RSpec.describe "MCP endpoint" do
       result = tool_result(token, "search_shelf", query: "Rework")
 
       expect(result.dig("structuredContent", "answer")).to eq("kind" => "listened", "book_id" => book.uuid)
+    end
+
+    it "removes a book, never another user's" do
+      book = create(:book, user:, title: "Реворк", format: "audio", status: "done")
+      create(:edition, book:, store: "litres", external_id: "L1")
+      stranger = create(:book, title: "Чужая", status: "want")
+
+      result = tool_result(token, "remove_book", book_id: book.uuid)
+
+      expect(result.dig("structuredContent", "code")).to eq("removed")
+      expect(user.books).to be_empty
+      expect(user.discarded_editions.pluck(:store, :external_id)).to eq([ [ "litres", "L1" ] ])
+
+      result = tool_result(token, "remove_book", book_id: stranger.uuid)
+      expect(result.dig("structuredContent", "error")).to eq("code" => "not_found", "field" => "book_id")
+      expect(stranger.reload).to be_persisted
     end
 
     it "returns codes for invalid input" do
